@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.reservation.ReservationController" stylesheets="@../event/event.css">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="My Reservations" styleClass="title-header"/>
+            <Region HBox.hgrow="ALWAYS" />
+        </HBox>
+        
+        <!-- Filter Bar -->
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+            <TextField fx:id="searchField" promptText="🔍 Search reservations (event title)..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="filterCombo" promptText="All" style="-fx-background-color: #2a2a3e;"/>
+            <ComboBox fx:id="sortCombo" promptText="Newest First" style="-fx-background-color: #2a2a3e;"/>
+            <Button text="Apply" onAction="#handleApplyFilter" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"/>
+        </HBox>
+        
+        <!-- Card Grid List -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+            <FlowPane fx:id="cardContainer" hgap="25" vgap="25" prefWrapLength="1000" style="-fx-padding: 10;" />
+        </ScrollPane>
+    </VBox>
+</StackPane>
