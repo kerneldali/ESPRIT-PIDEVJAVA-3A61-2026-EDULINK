@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" 
+            fx:controller="com.edulink.gui.controllers.assistance.CommunityBoardController"
+            stylesheets="@../../styles/style.css, @../../styles/community.css" styleClass="community-root">
+
+    <top>
+        <VBox spacing="10">
+            <padding><Insets top="20" right="20" bottom="10" left="20"/></padding>
+            <Label text="Community Forum" styleClass="page-title"/>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Button text="+ New Topic" onAction="#showNewThreadForm" styleClass="primary-button" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-padding: 10 20; -fx-background-radius: 8px;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <TextField fx:id="searchField" promptText="🔍 Search discussions..." styleClass="new-reply-field" prefWidth="250"/>
+            </HBox>
+        </VBox>
+    </top>
+
+    <center>
+        <SplitPane styleClass="community-split-pane">
+            <!-- Threads List -->
+            <ListView fx:id="threadsList" SplitPane.resizableWithParent="false" minWidth="300" prefWidth="350" styleClass="threads-list"/>
+            
+            <!-- Thread Details / Focus Area -->
+            <VBox fx:id="threadFocusArea" spacing="15" styleClass="thread-focus-area">
+                <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+                
+                <Label fx:id="focusedThreadTitle" styleClass="thread-focus-title" text="Select a topic to view"/>
+                <HBox spacing="15" alignment="CENTER_LEFT">
+                    <Label fx:id="focusedThreadAuthor" styleClass="thread-focus-author" text="Posted by: ..."/>
+                    <Button text="🚩 Report" onAction="#actionReportThread" styleClass="secondary-button" style="-fx-text-fill: #ef4444; -fx-padding: 2 6;"/>
+                </HBox>
+                <HBox fx:id="adminActionsPane" spacing="10" visible="false" managed="false">
+                    <Button text="🗑 Delete Thread" onAction="#handleAdminDeleteThread" styleClass="delete-button"/>
+                    <Button fx:id="pinThreadBtn" text="📌 Pin Thread" onAction="#handleAdminPinThread" styleClass="secondary-button"/>
+                    <Button fx:id="lockThreadBtn" text="🔒 Lock Thread" onAction="#handleAdminLockThread" styleClass="secondary-button"/>
+                </HBox>
+                <TextArea fx:id="focusedThreadContent" wrapText="true" editable="false" prefRowCount="4" styleClass="thread-focus-content"/>
+                
+                <Separator/>
+                
+                <Label text="💬 Replies" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #475569;"/>
+                <ListView fx:id="repliesList" VBox.vgrow="ALWAYS" styleClass="replies-list"/>
+                
+                <HBox spacing="10" alignment="CENTER">
+                    <TextField fx:id="newReplyField" HBox.hgrow="ALWAYS" promptText="Write a thoughtful comment..." styleClass="new-reply-field"/>
+                    <Button text="Post Reply" onAction="#postReply" styleClass="primary-button" style="-fx-font-weight: bold; -fx-background-radius: 20px;"/>
+                </HBox>
+            </VBox>
+        </SplitPane>
+    </center>
+    
+    <!-- New Thread Form overlay (hidden by default) -->
+    <bottom>
+        <VBox fx:id="newThreadForm" spacing="10" visible="false" managed="false" styleClass="card">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+            <Label text="Create a New Topic" style="-fx-font-weight: bold; -fx-font-size: 18px;"/>
+            <TextField fx:id="newThreadTitle" promptText="Topic Title"/>
+            <TextArea fx:id="newThreadContent" promptText="What do you want to discuss?" prefRowCount="3" wrapText="true"/>
+            <HBox spacing="10">
+                <Button text="Cancel" onAction="#hideNewThreadForm" styleClass="secondary-button"/>
+                <Button text="Publish" onAction="#postThread" styleClass="primary-button"/>
+            </HBox>
+        </VBox>
+    </bottom>
+
+</BorderPane>

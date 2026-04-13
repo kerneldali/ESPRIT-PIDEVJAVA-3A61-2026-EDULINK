@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane stylesheets="@../styles/style.css"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.edulink.gui.controllers.DashboardController">
+
+    <!-- Sidebar -->
+    <left>
+        <VBox styleClass="sidebar" prefWidth="240">
+            <padding>
+                <Insets top="25" right="0" bottom="20" left="0"/>
+            </padding>
+
+            <!-- Logo -->
+            <VBox spacing="5">
+                <padding><Insets left="20" right="20" bottom="20"/></padding>
+                <Label styleClass="logo-text" text="🎓 EduLink"/>
+                <Label fx:id="contextLabel" styleClass="logo-subtitle" text="Learning Platform"/>
+            </VBox>
+
+            <Separator styleClass="sidebar-separator"/>
+
+            <ScrollPane fitToWidth="true" styleClass="sidebar-scroll" VBox.vgrow="ALWAYS">
+                <VBox spacing="10" styleClass="sidebar-content">
+                    <padding><Insets top="10" right="15" bottom="10" left="15"/></padding>
+
+                    <!-- Assistance Module (Help Requests) -->
+                    <VBox fx:id="helpModule" styleClass="module-container">
+                        <Button styleClass="module-button" text="📋  Assistance" 
+                                onAction="#toggleHelpMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="helpSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <Button styleClass="sub-nav-button" text="• Help Board" onAction="#showHelpRequests"/>
+                            <Button styleClass="sub-nav-button" text="• My Tickets" onAction="#showAddRequest"/>
+                            <Button fx:id="adminOnlyTickets" styleClass="sub-nav-button" text="• Admin Moderation" onAction="#showAdminAssistance" visible="false" managed="false"/>
+                            <Button styleClass="sub-nav-button" text="• Community" onAction="#showCommunityBoard"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Challenges Module -->
+                    <VBox fx:id="challengeModule" styleClass="module-container">
+                        <Button styleClass="module-button" text="🏆  Challenges" 
+                                onAction="#toggleChallengeMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="challengeSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <Button styleClass="sub-nav-button" text="• AI Challenges" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• Weekly Contest" onAction="#showPlaceholder"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Events Module -->
+                    <VBox fx:id="eventModule" styleClass="module-container">
+                        <Button styleClass="module-button" text="📅  Events" 
+                                onAction="#toggleEventMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="eventSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <Button styleClass="sub-nav-button" text="• All Events" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• My Calendar" onAction="#showPlaceholder"/>
+                        </VBox>
+                    </VBox>
+
+                    <!-- Courses Module -->
+                    <VBox fx:id="courseModule" styleClass="module-container">
+                        <Button styleClass="module-button" text="📚  Courses" 
+                                onAction="#toggleCourseMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="courseSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <Button styleClass="sub-nav-button" text="• Catalog" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• My Learning" onAction="#showPlaceholder"/>
+                        </VBox>
+                    </VBox>
+                    <!-- User Profile Module -->
+                    <VBox fx:id="userModule" styleClass="module-container">   
+                        <Button styleClass="module-button" text="👤  User Profile" 
+                                onAction="#toggleUserMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="userSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <!-- Front -->
+                            <Button styleClass="sub-nav-button" text="• Profile" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• Wallet" onAction="#showPlaceholder"/>
+                            <!-- Back -->
+                            <Button fx:id="adminUserStats" styleClass="sub-nav-button" text="• Users Stats" onAction="#showPlaceholder" visible="false" managed="false"/>
+                            <Button fx:id="adminWallets" styleClass="sub-nav-button" text="• Wallets (Admin)" onAction="#showPlaceholder" visible="false" managed="false"/>
+                        </VBox>
+                    </VBox>
+                    <!-- Notes Module -->
+                    <VBox fx:id="notesModule" styleClass="module-container">
+                        <Button styleClass="module-button" text="📝  Notes" 
+                                onAction="#toggleNotesMenu" maxWidth="1.7976931348623157E308"/>
+                        <VBox fx:id="notesSubMenu" styleClass="sub-menu" visible="false" managed="false">
+                            <Button styleClass="sub-nav-button" text="• My Vault" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• Shared Notes" onAction="#showPlaceholder"/>
+                        </VBox>
+                    </VBox>
+                </VBox>
+            </ScrollPane>
+
+            <Separator styleClass="sidebar-separator"/>
+            
+            <!-- Bottom Actions -->
+            <VBox>
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Button styleClass="logout-button" text="↩  Exit to Workspace" 
+                        onAction="#handleExit" maxWidth="1.7976931348623157E308"/>
+            </VBox>
+        </VBox>
+    </left>
+
+    <!-- Main Content -->
+    <center>
+        <StackPane fx:id="contentArea" styleClass="content-area">
+            <padding>
+                <Insets top="25" right="30" bottom="25" left="30"/>
+            </padding>
+        </StackPane>
+    </center>
+</BorderPane>

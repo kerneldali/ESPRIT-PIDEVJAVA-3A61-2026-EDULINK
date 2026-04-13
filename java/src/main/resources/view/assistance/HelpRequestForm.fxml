@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<ScrollPane fitToWidth="true" styleClass="cards-scroll"
+            xmlns="http://javafx.com/javafx/17"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.edulink.gui.controllers.assistance.HelpRequestFormController">
+
+    <VBox fx:id="formContainer" spacing="18" styleClass="form-wrapper">
+        <padding>
+            <Insets top="10" right="30" bottom="30" left="30"/>
+        </padding>
+
+        <!-- Title -->
+        <Label fx:id="formTitle" styleClass="page-title" text="➕ New Help Request"/>
+
+        <!-- Error message -->
+        <Label fx:id="errorLabel" text="" wrapText="true"/>
+
+        <!-- Form Grid -->
+        <GridPane vgap="12" hgap="15" styleClass="form-grid">
+            <columnConstraints>
+                <ColumnConstraints minWidth="120" halignment="RIGHT"/>
+                <ColumnConstraints hgrow="ALWAYS" prefWidth="400"/>
+            </columnConstraints>
+
+            <!-- Title -->
+            <Label text="Title *" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+            <TextField fx:id="titleField" promptText="Enter request title (min 3 chars)"
+                       GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+            <!-- Description -->
+            <Label text="Description *" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+            <TextArea fx:id="descField" prefRowCount="4" promptText="Describe the issue in detail (min 10 chars)"
+                      GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+            <!-- Status -->
+            <Label text="Status" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+            <ComboBox fx:id="statusCombo" maxWidth="1.7976931348623157E308"
+                      GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+
+            <!-- Bounty -->
+            <Label text="Bounty ($)" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+            <TextField fx:id="bountyField" text="0" promptText="0"
+                       GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+
+            <!-- Category -->
+            <Label text="Category" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+            <TextField fx:id="categoryField" promptText="e.g. Math, Physics, Programming"
+                       GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+
+            <!-- Difficulty -->
+            <Label text="Difficulty" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+            <ComboBox fx:id="difficultyCombo" maxWidth="1.7976931348623157E308"
+                      GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+
+            <!-- Is Ticket -->
+            <Label text="Is Ticket?" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+            <CheckBox fx:id="ticketCheck" text="Mark as support ticket"
+                      GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+
+            <!-- Close Reason -->
+            <Label text="Close Reason" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+            <TextArea fx:id="closeReasonField" prefRowCount="2" promptText="Reason for closing (if applicable)"
+                      GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+        </GridPane>
+
+        <!-- Action Buttons -->
+        <HBox spacing="15" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="10"/>
+            </padding>
+            <Button text="Cancel" styleClass="secondary-button" onAction="#handleCancel"/>
+            <Button text="💾  Save Request" styleClass="primary-button" onAction="#handleSave"/>
+        </HBox>
+    </VBox>
+</ScrollPane>

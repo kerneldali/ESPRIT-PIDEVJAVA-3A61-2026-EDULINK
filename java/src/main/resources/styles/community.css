@@ -1,0 +1,108 @@
+/* Community Board Custom CSS */
+
+.community-root {
+    -fx-background-color: #0F0F0F;
+}
+
+.community-split-pane {
+    -fx-background-color: #0F0F0F;
+    -fx-box-border: transparent;
+    -fx-padding: 10px;
+}
+.community-split-pane *.split-pane-divider {
+    -fx-background-color: transparent;
+    -fx-padding: 0 5 0 5;
+}
+
+.threads-list {
+    -fx-background-color: #1C1C2E;
+    -fx-border-color: #2A2D45;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-padding: 8px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 4);
+}
+
+.threads-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 15px;
+    -fx-border-color: #2A2D45;
+    -fx-border-width: 0 0 1 0;
+    -fx-text-fill: #EDEDED;
+}
+.threads-list .list-cell .label {
+    -fx-text-fill: #EDEDED;
+}
+.threads-list .list-cell:filled:hover {
+    -fx-background-color: #222240;
+    -fx-cursor: hand;
+}
+.threads-list .list-cell:selected {
+    -fx-background-color: #222240;
+    -fx-border-color: #BB86FC;
+    -fx-border-width: 0 0 0 4;
+}
+
+.thread-focus-area {
+    -fx-background-color: #1C1C2E;
+    -fx-border-color: #2A2D45;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.5), 10, 0, 0, 4);
+    -fx-padding: 25px;
+}
+
+.thread-focus-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #EDEDED;
+}
+
+.thread-focus-author {
+    -fx-font-size: 13px;
+    -fx-text-fill: #A0A3BD;
+    -fx-font-weight: bold;
+    -fx-padding: 0 0 10 0;
+}
+
+.thread-focus-content {
+    -fx-font-size: 15px;
+    -fx-text-fill: #CCCCCC;
+    -fx-background-color: transparent;
+    -fx-control-inner-background: transparent;
+    -fx-border-color: transparent;
+}
+
+.replies-list {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.replies-list .list-cell {
+    -fx-background-color: #222240;
+    -fx-background-radius: 8px;
+    -fx-padding: 12px 15px;
+    -fx-margin: 5px 0;
+    -fx-text-fill: #EDEDED;
+    -fx-border-color: transparent;
+}
+.replies-list .list-cell .label {
+    -fx-text-fill: #EDEDED;
+}
+.replies-list .list-cell:empty {
+    -fx-background-color: transparent;
+}
+
+.new-reply-field {
+    -fx-background-color: #0F0F0F;
+    -fx-border-color: #2A2D45;
+    -fx-border-radius: 20px;
+    -fx-background-radius: 20px;
+    -fx-padding: 8px 15px;
+    -fx-font-size: 14px;
+    -fx-text-fill: #EDEDED;
+}
+
+.new-reply-field:focused {
+    -fx-border-color: #BB86FC;
+    -fx-effect: dropshadow(three-pass-box, rgba(187,134,252,0.3), 5, 0, 0, 0);
+}

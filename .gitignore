@@ -1,0 +1,22 @@
+# Ignore everything outside java map
+/edulink keml/
+/user.txt
+*.zip
+*.csv
+*.sql
+*.log
+
+# Java / Maven specific ignores
+java/target/
+java/**/*.class
+java/**/*.jar
+java/**/*.war
+java/**/*.ear
+java/**/*.log
+java/.idea/
+java/*.iml
+
+# IDE / OS generated files
+.DS_Store
+Thumbs.db
+.vscode/

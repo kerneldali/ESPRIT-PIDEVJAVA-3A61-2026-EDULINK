@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.text.Font?>
+
+<StackPane prefHeight="700.0" prefWidth="1000.0" styleClass="splash-container" 
+           stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/17" 
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.SplashController">
+    
+    <VBox alignment="CENTER" spacing="40.0" maxWidth="600">
+        <!-- Logo Section -->
+        <VBox alignment="CENTER" spacing="10">
+            <Label text="🎓" style="-fx-font-size: 80;"/>
+            <Label text="EduLink" styleClass="splash-logo-text"/>
+            <Label text="Advanced Learning &amp; Support Management" styleClass="splash-subtitle"/>
+        </VBox>
+
+        <Label text="Select your workspace to continue" styleClass="splash-instruction"/>
+        <Label fx:id="loadingLabel" text="" styleClass="splash-loading" visible="false"/>
+
+        <!-- Action Buttons -->
+        <HBox alignment="CENTER" spacing="30.0">
+            <Button fx:id="frontBtn" onAction="#handleFrontOffice" styleClass="splash-card" text="👤 Frontoffice\nHelp Board &amp; Store">
+                <padding><Insets top="30" right="40" bottom="30" left="40"/></padding>
+            </Button>
+            
+            <Button fx:id="backBtn" onAction="#handleBackOffice" styleClass="splash-card, splash-card-admin" text="🛡 Backoffice\nAdmin Dashboard">
+                <padding><Insets top="30" right="40" bottom="30" left="40"/></padding>
+            </Button>
+        </HBox>
+
+        <Label text="v1.1 - Professional Education Platform" styleClass="splash-footer"/>
+    </VBox>
+</StackPane>

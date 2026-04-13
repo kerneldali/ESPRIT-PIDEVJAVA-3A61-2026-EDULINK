@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="main-container" xmlns="http://javafx.com/javafx/17" 
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.assistance.AdminAssistanceController">
+    
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Header & Connection Status -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <Label text="🛡 Backoffice Assistance" styleClass="page-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="dbStatusLabel" text="Database: Checking..." styleClass="status-label"/>
+        <Button text="🔄 Force Refresh" onAction="#refreshAll" styleClass="secondary-button"/>
+    </HBox>
+
+    <!-- Expanded Stats Bar -->
+    <HBox spacing="15" alignment="CENTER">
+        <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label text="Total Requests" styleClass="card-info"/>
+            <Label fx:id="totalRequestsLabel" text="0" styleClass="card-title"/>
+        </VBox>
+        <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label text="Resolution Rate" styleClass="card-info"/>
+            <Label fx:id="rateLabel" text="0%" styleClass="card-title" style="-fx-text-fill: #10b981;"/>
+        </VBox>
+        <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label text="In Progress" styleClass="card-info"/>
+            <Label fx:id="openTicketsLabel" text="0" styleClass="card-title" style="-fx-text-fill: #6366f1;"/>
+        </VBox>
+        <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label text="Reported (⚠️)" styleClass="card-info"/>
+            <Label fx:id="reportedLabel" text="0" styleClass="card-title" style="-fx-text-fill: #ef4444;"/>
+        </VBox>
+        <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS">
+            <Label text="Total Bounty" styleClass="card-info"/>
+            <!-- The $ sign needs to be escaped using \&#36; or bound from the controller instead, but \$\ works normally in updated FXML.
+                 Changing to "0" and letting Java set the text prefix is safer to avoid compile-time issues -->
+            <Label fx:id="bountyLabel" text="0" styleClass="card-title" style="-fx-text-fill: #f59e0b;"/>
+        </VBox>
+    </HBox>
+
+    <Separator/>
+
+    <!-- Main Content: Moderation Queue -->
+    <HBox spacing="20" VBox.vgrow="ALWAYS">
+        <!-- Moderation Container -->
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Moderation Queue (All Tickets)" styleClass="card-title" style="-fx-font-size: 16px;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <ComboBox fx:id="searchByCombo" promptText="Search By..." styleClass="form-combo" prefWidth="120" />
+                <TextField fx:id="searchField" promptText="Search..." styleClass="form-field" prefWidth="250"/>
+                <Button text="📥 Export CSV" onAction="#handleExportLog" styleClass="edit-button"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
+                <FlowPane fx:id="ticketsContainer" hgap="15" vgap="15" prefWrapLength="1000" />
+            </ScrollPane>
+        </VBox>
+    </HBox>
+</VBox>
