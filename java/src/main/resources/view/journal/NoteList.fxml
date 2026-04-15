@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.edulink.gui.controllers.journal.NoteController" 
+      styleClass="main-container">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox spacing="15" alignment="CENTER_LEFT" styleClass="action-bar">
+        <Button text="⬅ Back" onAction="#handleBack" styleClass="secondary-button" />
+        <Label fx:id="notebookTitleLabel" styleClass="page-title" text="Notebook: Loading..." />
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="➕ New Note" onAction="#handleNewNote" styleClass="primary-button" />
+    </HBox>
+
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="cards-scroll">
+        <VBox spacing="15">
+            <FlowPane fx:id="notesContainer" hgap="20" vgap="20" styleClass="cards-container">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+            </FlowPane>
+        </VBox>
+    </ScrollPane>
+</VBox>

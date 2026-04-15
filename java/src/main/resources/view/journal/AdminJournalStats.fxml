@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.PieChart?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.edulink.gui.controllers.journal.AdminJournalStatsController"
+      styleClass="content-pane">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <Label text="📊 Journal Statistics" styleClass="page-title" />
+    </HBox>
+
+    <VBox alignment="CENTER" VBox.vgrow="ALWAYS" styleClass="card">
+        <Label text="Notes Distribution by Category" styleClass="card-title" />
+        <PieChart fx:id="categoryChart" title="Category Distribution" legendSide="BOTTOM" />
+    </VBox>
+</VBox>
