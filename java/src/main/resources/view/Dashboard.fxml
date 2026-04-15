@@ -82,11 +82,11 @@
                                 onAction="#toggleUserMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="userSubMenu" styleClass="sub-menu" visible="false" managed="false">
                             <!-- Front -->
-                            <Button styleClass="sub-nav-button" text="• Profile" onAction="#showPlaceholder"/>
-                            <Button styleClass="sub-nav-button" text="• Wallet" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• Profile" onAction="#showUserProfile"/>
+                            <Button styleClass="sub-nav-button" text="• Wallet" onAction="#showUserProfile"/>
                             <!-- Back -->
-                            <Button fx:id="adminUserStats" styleClass="sub-nav-button" text="• Users Stats" onAction="#showPlaceholder" visible="false" managed="false"/>
-                            <Button fx:id="adminWallets" styleClass="sub-nav-button" text="• Wallets (Admin)" onAction="#showPlaceholder" visible="false" managed="false"/>
+                            <Button fx:id="adminUserStats" styleClass="sub-nav-button" text="• Users Stats" onAction="#showAdminUserManagement" visible="false" managed="false"/>
+                            <Button fx:id="adminWallets" styleClass="sub-nav-button" text="• Wallets (Admin)" onAction="#showAdminWallets" visible="false" managed="false"/>
                         </VBox>
                     </VBox>
                     <!-- Notes Module -->

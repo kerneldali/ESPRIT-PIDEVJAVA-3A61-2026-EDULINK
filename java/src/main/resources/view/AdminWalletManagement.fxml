@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.AdminWalletManagementController" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;">
+    
+    <VBox spacing="35" style="-fx-padding: 40; -fx-background-color: #f8fafc; -fx-font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;">
+        <!-- Global Treasury Header -->
+        <VBox spacing="25">
+            <VBox spacing="8">
+                <Label text="Global Financial Treasury" style="-fx-font-size: 38px; -fx-font-weight: 950; -fx-text-fill: #1e293b; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 5);"/>
+                <Label text="Execute secure overrides and monitor platform circulating supply." style="-fx-font-size: 18px; -fx-text-fill: #64748b;"/>
+            </VBox>
+            
+            <HBox spacing="30">
+                <!-- Platform Funds Card -->
+                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(234,179,8,0.1), 30, 0, 0, 10); -fx-border-color: #fef08a; -fx-border-radius: 20; -fx-border-width: 1.5;">
+                    <StackPane style="-fx-background-color: linear-gradient(to bottom right, #facc15, #ca8a04); -fx-background-radius: 18; -fx-min-width: 75; -fx-min-height: 75; -fx-max-width: 75; -fx-max-height: 75; -fx-effect: dropshadow(gaussian, rgba(202,138,4,0.3), 15, 0, 0, 5);">
+                        <Label text="💰" style="-fx-font-size: 35px;"/>
+                    </StackPane>
+                    <VBox spacing="4">
+                        <Label text="Platform Circulating Assets" style="-fx-text-fill: #94a3b8; -fx-font-size: 15px; -fx-font-weight: 800;"/>
+                        <Label fx:id="totalPlatformFundsLabel" text="0.00 TND" style="-fx-text-fill: #1e293b; -fx-font-size: 34px; -fx-font-weight: 950;"/>
+                    </VBox>
+                </HBox>
+
+                <!-- Active Wallets Card -->
+                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.1), 30, 0, 0, 10); -fx-border-color: #bbf7d0; -fx-border-radius: 20; -fx-border-width: 1.5;">
+                    <StackPane style="-fx-background-color: linear-gradient(to bottom right, #10b981, #059669); -fx-background-radius: 18; -fx-min-width: 75; -fx-min-height: 75; -fx-max-width: 75; -fx-max-height: 75; -fx-effect: dropshadow(gaussian, rgba(5,150,105,0.3), 15, 0, 0, 5);">
+                        <Label text="💳" style="-fx-font-size: 35px;"/>
+                    </StackPane>
+                    <VBox spacing="4">
+                        <Label text="Active Liquidity Nodes" style="-fx-text-fill: #94a3b8; -fx-font-size: 15px; -fx-font-weight: 800;"/>
+                        <Label fx:id="totalActiveWalletsLabel" text="0" style="-fx-text-fill: #111827; -fx-font-size: 34px; -fx-font-weight: 950;"/>
+                    </VBox>
+                </HBox>
+            </HBox>
+        </VBox>
+
+        <!-- Main Financial Workspace -->
+        <HBox spacing="35">
+            <!-- Left: Financial Ledger -->
+            <VBox spacing="25" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20;">
+                
+                <HBox alignment="CENTER_LEFT" spacing="20">
+                    <Label text="Capital Distribution Ledger" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: #0f172a;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: #f1f5f9; -fx-padding: 12 20; -fx-background-radius: 12;">
+                        <Label text="🔍" style="-fx-font-size: 18px;"/>
+                        <TextField fx:id="searchField" promptText="Filter by entity email or identity..." style="-fx-background-color: transparent; -fx-font-size: 15px; -fx-min-width: 320;"/>
+                    </HBox>
+                </HBox>
+                
+                <TableView fx:id="walletTable" prefHeight="650" style="-fx-background-radius: 15; -fx-border-radius: 15; -fx-border-color: #f1f5f9; -fx-font-size: 15px; -fx-selection-bar: #f0fdf4;">
+                    <columns>
+                        <TableColumn fx:id="idCol" text="Entity ID" prefWidth="80"/>
+                        <TableColumn fx:id="nameCol" text="Account Identity" prefWidth="250"/>
+                        <TableColumn fx:id="emailCol" text="Verified Access Points" prefWidth="300"/>
+                        <TableColumn fx:id="balanceCol" text="Reserved Capital (TND)" prefWidth="180"/>
+                    </columns>
+                </TableView>
+            </VBox>
+
+            <!-- Right: Finance Node (Controller & Logs) -->
+            <VBox spacing="30" minWidth="420" maxWidth="450" style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20;">
+                
+                <Label text="Transaction Command Node" style="-fx-font-size: 20px; -fx-font-weight: 900; -fx-text-fill: #1e293b;"/>
+                
+                <!-- Inspector/Control Pane -->
+                <VBox fx:id="actionPane" alignment="CENTER" spacing="25" visible="false" managed="false" style="-fx-background-color: linear-gradient(to bottom right, #f8fafc, #f1f8f6); -fx-padding: 30; -fx-background-radius: 20; -fx-border-color: #d1fae5; -fx-border-radius: 20; -fx-effect: innershadow(gaussian, rgba(16,185,129,0.05), 20,0,0,5);">
+                    
+                    <StackPane style="-fx-background-color: linear-gradient(to bottom right, #34d399, #059669); -fx-background-radius: 50; -fx-min-width: 90; -fx-min-height: 90; -fx-max-width: 90; -fx-max-height: 90; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.4), 20, 0, 0, 8);">
+                        <Label text="🏦" style="-fx-font-size: 45px;"/>
+                    </StackPane>
+                    
+                    <VBox alignment="CENTER" spacing="5">
+                        <Label text="TARGET ENTITY" style="-fx-text-fill: #94a3b8; -fx-font-size: 12px; -fx-font-weight: 800;"/>
+                        <Label fx:id="actionUserNameLabel" text="Selected User" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: #0f172a;"/>
+                        <Label fx:id="actionUserEmailLabel" text="email@addr.com" style="-fx-text-fill: #2563eb; -fx-font-size: 14px; -fx-font-weight: 700;"/>
+                    </VBox>
+                    
+                    <VBox alignment="CENTER" spacing="3" style="-fx-background-color: white; -fx-padding: 15 25; -fx-background-radius: 12; -fx-border-color: #a7f3d0; -fx-border-width: 2;">
+                        <Label text="RESERVED BALANCE" style="-fx-text-fill: #059669; -fx-font-weight: 800; -fx-font-size: 13px;"/>
+                        <Label fx:id="actionUserBalanceLabel" text="0.00 TND" style="-fx-font-size: 24px; -fx-font-weight: 950; -fx-text-fill: #064e3b;"/>
+                    </VBox>
+
+                    <!-- User Specific Transaction Logs -->
+                    <VBox spacing="10">
+                        <Label text="Entity Transaction History" style="-fx-font-size: 15px; -fx-font-weight: 800; -fx-text-fill: #475569;"/>
+                        <ListView fx:id="logsListView" prefHeight="180" style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-background-radius: 12; -fx-font-family: 'Consolas', monospace; -fx-font-size: 12px;"/>
+                    </VBox>
+                    
+                    <Separator/>
+
+                    <!-- execution field -->
+                    <VBox spacing="10">
+                        <Label text="OVERRIDE AMOUNT (FLOAT)" style="-fx-font-weight: 800; -fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
+                        <TextField fx:id="actionAmountField" promptText="(-) For Deduction | (+) For Grant" style="-fx-padding: 15; -fx-background-color: white; -fx-border-color: #cbd5e1; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: #0f172a; -fx-font-weight: 700; -fx-font-size: 15px;"/>
+                    </VBox>
+                    
+                    <Label fx:id="formStatusLabel" text="" style="-fx-font-weight: 800; -fx-font-size: 14px;" wrapText="true" textAlignment="CENTER"/>
+
+                    <Button text="⚡ Process Financial Adjustment" onAction="#handleRefundOrAdd" style="-fx-background-color: linear-gradient(to right, #f59e0b, #d97706); -fx-text-fill: white; -fx-padding: 16; -fx-font-size: 15px; -fx-font-weight: 900; -fx-cursor: hand; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(217,119,6,0.4), 20, 0, 0, 8);" maxWidth="Infinity"/>
+                </VBox>
+
+                <VBox fx:id="emptyPrompt" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS" opacity="0.6">
+                    <Label text="Select an entity from the ledger to activate the transaction interface." wrapText="true" textAlignment="CENTER" style="-fx-text-fill: #64748b; -fx-font-size: 16px; -fx-font-weight: 700;"/>
+                    <Label text="🔍" style="-fx-font-size: 40px;"/>
+                </VBox>
+
+            </VBox>
+        </HBox>
+    </VBox>
+</ScrollPane>
