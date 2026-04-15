@@ -49,6 +49,59 @@ public class UserService implements IService<User> {
         }
     }
 
+    public User findByEmail(String email) {
+        String qry = "SELECT * FROM user WHERE email = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, email);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void updateWallet(int userId, double amountToAdd) {
+        String qry = "UPDATE user SET wallet_balance = wallet_balance + ? WHERE id=?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setDouble(1, amountToAdd);
+            pstm.setInt(2, userId);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Could not update wallet (column might not exist): " + e.getMessage());
+        }
+    }
+
+    public void addTransactionLog(int userId, String message) {
+        String qry = "INSERT INTO transaction_log (user_id, message) VALUES (?, ?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, userId);
+            pstm.setString(2, message);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Failed to insert log: " + e.getMessage());
+        }
+    }
+
+    public List<String> getUserTransactions(int userId) {
+        List<String> logs = new ArrayList<>();
+        String qry = "SELECT message, created_at FROM transaction_log WHERE user_id = ? ORDER BY id ASC";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, userId);
+            ResultSet rs = pstm.executeQuery();
+            while (rs.next()) {
+                String msg = rs.getString("message");
+                String date = rs.getString("created_at");
+                logs.add("[" + date + "] " + msg);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return logs;
+    }
+
     @Override
     public void delete(int id) {
         String qry = "DELETE FROM user WHERE id=?";
@@ -58,6 +111,21 @@ public class UserService implements IService<User> {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public User authenticate(String email, String password) {
+        String qry = "SELECT * FROM user WHERE email = ? AND password = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, email);
+            pstm.setString(2, password);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToUser(rs);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     @Override
@@ -113,6 +181,7 @@ public class UserService implements IService<User> {
         u.setRoles(rs.getString("roles"));
         u.setResetOtp(rs.getString("reset_otp"));
         u.setVerified(rs.getBoolean("is_verified"));
+        u.setWalletBalance(rs.getDouble("wallet_balance"));
         // Fake XP data based on ID since it's not in DB schema but expected by UI
         u.setXp(u.getId() * 150 + 500); 
         return u;

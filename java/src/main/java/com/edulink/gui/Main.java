@@ -19,10 +19,10 @@ public class Main extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         try {
-            // Check if Splash FXML exists
-            URL fxmlUrl = Main.class.getResource("/view/Splash.fxml");
+            // Check if Login FXML exists
+            URL fxmlUrl = Main.class.getResource("/view/Login.fxml");
             if (fxmlUrl == null) {
-                showCriticalError("FXML Not Found", "Could not find /view/Splash.fxml in resources.");
+                showCriticalError("FXML Not Found", "Could not find /view/Login.fxml in resources.");
                 return;
             }
 

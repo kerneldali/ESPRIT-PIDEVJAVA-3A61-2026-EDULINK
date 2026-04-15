@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.geometry.Insets?>
+
+<StackPane prefHeight="700.0" prefWidth="1000.0" styleClass="splash-container" 
+           stylesheets="@../styles/style.css" xmlns="http://javafx.com/javafx/17" 
+           xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.LoginController">
+    
+    <VBox alignment="CENTER" spacing="20.0" maxWidth="450">
+        <!-- Logo Section -->
+        <VBox alignment="CENTER" spacing="10">
+            <Label text="🎓" style="-fx-font-size: 80;"/>
+            <Label text="EduLink" styleClass="splash-logo-text"/>
+            <Label text="Sign in to your learning workspace" styleClass="splash-subtitle"/>
+        </VBox>
+
+        <!-- Login Form -->
+        <VBox fx:id="loginBox" spacing="15.0" styleClass="splash-card" alignment="CENTER" maxWidth="400">
+            <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
+            <Label text="Login" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            
+            <TextField fx:id="emailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            <PasswordField fx:id="passwordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            
+            <Label fx:id="errorLabel" style="-fx-text-fill: #ef4444;"/>
+            <Label fx:id="loadingLabel" text="" styleClass="splash-loading" visible="false"/>
+            
+            <Button onAction="#handleLogin" text="Sign In" styleClass="btn-primary" prefWidth="300" style="-fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px;"/>
+            <Label text="Don't have an account? Register" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showRegister"/>
+        </VBox>
+
+        <!-- Register Form -->
+        <VBox fx:id="registerBox" spacing="15.0" styleClass="splash-card" alignment="CENTER" maxWidth="400" visible="false" managed="false">
+            <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
+            <Label text="Register" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            
+            <TextField fx:id="regFullNameField" promptText="Full Name" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            <PasswordField fx:id="regPasswordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            
+            <Label fx:id="regErrorLabel" style="-fx-text-fill: #ef4444;"/>
+            
+            <Button onAction="#handleRegister" text="Create Account" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px; -fx-cursor: hand;" prefWidth="300"/>
+            <Label text="Already have an account? Login" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showLogin"/>
+        </VBox>
+
+        <Label text="v1.1 - Professional Education Platform" styleClass="splash-footer"/>
+    </VBox>
+</StackPane>
