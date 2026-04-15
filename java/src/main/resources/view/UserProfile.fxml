@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.effect.DropShadow?>
+
+<ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.UserProfileController" style="-fx-background-color: transparent; -fx-background: transparent;">
+    <!-- Main wrapper -->
+    <VBox spacing="35" style="-fx-padding: 40; -fx-background-color: #f4f7fb; -fx-font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;">
+
+        <!-- Header Area -->
+        <VBox spacing="5" style="-fx-padding: 0 0 10 0;">
+            <Label text="My Profile &amp; Wallet" style="-fx-font-size: 32px; -fx-font-weight: 800; -fx-text-fill: #1e293b; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);"/>
+            <Label text="Manage your account settings, preferences, and fintech dashboard." style="-fx-font-size: 15px; -fx-text-fill: #64748b;"/>
+            <Label fx:id="statusLabel" text="" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 0 0 0;"/>
+        </VBox>
+
+        <HBox spacing="35">
+            <!-- Profile Card -->
+            <VBox spacing="25" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(20,20,40,0.06), 30, 0, 0, 10);">
+                
+                <!-- Avatar & Identity -->
+                <HBox spacing="20" alignment="CENTER_LEFT">
+                    <StackPane style="-fx-background-color: linear-gradient(to bottom right, #38bdf8, #2563eb); -fx-background-radius: 50; -fx-min-width: 80; -fx-min-height: 80; -fx-max-width: 80; -fx-max-height: 80; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.4), 15, 0, 0, 5);">
+                        <Label text="🤠" style="-fx-font-size: 40px;"/>
+                    </StackPane>
+                    <VBox spacing="2" alignment="CENTER_LEFT">
+                        <Label fx:id="nameDisplayLabel" text="User Name" style="-fx-font-size: 24px; -fx-font-weight: 800; -fx-text-fill: #0f172a;"/>
+                        <Label fx:id="roleDisplayLabel" text="Roles: USER" style="-fx-text-fill: #2563eb; -fx-font-size: 13px; -fx-font-weight: 700; -fx-background-color: #dbeafe; -fx-padding: 4 10; -fx-background-radius: 12;"/>
+                    </VBox>
+                </HBox>
+                
+                <Separator style="-fx-padding: 10 0; -fx-opacity: 0.5;"/>
+                
+                <!-- Settings Form -->
+                <VBox spacing="15">
+                    <Label text="Account Settings" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #1e293b;"/>
+                    
+                    <VBox spacing="8">
+                        <Label text="Full Name" style="-fx-font-weight: 700; -fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                        <TextField fx:id="fullNameField" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 10; -fx-background-radius: 10; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    </VBox>
+                    <VBox spacing="8">
+                        <Label text="Email Address" style="-fx-font-weight: 700; -fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                        <TextField fx:id="emailField" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 10; -fx-background-radius: 10; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    </VBox>
+                </VBox>
+                
+                <Region VBox.vgrow="ALWAYS"/>
+                <Button text="Save Changes" onAction="#handleUpdateProfile" style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6); -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.3), 10, 0, 0, 5);" maxWidth="Infinity"/>
+            </VBox>
+
+            <!-- Fintech Wallet Card & Transfer -->
+            <VBox spacing="25" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(20,20,40,0.06), 30, 0, 0, 10);">
+                
+                <!-- Visual Debit Card -->
+                <VBox style="-fx-background-color: linear-gradient(to bottom right, #0f172a, #1e293b, #334155); -fx-padding: 30; -fx-background-radius: 16; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.4), 20, 0, 0, 10);" spacing="20">
+                    <HBox alignment="CENTER_LEFT">
+                        <Label text="EduLink Card" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: white; -fx-opacity: 0.9;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Label text="🌐" style="-fx-font-size: 24px;"/>
+                    </HBox>
+                    <VBox spacing="0">
+                        <Label text="Current Balance" style="-fx-text-fill: #94a3b8; -fx-font-size: 13px; -fx-font-weight: 600;"/>
+                        <Label fx:id="walletBalanceLabel" text="0.00 TND" style="-fx-font-size: 42px; -fx-font-weight: 900; -fx-text-fill: white;"/>
+                    </VBox>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <Label text="**** **** **** 8432" style="-fx-text-fill: #cbd5e1; -fx-font-family: 'Courier New', monospace; -fx-font-size: 16px;"/>
+                    </HBox>
+                </VBox>
+                
+                <Separator style="-fx-padding: 5 0; -fx-opacity: 0.5;"/>
+                
+                <!-- Send to Friend Form -->
+                <VBox spacing="15">
+                    <Label text="Send to a Friend 🚀" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #1e293b;"/>
+                    
+                    <VBox spacing="8">
+                        <Label text="Friend's Email" style="-fx-font-weight: 700; -fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                        <TextField fx:id="friendEmailField" promptText="friend@example.com" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 10; -fx-background-radius: 10; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                    </VBox>
+                    <VBox spacing="8">
+                        <Label text="Amount (TND)" style="-fx-font-weight: 700; -fx-text-fill: #64748b; -fx-font-size: 13px;"/>
+                        <HBox spacing="10">
+                            <TextField fx:id="sendAmountField" promptText="0.00" HBox.hgrow="ALWAYS" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 10; -fx-background-radius: 10; -fx-text-fill: #0f172a; -fx-font-size: 14px; -fx-font-weight: 600;"/>
+                            <Button text="Transfer" onAction="#handleSendFunds" style="-fx-background-color: linear-gradient(to right, #10b981, #059669); -fx-text-fill: white; -fx-padding: 14 25; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.4), 10, 0, 0, 5);"/>
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </VBox>
+        </HBox>
+
+        <!-- Activity Logs Card -->
+        <VBox spacing="20" style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(20,20,40,0.06), 30, 0, 0, 10);">
+            <HBox alignment="CENTER_LEFT">
+                <Label text="Activity Logs" style="-fx-font-size: 20px; -fx-font-weight: 800; -fx-text-fill: #1e293b;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="⚡ Live Updates" style="-fx-text-fill: #10b981; -fx-background-color: #d1fae5; -fx-padding: 4 12; -fx-background-radius: 12; -fx-font-weight: 700; -fx-font-size: 12px;"/>
+            </HBox>
+            <!-- Customized ListView to look like premium terminal or clean rows -->
+            <ListView fx:id="logsListView" prefHeight="250" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 10; -fx-background-radius: 10; -fx-control-inner-background: #f8fafc; -fx-font-family: 'Consolas', monospace; -fx-font-size: 13px; -fx-padding: 5;"/>
+        </VBox>
+
+    </VBox>
+</ScrollPane>

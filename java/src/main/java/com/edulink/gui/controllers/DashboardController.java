@@ -68,8 +68,9 @@ public class DashboardController implements Initializable {
     @FXML
     public void handleExit() {
         try {
-            Parent splash = FXMLLoader.load(getClass().getResource("/view/Splash.fxml"));
-            Main.getPrimaryStage().getScene().setRoot(splash);
+            com.edulink.gui.util.SessionManager.clearSession();
+            Parent login = FXMLLoader.load(getClass().getResource("/view/Login.fxml"));
+            Main.getPrimaryStage().getScene().setRoot(login);
         } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -91,6 +92,21 @@ public class DashboardController implements Initializable {
     @FXML
     public void showCommunityBoard() {
         loadView("/view/assistance/CommunityBoard.fxml");
+    }
+
+    @FXML
+    public void showUserProfile() {
+        loadView("/view/UserProfile.fxml");
+    }
+
+    @FXML
+    public void showAdminUserManagement() {
+        loadView("/view/AdminUserManagement.fxml");
+    }
+
+    @FXML
+    public void showAdminWallets() {
+        loadView("/view/AdminWalletManagement.fxml");
     }
 
     @FXML
