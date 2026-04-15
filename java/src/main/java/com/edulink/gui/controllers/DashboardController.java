@@ -16,10 +16,14 @@ import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
 
-    @FXML private StackPane contentArea;
-    @FXML private Label contextLabel;
-    @FXML private VBox helpSubMenu, challengeSubMenu, eventSubMenu, courseSubMenu, notesSubMenu, userSubMenu;
-    @FXML private Button adminOnlyTickets, adminUserStats, adminWallets;
+    @FXML
+    private StackPane contentArea;
+    @FXML
+    private Label contextLabel;
+    @FXML
+    private VBox helpSubMenu, challengeSubMenu, eventSubMenu, courseSubMenu, notesSubMenu, userSubMenu;
+    @FXML
+    private Button adminOnlyTickets, adminUserStats, adminWallets, adminJournalStats;
 
     private boolean isAdmin = false;
 
@@ -36,28 +40,84 @@ public class DashboardController implements Initializable {
             contextLabel.getStyleClass().add("label-admin");
             adminOnlyTickets.setVisible(true);
             adminOnlyTickets.setManaged(true);
-            if (adminUserStats != null) { adminUserStats.setVisible(true); adminUserStats.setManaged(true); }
-            if (adminWallets != null) { adminWallets.setVisible(true); adminWallets.setManaged(true); }
+            if (adminUserStats != null) {
+                adminUserStats.setVisible(true);
+                adminUserStats.setManaged(true);
+            }
+            if (adminWallets != null) {
+                adminWallets.setVisible(true);
+                adminWallets.setManaged(true);
+            }
+            if (adminJournalStats != null) {
+                adminJournalStats.setVisible(true);
+                adminJournalStats.setManaged(true);
+            }
         } else {
             contextLabel.setText("Student Frontoffice");
         }
     }
 
-    @FXML public void toggleHelpMenu() { toggleMenu(helpSubMenu); }
-    @FXML public void toggleChallengeMenu() { toggleMenu(challengeSubMenu); }   
-    @FXML public void toggleEventMenu() { toggleMenu(eventSubMenu); }
-    @FXML public void toggleCourseMenu() { toggleMenu(courseSubMenu); }
-    @FXML public void toggleNotesMenu() { toggleMenu(notesSubMenu); }
-    @FXML public void toggleUserMenu() { toggleMenu(userSubMenu); }
+    @FXML
+    public void showAdminJournalStats() {
+        loadView("/view/journal/AdminJournalStats.fxml");
+    }
+
+    @FXML
+    public void toggleHelpMenu() {
+        toggleMenu(helpSubMenu);
+    }
+
+    @FXML
+    public void toggleChallengeMenu() {
+        toggleMenu(challengeSubMenu);
+    }
+
+    @FXML
+    public void toggleEventMenu() {
+        toggleMenu(eventSubMenu);
+    }
+
+    @FXML
+    public void toggleCourseMenu() {
+        toggleMenu(courseSubMenu);
+    }
+
+    @FXML
+    public void toggleNotesMenu() {
+        toggleMenu(notesSubMenu);
+    }
+
+    @FXML
+    public void toggleUserMenu() {
+        toggleMenu(userSubMenu);
+    }
 
     private void toggleMenu(VBox subMenu) {
         boolean isVisible = subMenu.isVisible();
-        if (helpSubMenu != null) { helpSubMenu.setVisible(false); helpSubMenu.setManaged(false); }
-        if (challengeSubMenu != null) { challengeSubMenu.setVisible(false); challengeSubMenu.setManaged(false); }
-        if (eventSubMenu != null) { eventSubMenu.setVisible(false); eventSubMenu.setManaged(false); }
-        if (courseSubMenu != null) { courseSubMenu.setVisible(false); courseSubMenu.setManaged(false); }
-        if (notesSubMenu != null) { notesSubMenu.setVisible(false); notesSubMenu.setManaged(false); }
-        if (userSubMenu != null) { userSubMenu.setVisible(false); userSubMenu.setManaged(false); }
+        if (helpSubMenu != null) {
+            helpSubMenu.setVisible(false);
+            helpSubMenu.setManaged(false);
+        }
+        if (challengeSubMenu != null) {
+            challengeSubMenu.setVisible(false);
+            challengeSubMenu.setManaged(false);
+        }
+        if (eventSubMenu != null) {
+            eventSubMenu.setVisible(false);
+            eventSubMenu.setManaged(false);
+        }
+        if (courseSubMenu != null) {
+            courseSubMenu.setVisible(false);
+            courseSubMenu.setManaged(false);
+        }
+        if (notesSubMenu != null) {
+            notesSubMenu.setVisible(false);
+            notesSubMenu.setManaged(false);
+        }
+        if (userSubMenu != null) {
+            userSubMenu.setVisible(false);
+            userSubMenu.setManaged(false);
+        }
 
         if (subMenu != null) {
             subMenu.setVisible(!isVisible);
@@ -71,7 +131,9 @@ public class DashboardController implements Initializable {
             com.edulink.gui.util.SessionManager.clearSession();
             Parent login = FXMLLoader.load(getClass().getResource("/view/Login.fxml"));
             Main.getPrimaryStage().getScene().setRoot(login);
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
@@ -110,6 +172,16 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    public void showNotebooks() {
+        loadView("/view/journal/NotebookList.fxml");
+    }
+
+    @FXML
+    public void showTasks() {
+        loadView("/view/journal/TaskList.fxml");
+    }
+
+    @FXML
     public void showPlaceholder() {
         Label placeholder = new Label("🚧 This module is currently under construction.");
         placeholder.setStyle("-fx-font-size: 20px; -fx-text-fill: #a0a0ab; -fx-font-weight: bold;");
@@ -120,11 +192,12 @@ public class DashboardController implements Initializable {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlFile));
             Parent view = loader.load();
-            
+
             Object controller = loader.getController();
             if (controller != null) {
                 try {
-                    java.lang.reflect.Method setAdminModeMethod = controller.getClass().getMethod("setAdminMode", boolean.class);
+                    java.lang.reflect.Method setAdminModeMethod = controller.getClass().getMethod("setAdminMode",
+                            boolean.class);
                     setAdminModeMethod.invoke(controller, this.isAdmin);
                 } catch (NoSuchMethodException e) {
                     // Controller does not support admin mode toggling, ignore
@@ -132,7 +205,7 @@ public class DashboardController implements Initializable {
                     e.printStackTrace();
                 }
             }
-            
+
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             System.err.println("Error loading view: " + fxmlFile);

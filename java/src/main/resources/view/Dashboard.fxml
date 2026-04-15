@@ -91,10 +91,12 @@
                     </VBox>
                     <!-- Notes Module -->
                     <VBox fx:id="notesModule" styleClass="module-container">
-                        <Button styleClass="module-button" text="📝  Notes" 
+                        <Button styleClass="module-button" text="📝  Journal" 
                                 onAction="#toggleNotesMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="notesSubMenu" styleClass="sub-menu" visible="false" managed="false">
-                            <Button styleClass="sub-nav-button" text="• My Vault" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• My Vault" onAction="#showNotebooks"/>
+                            <Button styleClass="sub-nav-button" text="• Tasks" onAction="#showTasks" />
+                            <Button fx:id="adminJournalStats" styleClass="sub-nav-button" text="• Journal Stats (Admin)" onAction="#showAdminJournalStats" visible="false" managed="false"/>
                             <Button styleClass="sub-nav-button" text="• Shared Notes" onAction="#showPlaceholder"/>
                         </VBox>
                     </VBox>
