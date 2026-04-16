@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.courses.ManageResourcesController">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Button text="← Back to Courses" onAction="#handleBack" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;" />
+        </HBox>
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="✦ Resource Matrix" style="-fx-text-fill: #7c3aed; -fx-font-size: 14px;"/>
+            <Label fx:id="pageTitle" text="Resources" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 20px;"/>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="+ Add New Resource" onAction="#handleNewResource" style="-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+        
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+            <VBox fx:id="cardContainer" spacing="12" />
+        </ScrollPane>
+    </VBox>
+
+    <!-- Overlay Form -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false" style="-fx-background-color: #000000bb;">
+        <VBox spacing="15" maxWidth="450" style="-fx-background-color: #16162a; -fx-padding: 30; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+            <Label fx:id="formTitle" text="New Resource" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+            
+            <VBox spacing="5">
+                <Label text="Resource Title *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="titleField" promptText="Enter resource title" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="titleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Status" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="statusCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+            </HBox>
+            
+            <VBox spacing="5">
+                <Label text="URL / File Path *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <HBox spacing="10">
+                    <TextField fx:id="urlField" HBox.hgrow="ALWAYS" promptText="Enter URL or browse for file" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                    <Button fx:id="browseBtn" text="Browse" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                </HBox>
+            </VBox>
+            
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseForm" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="saveBtn" text="Save Resource" onAction="#handleSaveResource" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>
