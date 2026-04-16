@@ -44,6 +44,22 @@ public class UserService implements IService<User> {
     }
 
     @Override
+    public void add2(User user) {
+        String qry = "INSERT INTO user (email, full_name, password, roles, is_verified) VALUES (?,?,?,?,?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, user.getEmail());
+            pstm.setString(2, user.getFullName());
+            pstm.setString(3, user.getPassword());
+            pstm.setString(4, user.getRoles() != null ? user.getRoles() : "[\"ROLE_USER\"]");
+            pstm.setBoolean(5, user.isVerified());
+            pstm.executeUpdate();
+            System.out.println("✅ User added (add2)!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(User user) {
         String qry = "UPDATE user SET email=?, full_name=?, roles=?, is_verified=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {

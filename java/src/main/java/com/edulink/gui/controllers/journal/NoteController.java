@@ -189,7 +189,7 @@ public class NoteController {
         Optional<Note> result = dialog.showAndWait();
         result.ifPresent(n -> {
             if (existingNote == null)
-                noteService.add(n);
+                noteService.add2(n);
             else
                 noteService.edit(n);
             loadData();

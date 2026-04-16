@@ -64,6 +64,7 @@ public class ResourceService implements IService<Resource> {
         }
     }
 
+    @Override
     public void add2(Resource resource) {
         // Try with author_id first, fallback without it
         try {

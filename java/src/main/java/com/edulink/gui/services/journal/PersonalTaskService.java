@@ -31,6 +31,21 @@ public class PersonalTaskService implements IService<PersonalTask> {
     }
 
     @Override
+    public void add2(PersonalTask t) {
+        String qry = "INSERT INTO personal_tasks (user_id, title, is_completed) VALUES (?,?,?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, t.getUserId());
+            pstm.setString(2, t.getTitle());
+            pstm.setBoolean(3, t.isCompleted());
+            pstm.executeUpdate();
+            System.out.println("✅ Task added (add2): " + t.getTitle());
+        } catch (SQLException e) {
+            System.err.println("❌ Error adding task2: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(PersonalTask t) {
         String qry = "UPDATE personal_tasks SET title=?, is_completed=?, completed_at=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
