@@ -72,8 +72,14 @@
                         <Button styleClass="module-button" text="📚  Courses" 
                                 onAction="#toggleCourseMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="courseSubMenu" styleClass="sub-menu" visible="false" managed="false">
-                            <Button styleClass="sub-nav-button" text="• Catalog" onAction="#showPlaceholder"/>
-                            <Button styleClass="sub-nav-button" text="• My Learning" onAction="#showPlaceholder"/>
+                            <!-- Student -->
+                            <Button fx:id="studentCatalogBtn" styleClass="sub-nav-button" text="• Catalog" onAction="#showCatalog"/>
+                            <Button fx:id="studentLearningBtn" styleClass="sub-nav-button" text="• My Learning" onAction="#showMyLearning"/>
+                            <Button fx:id="studentSuggestionsBtn" styleClass="sub-nav-button" text="• My Suggestions" onAction="#showStudentSuggestions"/>
+                            
+                            <!-- Admin -->
+                            <Button fx:id="adminCatalogBtn" styleClass="sub-nav-button" text="• Manage Catalog" onAction="#showManageCatalog" visible="false" managed="false"/>
+                            <Button fx:id="adminSuggestionsBtn" styleClass="sub-nav-button" text="• Manage Suggestions" onAction="#showManageSuggestions" visible="false" managed="false"/>
                         </VBox>
                     </VBox>
                     <!-- User Profile Module -->
@@ -91,10 +97,12 @@
                     </VBox>
                     <!-- Notes Module -->
                     <VBox fx:id="notesModule" styleClass="module-container">
-                        <Button styleClass="module-button" text="📝  Notes" 
+                        <Button styleClass="module-button" text="📝  Journal" 
                                 onAction="#toggleNotesMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="notesSubMenu" styleClass="sub-menu" visible="false" managed="false">
-                            <Button styleClass="sub-nav-button" text="• My Vault" onAction="#showPlaceholder"/>
+                            <Button styleClass="sub-nav-button" text="• My Vault" onAction="#showNotebooks"/>
+                            <Button styleClass="sub-nav-button" text="• Tasks" onAction="#showTasks" />
+                            <Button fx:id="adminJournalStats" styleClass="sub-nav-button" text="• Journal Stats (Admin)" onAction="#showAdminJournalStats" visible="false" managed="false"/>
                             <Button styleClass="sub-nav-button" text="• Shared Notes" onAction="#showPlaceholder"/>
                         </VBox>
                     </VBox>
