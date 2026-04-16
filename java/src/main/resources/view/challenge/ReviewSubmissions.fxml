@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="main-container"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.edulink.gui.controllers.challenge.ReviewSubmissionsController">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <VBox spacing="4">
+            <Label text="📋  Soumissions à valider"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            <Label text="Valide ou rejette les travaux soumis par les étudiants."
+                   style="-fx-text-fill: #7B7FA0; -fx-font-size: 13px;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Barre de recherche + tri -->
+    <HBox spacing="12" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField"
+                   promptText="🔍  Rechercher par challenge ou étudiant..."
+                   HBox.hgrow="ALWAYS"
+                   style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;
+                          -fx-prompt-text-fill: #555; -fx-background-radius: 8;
+                          -fx-border-color: #ffffff18; -fx-border-radius: 8; -fx-padding: 8 12;"/>
+        <ComboBox fx:id="sortCombo"
+                  prefWidth="180"
+                  style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                         -fx-border-color: #ffffff18; -fx-border-radius: 8;"/>
+    </HBox>
+
+    <!-- Message vide -->
+    <Label fx:id="emptyLabel"
+           text="✅  Aucune soumission en attente. Tout est à jour !"
+           visible="false" managed="false"
+           style="-fx-text-fill: #00d289; -fx-font-size: 14px; -fx-padding: 20 0;"/>
+
+    <!-- Liste des soumissions -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+        <VBox fx:id="cardContainer" spacing="16">
+            <padding><Insets top="5" right="5" bottom="5" left="5"/></padding>
+        </VBox>
+    </ScrollPane>
+
+</VBox>
