@@ -138,7 +138,7 @@ public class HelpRequestFormController implements Initializable {
         currentRequest.setDifficulty(difficultyCombo.getValue());
         currentRequest.setCloseReason(closeReasonField.getText().trim());
 
-        if (isNew) service.add(currentRequest);
+        if (isNew) service.add2(currentRequest);
         else service.edit(currentRequest);
 
         goBack();

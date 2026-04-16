@@ -29,6 +29,20 @@ public class NotebookService implements IService<Notebook> {
     }
 
     @Override
+    public void add2(Notebook n) {
+        String qry = "INSERT INTO notebook (user_id, title, cover_color) VALUES (?,?,?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, n.getUserId());
+            pstm.setString(2, n.getTitle());
+            pstm.setString(3, n.getCoverColor());
+            pstm.executeUpdate();
+            System.out.println("✅ Notebook added (add2): " + n.getTitle());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(Notebook n) {
         String qry = "UPDATE notebook SET title=?, cover_color=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {

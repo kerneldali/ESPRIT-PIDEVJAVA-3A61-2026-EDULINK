@@ -8,6 +8,7 @@ import java.util.List;
  */
 public interface IService<T> {
     void add(T t);
+    void add2(T t);
     void edit(T t);
     void delete(int id);
     List<T> getAll();
