@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.edulink.gui.controllers.challenge.MyChallengesController">
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="15">
+            <VBox spacing="4">
+                <Label text="📁  Mes Challenges"
+                       style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+                <Label text="Suis l'avancement de tes challenges et dépose ton travail."
+                       style="-fx-text-fill: #7B7FA0; -fx-font-size: 13px;"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <!-- Légende -->
+            <HBox spacing="14" alignment="CENTER">
+                <HBox spacing="5" alignment="CENTER">
+                    <Label text="●" style="-fx-text-fill: #7c3aed; -fx-font-size: 10px;"/>
+                    <Label text="Rejoint"    style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="5" alignment="CENTER">
+                    <Label text="●" style="-fx-text-fill: #f59e0b; -fx-font-size: 10px;"/>
+                    <Label text="En attente" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="5" alignment="CENTER">
+                    <Label text="●" style="-fx-text-fill: #00d289; -fx-font-size: 10px;"/>
+                    <Label text="Validé"     style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                </HBox>
+                <HBox spacing="5" alignment="CENTER">
+                    <Label text="●" style="-fx-text-fill: #ef4444; -fx-font-size: 10px;"/>
+                    <Label text="Rejeté"     style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                </HBox>
+            </HBox>
+        </HBox>
+
+        <!-- Barre de recherche + filtre statut + tri -->
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <TextField fx:id="searchField"
+                       promptText="🔍  Rechercher un challenge..."
+                       HBox.hgrow="ALWAYS"
+                       style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;
+                              -fx-prompt-text-fill: #555; -fx-background-radius: 8;
+                              -fx-border-color: #ffffff18; -fx-border-radius: 8; -fx-padding: 8 12;"/>
+            <ComboBox fx:id="statusFilterCombo"
+                      prefWidth="150"
+                      style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                             -fx-border-color: #ffffff18; -fx-border-radius: 8;"/>
+            <ComboBox fx:id="sortCombo"
+                      prefWidth="170"
+                      style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                             -fx-border-color: #ffffff18; -fx-border-radius: 8;"/>
+        </HBox>
+
+        <!-- Cards -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                    style="-fx-background-color: transparent; -fx-background: transparent;">
+            <VBox fx:id="cardContainer" spacing="12">
+                <padding><Insets top="5" right="5" bottom="5" left="5"/></padding>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- ========== OVERLAY DE SOUMISSION ========== -->
+    <VBox fx:id="submissionOverlay" alignment="CENTER" visible="false"
+          style="-fx-background-color: #000000cc;">
+
+        <VBox spacing="16" maxWidth="520"
+              style="-fx-background-color: #16162a; -fx-padding: 30; -fx-background-radius: 12;
+                     -fx-border-radius: 12; -fx-border-color: #7c3aed55; -fx-border-width: 1;">
+
+            <!-- Titre overlay -->
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="overlayTitle" text="Soumettre mon travail"
+                       style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 18px;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="✕" onAction="#handleCloseOverlay"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab;
+                               -fx-font-size: 16px; -fx-cursor: hand;"/>
+            </HBox>
+
+            <!-- Message rejet -->
+            <Label fx:id="submissionHint" text="" visible="false" managed="false"
+                   style="-fx-text-fill: #ef4444; -fx-font-size: 12px; -fx-background-color: #ef444415;
+                          -fx-padding: 8 12; -fx-background-radius: 6;"
+                   wrapText="true" maxWidth="460"/>
+
+            <!-- Zone de texte -->
+            <VBox spacing="6">
+                <Label text="Description / Notes"
+                       style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="submissionTextArea"
+                          promptText="Décris ta solution, tes choix, tes résultats..."
+                          prefRowCount="6"
+                          style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;
+                                 -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+            </VBox>
+
+            <!-- Upload fichier -->
+            <VBox spacing="8">
+                <Label text="Fichier joint (optionnel)"
+                       style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Button text="📂  Choisir un fichier" onAction="#handleChooseFile"
+                            style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                                   -fx-padding: 8 16; -fx-background-radius: 6; -fx-cursor: hand;
+                                   -fx-border-color: #ffffff22; -fx-border-radius: 6;"/>
+                    <Label fx:id="selectedFileLabel" text="Aucun fichier sélectionné"
+                           style="-fx-text-fill: #7B7FA0; -fx-font-size: 12px;"/>
+                </HBox>
+            </VBox>
+
+            <!-- Boutons -->
+            <HBox spacing="12" alignment="CENTER_RIGHT" style="-fx-padding: 6 0 0 0;">
+                <Button text="Annuler" onAction="#handleCloseOverlay"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button text="📤  Envoyer la soumission" onAction="#handleSubmit"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 10 24; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+</StackPane>

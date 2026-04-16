@@ -29,6 +29,10 @@ public class DashboardController implements Initializable {
     private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
     @FXML
     private Button adminCatalogBtn, adminSuggestionsBtn;
+    @FXML
+    private Button adminChallengesBtn;
+    @FXML
+    private Button adminReviewSubmissionsBtn;
 
     private boolean isAdmin = false;
 
@@ -65,6 +69,14 @@ public class DashboardController implements Initializable {
                 adminSuggestionsBtn.setVisible(true);
                 adminSuggestionsBtn.setManaged(true);
             }
+            if (adminChallengesBtn != null) {
+                adminChallengesBtn.setVisible(true);
+                adminChallengesBtn.setManaged(true);
+            }
+            if (adminReviewSubmissionsBtn != null) {
+                adminReviewSubmissionsBtn.setVisible(true);
+                adminReviewSubmissionsBtn.setManaged(true);
+            }
             
             if (studentCatalogBtn != null) {
                 studentCatalogBtn.setVisible(false);
@@ -82,6 +94,15 @@ public class DashboardController implements Initializable {
             contextLabel.setText("Student Frontoffice");
         }
     }
+
+    @FXML public void showChallengeList()        { loadView("/view/challenge/ChallengeList.fxml"); }
+    @FXML public void showMyChallenges()         { loadView("/view/challenge/MyChallenges.fxml"); }
+    @FXML public void showManageChallenges()     { loadView("/view/challenge/ManageChallenges.fxml"); }
+    @FXML public void showReviewSubmissions()    { loadView("/view/challenge/ReviewSubmissions.fxml"); }
+
+    // ── Events ──────────────────────────────────────────────────────────────
+    @FXML public void showEvent()                { loadView("/view/event/event.fxml"); }
+    @FXML public void showReservation()          { loadView("/view/reservation/reservation.fxml"); }
 
     @FXML public void showCatalog() { loadView("/view/courses/MatiereList.fxml"); }
     @FXML public void showMyLearning() { loadView("/view/courses/MyLearning.fxml"); }

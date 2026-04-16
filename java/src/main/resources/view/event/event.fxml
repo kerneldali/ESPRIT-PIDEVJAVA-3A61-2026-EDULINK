@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.event.EventController" stylesheets="@event.css">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="Manage Events" styleClass="title-header"/>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="+ Add Event" onAction="#handleNewEvent" style="-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+        
+        <!-- Filter Bar -->
+        <HBox spacing="10" alignment="CENTER_LEFT" styleClass="filter-bar">
+            <TextField fx:id="searchField" promptText="🔍 Search events..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="onlineComboFilter" promptText="All Types" style="-fx-background-color: #2a2a3e;"/>
+            <ComboBox fx:id="sortCombo" promptText="Newest First" style="-fx-background-color: #2a2a3e;"/>
+            <Button text="Apply" onAction="#handleApplyFilter" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"/>
+        </HBox>
+        
+        <!-- Card Grid List -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="scroll-pane">
+            <FlowPane fx:id="cardContainer" hgap="25" vgap="25" prefWrapLength="1000" style="-fx-padding: 10;" />
+        </ScrollPane>
+    </VBox>
+    
+    <!-- Overlay Form -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false" style="-fx-background-color: #000000bb;">
+        <VBox spacing="15" maxWidth="500" style="-fx-background-color: #16162a; -fx-padding: 30; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+            <Label fx:id="formTitle" text="New Event" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+            
+            <VBox spacing="5">
+                <Label text="Event Title *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="titleField" promptText="Enter event title" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="titleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="Description *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="descField" promptText="Describe the event..." prefRowCount="3" style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="descError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Start Date *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <DatePicker fx:id="dateStartField" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="End Date *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <DatePicker fx:id="dateEndField" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+            </HBox>
+            <Label fx:id="datesError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+
+            <CheckBox fx:id="onlineCheck" text="Is Online Event?" style="-fx-text-fill: white;"/>
+
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Meet Link" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="meetLinkField" promptText="Meeting URL" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Location" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="locationField" promptText="Physical venue" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Capacity *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="maxCapacityField" promptText="Max spaces" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                    <Label fx:id="capacityError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Image URL" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="imageField" promptText="Image link" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                </VBox>
+            </HBox>
+            
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseForm" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="saveBtn" text="Save Event" onAction="#handleSaveEvent" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>
