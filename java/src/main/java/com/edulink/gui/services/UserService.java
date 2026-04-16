@@ -13,6 +13,15 @@ public class UserService implements IService<User> {
 
     public UserService() {
         cnx = MyConnection.getInstance().getCnx();
+        ensureXpColumn();
+    }
+
+    private void ensureXpColumn() {
+        try (Statement st = cnx.createStatement()) {
+            st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
+        } catch (SQLException e) {
+            // Might already exist or dialect doesn't support IF NOT EXISTS
+        }
     }
 
     public boolean isConnected() {
@@ -63,14 +72,27 @@ public class UserService implements IService<User> {
         return null;
     }
 
+    public void updateXp(int userId, int amountToAdd) {
+        String qry = "UPDATE user SET xp = xp + ? WHERE id=?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, amountToAdd);
+            pstm.setInt(2, userId);
+            pstm.executeUpdate();
+            addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void updateWallet(int userId, double amountToAdd) {
         String qry = "UPDATE user SET wallet_balance = wallet_balance + ? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setDouble(1, amountToAdd);
             pstm.setInt(2, userId);
             pstm.executeUpdate();
+            addTransactionLog(userId, "Wallet credited with " + amountToAdd + " coins.");
         } catch (SQLException e) {
-            System.err.println("Could not update wallet (column might not exist): " + e.getMessage());
+            System.err.println("Could not update wallet: " + e.getMessage());
         }
     }
 
@@ -182,8 +204,13 @@ public class UserService implements IService<User> {
         u.setResetOtp(rs.getString("reset_otp"));
         u.setVerified(rs.getBoolean("is_verified"));
         u.setWalletBalance(rs.getDouble("wallet_balance"));
-        // Fake XP data based on ID since it's not in DB schema but expected by UI
-        u.setXp(u.getId() * 150 + 500); 
+        
+        // Use real XP from DB
+        try {
+            u.setXp(rs.getInt("xp"));
+        } catch (SQLException e) {
+            u.setXp(0);
+        }
         return u;
     }
 }

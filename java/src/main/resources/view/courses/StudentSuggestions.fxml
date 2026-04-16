@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.courses.StudentSuggestionsController">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <VBox>
+                <Label text="Creator Studio" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;"/>
+                <Label text="Track and manage your suggested content." style="-fx-text-fill: #a0a0ab;"/>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <HBox spacing="10" alignment="CENTER_RIGHT">
+                <Button text="↻ Refresh" onAction="#loadData" style="-fx-background-color: transparent; -fx-text-fill: #3b82f6; -fx-cursor: hand;"/>
+                <Label text="Filter Status:" style="-fx-text-fill: #a0a0ab;"/>
+                <ComboBox fx:id="statusFilter" prefWidth="150" style="-fx-background-color: #2a2a3e; -fx-text-fill: white;"/>
+            </HBox>
+        </HBox>
+        
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+            <VBox spacing="25">
+                <!-- Courses Section -->
+                <VBox spacing="10">
+                    <Label text="✦ My Proposed Courses" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 16;"/>
+                    <FlowPane fx:id="coursesContainer" hgap="15" vgap="15" />
+                </VBox>
+                
+                <!-- Categories Section -->
+                <VBox spacing="10">
+                    <Label text="✦ My Proposed Categories" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 16;"/>
+                    <VBox fx:id="categoriesContainer" spacing="10" />
+                </VBox>
+                
+                <!-- Resources Section -->
+                <VBox spacing="10">
+                    <Label text="✦ My Proposed Resources" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 16;"/>
+                    <VBox fx:id="resourcesContainer" spacing="10" />
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- Edit Overlay Form (Hidden by default) -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false" style="-fx-background-color: #000000bb;">
+        <VBox spacing="15" maxWidth="500" style="-fx-background-color: #16162a; -fx-padding: 30; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+            <Label fx:id="formTitle" text="Edit Proposal" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+            
+            <VBox spacing="5">
+                <Label text="Title *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="titleField" promptText="Enter title" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6;"/>
+            </VBox>
+
+            <!-- Metadata Row for Courses (Hides for others) -->
+            <HBox fx:id="courseMetaRow" spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Difficulty" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="levelCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="XP Reward" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="xpField" promptText="XP" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6;"/>
+                </VBox>
+            </HBox>
+            
+            <VBox spacing="5">
+                <Label text="Description / Content Details" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="descField" prefHeight="120" wrapText="true" style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white; -fx-background-radius: 6;"/>
+            </VBox>
+            
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseForm" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="saveBtn" text="Save Changes" onAction="#handleSaveEdit" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>

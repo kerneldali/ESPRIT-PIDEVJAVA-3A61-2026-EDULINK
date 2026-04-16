@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.edulink.gui.controllers.courses.ResourceViewerController"
+      style="-fx-background-color: #0f172a; -fx-background-radius: 12;"
+      spacing="15">
+    
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label fx:id="viewerTitle" text="Resource Viewer" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🌐 Open in Browser" onAction="#handleWatchOnline" style="-fx-background-color: #3b82f633; -fx-text-fill: #3b82f6; -fx-background-radius: 5px; -fx-cursor: hand;"/>
+        <Button text="✕" onAction="#handleClose" style="-fx-background-color: #ef444433; -fx-text-fill: #ef4444; -fx-background-radius: 5px; -fx-cursor: hand;"/>
+    </HBox>
+
+    <StackPane VBox.vgrow="ALWAYS" style="-fx-background-color: black; -fx-background-radius: 10;">
+        <WebView fx:id="webView" minHeight="500" minWidth="800"/>
+    </StackPane>
+
+</VBox>

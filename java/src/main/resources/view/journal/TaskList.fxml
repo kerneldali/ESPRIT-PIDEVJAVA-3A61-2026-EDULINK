@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.edulink.gui.controllers.journal.TaskController" 
+      styleClass="main-container">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <HBox spacing="15" alignment="CENTER_LEFT" styleClass="action-bar">
+        <Label styleClass="page-title" text="✅ Daily Tasks" />
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🔃 Sort: Incomplete First" onAction="#handleSortTasks" styleClass="secondary-button" />
+        <TextField fx:id="newTaskField" promptText="Enter a new task..." prefWidth="300" onAction="#handleAddTask" />
+        <Button text="➕ Add" onAction="#handleAddTask" styleClass="primary-button" />
+    </HBox>
+
+    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="cards-scroll">
+        <VBox fx:id="tasksContainer" spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+        </VBox>
+    </ScrollPane>
+</VBox>

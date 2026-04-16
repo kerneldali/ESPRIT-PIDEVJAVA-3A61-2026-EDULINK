@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.courses.CourseDetailsController">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <Button text="← Back" onAction="#handleBack" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;" />
+        </HBox>
+        
+        <HBox spacing="20" alignment="CENTER_LEFT">
+            <VBox spacing="5" HBox.hgrow="ALWAYS">
+                <Label fx:id="courseTitleLabel" text="Course Title" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;"/>
+                <Label fx:id="courseDescLabel" wrapText="true" style="-fx-text-fill: #a0a0ab;"/>
+            </VBox>
+            <Button text="💡 Suggest Resource" onAction="#handleSuggestResource" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+        
+        <HBox spacing="20" VBox.vgrow="ALWAYS">
+            <!-- Left: Course Info + Enrollment -->
+            <VBox spacing="15" prefWidth="300" style="-fx-background-color: #1a1a2e; -fx-padding: 20; -fx-border-radius: 10; -fx-background-radius: 10; -fx-border-color: #ffffff11;">
+                <Label text="Course Info" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                <Label fx:id="xpLabel" style="-fx-text-fill: #00d289; -fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <Label fx:id="levelLabel" style="-fx-text-fill: #3b82f6;"/>
+                
+                <VBox fx:id="notEnrolledBox" spacing="10">
+                    <Button text="Enroll Now" onAction="#handleEnroll" maxWidth="Infinity" style="-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-background-radius: 5; -fx-cursor: hand;"/>
+                </VBox>
+                
+                <VBox fx:id="enrolledBox" spacing="10" visible="false" managed="false">
+                    <Label text="Your Progress" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                    <ProgressBar fx:id="progressBar" prefWidth="260" progress="0.0" style="-fx-accent: #00d289;"/>
+                    <Label fx:id="progressLabel" text="0% Completed" style="-fx-text-fill: #00d289;"/>
+                    <Label fx:id="enrollmentStatusLabel" text="IN PROGRESS" style="-fx-text-fill: #a0a0ab; -fx-font-size: 11px;"/>
+                    <Button fx:id="certifyBtn" text="🎓 Get Certified" onAction="#handleGenerateCertificate" visible="false" managed="false" maxWidth="Infinity" style="-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10; -fx-background-radius: 5; -fx-cursor: hand;"/>
+                </VBox>
+            </VBox>
+            
+            <!-- Right: Resources -->
+            <VBox spacing="10" HBox.hgrow="ALWAYS">
+                <Label text="Course Resources" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;"/>
+                <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                    <VBox fx:id="resourcesContainer" spacing="10" />
+                </ScrollPane>
+            </VBox>
+        </HBox>
+    </VBox>
+    
+    <!-- Suggest Resource Overlay -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false" style="-fx-background-color: #000000bb;">
+        <VBox spacing="15" maxWidth="450" style="-fx-background-color: #16162a; -fx-padding: 30; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+            <Label text="Suggest a Resource" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+            <Label fx:id="suggestContextLabel" text="" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+            
+            <VBox spacing="5">
+                <Label text="Resource Title *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="suggestTitleField" promptText="e.g. Introduction Video" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="suggestTitleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+            
+            <HBox spacing="15">
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="suggestTypeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+                <VBox spacing="5" HBox.hgrow="ALWAYS">
+                    <Label text="URL / File Path" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="suggestUrlField" promptText="https://..." style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                </VBox>
+            </HBox>
+            
+            <VBox spacing="5">
+                <Label text="Description" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="suggestDescField" promptText="Additional details..." prefRowCount="2" style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #555;"/>
+            </VBox>
+            
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseSuggest" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="suggestSaveBtn" text="Submit Proposal" onAction="#handleSubmitSuggest" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>
