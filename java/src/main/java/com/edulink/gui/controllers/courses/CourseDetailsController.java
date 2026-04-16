@@ -181,14 +181,23 @@ public class CourseDetailsController implements Initializable {
                 completeBtn.setStyle("-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
             }
 
-            final List<Resource> allResList = resources;
             completeBtn.setOnAction(e -> {
                 if (currentEnrollment != null) {
                     resourceService.markAsCompleted(studentId, r.getId());
                     checkEnrollment(); // This will auto-update progress in DB too
                     loadResources();
                     if (currentEnrollment.getProgress() >= 100) {
-                        EduAlert.show(EduAlert.AlertType.SUCCESS, "Course Completed!", "Congratulations! All resources finished.");
+                        // Reward student
+                        int sid = com.edulink.gui.util.SessionManager.getCurrentUser().getId();
+                        int xpReward = currentCourse.getXp();
+                        com.edulink.gui.services.UserService us = new com.edulink.gui.services.UserService();
+                        us.updateXp(sid, xpReward);
+                        us.updateWallet(sid, (double)xpReward); // Match points to wallet balance as requested
+                        
+                        EduAlert.show(EduAlert.AlertType.SUCCESS, "Course Completed!", 
+                            "Congratulations! You gained " + xpReward + " XP and the same amount of coins in your wallet.");
+                        
+                        checkEnrollment(); // Refresh UI to show Get Certified button
                     }
                 }
             });
@@ -200,53 +209,92 @@ public class CourseDetailsController implements Initializable {
 
     private void openResource(Resource r) {
         try {
-            String url = r.getUrl();
-            if (url == null || url.trim().isEmpty()) {
+            String path = r.getUrl();
+            if (path == null || path.trim().isEmpty()) {
                 EduAlert.show(EduAlert.AlertType.WARNING, "No Path", "No URL/path set for this resource.");
                 return;
             }
             
-            // YouTube Embedded View
-            if (url.contains("youtube.com") || url.contains("youtu.be")) {
-                try {
-                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/courses/VideoPlayer.fxml"));
-                    Parent root = loader.load();
-                    VideoPlayerController controller = loader.getController();
-                    controller.loadVideo(r.getTitle(), url);
-                    
-                    javafx.stage.Stage stage = new javafx.stage.Stage();
-                    stage.setTitle("EduLink Video Player - " + r.getTitle());
-                    stage.setScene(new javafx.scene.Scene(root));
-                    stage.initOwner(rootPane.getScene().getWindow());
-                    stage.show();
-                    return;
-                } catch (Exception ex) {
-                    System.err.println("WebView failed, falling back to browser...");
+            // Integrated Viewer (PDF, Video, YouTube, Link)
+            try {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/courses/ResourceViewer.fxml"));
+                Parent root = loader.load();
+                ResourceViewerController controller = loader.getController();
+                
+                // Pass title, path, AND type for smart rendering
+                controller.loadResource(r.getTitle(), path, r.getType());
+                
+                javafx.stage.Stage stage = new javafx.stage.Stage();
+                stage.setTitle("EduLink Viewer - " + r.getTitle());
+                stage.setScene(new javafx.scene.Scene(root));
+                stage.initOwner(rootPane.getScene().getWindow());
+                stage.show();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                // Fallback to legacy
+                if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                    new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", path).start();
+                } else if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(new File(path));
                 }
-            }
-
-            if (url.startsWith("http")) {
-                if (Desktop.isDesktopSupported()) Desktop.getDesktop().browse(new URI(url));
-                return;
-            }
-
-            File file = new File(url);
-            if (!file.exists()) {
-                EduAlert.show(EduAlert.AlertType.ERROR, "File Not Found", "The physical file does not exist at: " + url);
-                return;
-            }
-
-            // More robust opening for Windows fallback (PDF, DOC, DOCX)
-            if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                new ProcessBuilder("cmd", "/c", "start", "", url).start();
-            } else if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(file);
-            } else {
-                EduAlert.show(EduAlert.AlertType.INFO, "Resource Path", "Path: " + url + "\nPlease open it manually.");
             }
         } catch (Exception ex) {
             ex.printStackTrace();
-            EduAlert.show(EduAlert.AlertType.ERROR, "Open Error", "Target: " + r.getUrl() + "\nError: " + ex.getMessage());
+            EduAlert.show(EduAlert.AlertType.ERROR, "Viewer Error", ex.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleGenerateCertificate() {
+        if (currentEnrollment == null || currentEnrollment.getProgress() < 100) {
+            EduAlert.show(EduAlert.AlertType.WARNING, "Not Ready", "Complete all resources first!");
+            return;
+        }
+
+        com.edulink.gui.models.User student = com.edulink.gui.util.SessionManager.getCurrentUser();
+        com.edulink.gui.services.PdfExportService exporter = new com.edulink.gui.services.PdfExportService();
+
+        // Format Selection Dialog
+        ButtonType pdfBtn = new ButtonType("🎓 Professional PDF", ButtonBar.ButtonData.OK_DONE);
+        ButtonType pngBtn = new ButtonType("🖼️ High-Res Image (PNG)", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("Elite Certification");
+        alert.setHeaderText("Congratulations, " + student.getFullName() + "!");
+        alert.setContentText("Your achievement is verified. How would you like to save your certificate?");
+        alert.getButtonTypes().setAll(pdfBtn, pngBtn, cancelBtn);
+        alert.initOwner(rootPane.getScene().getWindow());
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() != cancelBtn) {
+            boolean isPdf = result.get() == pdfBtn;
+            
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Save Certificate");
+            fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
+
+            File file = fc.showSaveDialog(rootPane.getScene().getWindow());
+            if (file != null) {
+                try {
+                    if (isPdf) {
+                        exporter.exportCertificate(student, currentCourse, file);
+                    } else {
+                        exporter.exportCertificateAsImage(student, currentCourse, file);
+                    }
+                    
+                    EduAlert.show(EduAlert.AlertType.SUCCESS, "Export Success", 
+                        "Your certificate has been saved to:\n" + file.getAbsolutePath());
+                    
+                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                        new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", file.getAbsolutePath()).start();
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", ex.getMessage());
+                }
+            }
         }
     }
 
@@ -327,74 +375,5 @@ public class CourseDetailsController implements Initializable {
         new ContentProposalService().add2(p);
         handleCloseSuggest();
         EduAlert.show(EduAlert.AlertType.SUCCESS, "Submitted", "Proposal sent for review.");
-    }
-
-    @FXML
-    private void handleGenerateCertificate() {
-        if (currentEnrollment == null || currentEnrollment.getProgress() < 100) {
-            EduAlert.show(EduAlert.AlertType.WARNING, "Not Ready", "Complete all resources first!");
-            return;
-        }
-
-        String studentName = com.edulink.gui.util.SessionManager.getCurrentUser() != null ? 
-            com.edulink.gui.util.SessionManager.getCurrentUser().getFullName() : "Student";
-            
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Save Certificate");
-        fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + ".pdf");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Document", "*.pdf"));
-
-        File file = fc.showSaveDialog(rootPane.getScene().getWindow());
-        if (file != null) {
-            try {
-                com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(file.getAbsolutePath());
-                com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
-                com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf, com.itextpdf.kernel.geom.PageSize.A4.rotate());
-                
-                // Design - Premium Gold/Black theme
-                document.setBackgroundColor(com.itextpdf.kernel.colors.ColorConstants.DARK_GRAY);
-                document.setTextAlignment(com.itextpdf.layout.properties.TextAlignment.CENTER);
-                
-                com.itextpdf.kernel.colors.Color gold = new com.itextpdf.kernel.colors.DeviceRgb(212, 175, 55);
-                
-                // Title
-                document.add(new com.itextpdf.layout.element.Paragraph("EDULINK ACADEMY")
-                    .setFontSize(32).setBold().setFontColor(gold).setMarginTop(40));
-                    
-                document.add(new com.itextpdf.layout.element.Paragraph("CERTIFICATE OF COMPLETION")
-                    .setFontSize(48).setBold().setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE).setMarginTop(10));
-
-                document.add(new com.itextpdf.layout.element.Paragraph("This prestigious award is presented to")
-                    .setFontSize(22).setItalic().setFontColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY).setMarginTop(30));
-
-                document.add(new com.itextpdf.layout.element.Paragraph(studentName.toUpperCase())
-                    .setFontSize(44).setBold().setFontColor(gold).setUnderline().setMarginTop(10));
-
-                document.add(new com.itextpdf.layout.element.Paragraph("for successfully mastering the curriculum of")
-                    .setFontSize(20).setFontColor(com.itextpdf.kernel.colors.ColorConstants.LIGHT_GRAY).setMarginTop(30));
-
-                document.add(new com.itextpdf.layout.element.Paragraph(currentCourse.getTitle())
-                    .setFontSize(34).setBold().setFontColor(com.itextpdf.kernel.colors.ColorConstants.WHITE).setMarginTop(10));
-
-                document.add(new com.itextpdf.layout.element.Paragraph("Official Academic Credentials • Verified on " + java.time.LocalDate.now().toString())
-                    .setFontSize(16).setFontColor(com.itextpdf.kernel.colors.ColorConstants.GRAY).setMarginTop(50));
-                    
-                document.add(new com.itextpdf.layout.element.Paragraph("XP MERIT: " + currentCourse.getXp())
-                    .setFontSize(14).setBold().setFontColor(gold).setMarginTop(20));
-
-                document.close();
-                
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Certificate Generated!", 
-                    "Professional Premium PDF certificate has been saved to:\n" + file.getAbsolutePath());
-                
-                if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                    new ProcessBuilder("cmd", "/c", "start", "", file.getAbsolutePath()).start();
-                }
-
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                EduAlert.show(EduAlert.AlertType.ERROR, "PDF Export Error", ex.getMessage());
-            }
-        }
     }
 }
