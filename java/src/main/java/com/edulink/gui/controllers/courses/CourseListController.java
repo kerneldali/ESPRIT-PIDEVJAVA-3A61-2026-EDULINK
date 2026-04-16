@@ -149,8 +149,7 @@ public class CourseListController implements Initializable {
                         enr.setCoursId(c.getId());
                         enr.setProgress(0.0);
                         
-                        boolean success = enrollmentService.add2(enr);
-                        System.out.println("🔄 [UI_DEBUG] add2 result: " + success);
+                        enrollmentService.add2(enr);
                         
                         // Final verification check for UI feedback
                         List<com.edulink.gui.models.courses.Enrollment> enrs = enrollmentService.getEnrollmentByStudent(studentId);

@@ -38,6 +38,26 @@ public class NoteService implements IService<Note> {
     }
 
     @Override
+    public void add2(Note n) {
+        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags) VALUES (?,?,?,?,?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, n.getNotebookId());
+            if (n.getCategoryId() > 0)
+                pstm.setInt(2, n.getCategoryId());
+            else
+                pstm.setNull(2, java.sql.Types.INTEGER);
+            pstm.setString(3, n.getTitle());
+            pstm.setString(4, n.getContent());
+            pstm.setString(5, n.getTags());
+            pstm.executeUpdate();
+            System.out.println("✅ Note added (add2): " + n.getTitle());
+        } catch (SQLException e) {
+            System.err.println("❌ Error adding note2: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(Note n) {
         String qry = "UPDATE note SET title=?, content=?, tags=?, category_id=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {

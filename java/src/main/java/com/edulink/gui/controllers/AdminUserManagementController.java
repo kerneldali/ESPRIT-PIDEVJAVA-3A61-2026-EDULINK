@@ -192,7 +192,7 @@ public class AdminUserManagementController implements Initializable {
             newUser.setRoles(roles);
             newUser.setVerified(true);
             try {
-                userService.add(newUser);
+                userService.add2(newUser);
                 formStatusLabel.setText("User created successfully!");
                 formStatusLabel.setStyle("-fx-text-fill: #10b981;");
                 refreshData();

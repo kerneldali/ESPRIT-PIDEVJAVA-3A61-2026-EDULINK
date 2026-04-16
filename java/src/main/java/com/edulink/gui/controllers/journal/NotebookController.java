@@ -103,7 +103,7 @@ public class NotebookController implements Initializable {
                 n.setTitle(title);
                 n.setCoverColor("#BB86FC");
                 n.setUserId(SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1);
-                notebookService.add(n);
+                notebookService.add2(n);
                 loadData();
             } else {
                 showAlert("Validation Error", "Notebook title cannot be empty!");

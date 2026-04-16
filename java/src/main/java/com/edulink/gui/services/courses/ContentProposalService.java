@@ -4,6 +4,7 @@ import com.edulink.gui.interfaces.IService;
 import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.util.MyConnection;
 
+import java.time.LocalDateTime;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class ContentProposalService implements IService<ContentProposal> {
         }
     }
 
+    @Override
     public void add2(ContentProposal p) {
         String query = "INSERT INTO content_proposal (suggested_by, type, title, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?)";
         try {

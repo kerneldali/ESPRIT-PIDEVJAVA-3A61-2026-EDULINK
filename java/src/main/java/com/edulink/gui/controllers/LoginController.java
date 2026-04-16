@@ -92,7 +92,7 @@ public class LoginController {
         newUser.setVerified(true); // For testing simplicity
         
         try {
-            userService.add(newUser);
+            userService.add2(newUser);
             showLogin();
             errorLabel.setStyle("-fx-text-fill: #10b981;"); // Green
             errorLabel.setText("Registration successful! Please log in.");
