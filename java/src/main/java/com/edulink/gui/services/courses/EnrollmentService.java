@@ -20,8 +20,9 @@ public class EnrollmentService implements IService<Enrollment> {
         add2(enrollment);
     }
 
-    public boolean add2(Enrollment enrollment) {
-        if (cnx == null) return false;
+    @Override
+    public void add2(Enrollment enrollment) {
+        if (cnx == null) return;
         
         int sid = enrollment.getStudentId();
         int cid = enrollment.getCoursId();
@@ -36,7 +37,7 @@ public class EnrollmentService implements IService<Enrollment> {
             cpst.setInt(2, cid);
             if (cpst.executeQuery().next()) {
                 System.out.println("ℹ️ [ENROLL_SERVICE] Already enrolled.");
-                return true;
+                return;
             }
 
             // INSERT matching user's exact schema: id, student_id, cours_id, enrolled_at, progress, completed_at, completed_resources
@@ -48,19 +49,16 @@ public class EnrollmentService implements IService<Enrollment> {
             int rows = pst.executeUpdate();
             
             System.out.println("✅ [ENROLL_SERVICE] Insertion Successful. Rows: " + rows);
-            return rows > 0;
         } catch (SQLException e) {
-            System.err.println("❌ [ENROLL_SERVICE] Schema Mismatch/SQL Error: " + e.getMessage());
-            // Fallback for different naming
             try {
+                // Fallback for different naming
                 String fallbackSql = "INSERT INTO enrollment (student_id, course_id, progress) VALUES (?, ?, 0)";
                 PreparedStatement pst = cnx.prepareStatement(fallbackSql);
                 pst.setInt(1, sid);
                 pst.setInt(2, cid);
-                return pst.executeUpdate() > 0;
+                pst.executeUpdate();
             } catch (SQLException e2) {
                 System.err.println("❌ [ENROLL_SERVICE] Fallback failed: " + e2.getMessage());
-                return false;
             }
         }
     }

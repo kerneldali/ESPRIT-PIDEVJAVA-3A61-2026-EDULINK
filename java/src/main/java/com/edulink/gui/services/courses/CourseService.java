@@ -4,6 +4,7 @@ import com.edulink.gui.interfaces.IService;
 import com.edulink.gui.models.courses.Course;
 import com.edulink.gui.util.MyConnection;
 
+import java.time.LocalDateTime;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,7 @@ public class CourseService implements IService<Course> {
         }
     }
 
+    @Override
     public void add2(Course course) {
         try {
             PreparedStatement pst = cnx.prepareStatement(

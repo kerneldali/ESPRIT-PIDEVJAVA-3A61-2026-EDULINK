@@ -54,6 +54,34 @@ public class HelpRequestService implements IService<HelpRequest> {
     }
 
     @Override
+    public void add2(HelpRequest req) {
+        if (cnx == null) return;
+        String sql = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, difficulty, close_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, req.getTitle());
+            ps.setString(2, req.getDescription());
+            ps.setString(3, req.getStatus());
+            ps.setInt(4, req.getBounty());
+            ps.setBoolean(5, req.isTicket());
+            ps.setTimestamp(6, req.getCreatedAt() != null ? req.getCreatedAt() : new Timestamp(System.currentTimeMillis()));
+            ps.setString(7, req.getCategory());
+            ps.setString(8, req.getDifficulty());
+            ps.setString(9, req.getCloseReason());
+            
+            ps.executeUpdate();
+            
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                req.setId(rs.getInt(1));
+            }
+            System.out.println("✅ HelpRequest added (add2)! ID: " + req.getId());
+        } catch (SQLException e) {
+            System.err.println("Error adding HelpRequest2: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void edit(HelpRequest req) {
         if (cnx == null) return;
         String sql = "UPDATE help_request SET title=?, description=?, status=?, bounty=?, is_ticket=?, category=?, difficulty=?, close_reason=? WHERE id=?";

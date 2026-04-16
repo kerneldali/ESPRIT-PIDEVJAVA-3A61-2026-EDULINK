@@ -27,6 +27,18 @@ public class NoteCategoryService implements IService<NoteCategory> {
     }
 
     @Override
+    public void add2(NoteCategory c) {
+        String qry = "INSERT INTO note_category (name) VALUES (?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, c.getName());
+            pstm.executeUpdate();
+            System.out.println("✅ Note category added (add2): " + c.getName());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(NoteCategory c) {
         String qry = "UPDATE note_category SET name=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {

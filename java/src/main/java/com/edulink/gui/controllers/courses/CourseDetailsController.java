@@ -310,15 +310,8 @@ public class CourseDetailsController implements Initializable {
         e.setEnrolledAt(LocalDateTime.now());
         e.setLastAccessed(LocalDateTime.now());
 
-        boolean success = enrollmentService.add2(e);
-        
-        if (success) {
-            System.out.println("✅ Enrollment reported as success by service.");
-            EduAlert.show(EduAlert.AlertType.SUCCESS, "Success!", "You are now enrolled in \"" + currentCourse.getTitle() + "\".");
-        } else {
-            System.err.println("❌ Enrollment reported as failure by service.");
-            EduAlert.show(EduAlert.AlertType.ERROR, "Enrollment Failed", "Database rejected the enrollment. Check logs.");
-        }
+        enrollmentService.add2(e);
+        EduAlert.show(EduAlert.AlertType.SUCCESS, "Success!", "You are now enrolled in \"" + currentCourse.getTitle() + "\".");
         
         checkEnrollment();
         loadResources();

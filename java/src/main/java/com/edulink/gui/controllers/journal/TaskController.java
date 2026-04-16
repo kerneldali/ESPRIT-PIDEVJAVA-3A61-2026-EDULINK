@@ -96,7 +96,7 @@ public class TaskController implements Initializable {
         t.setUserId(SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1);
         t.setCompleted(false);
 
-        taskService.add(t);
+        taskService.add2(t);
         newTaskField.clear();
         loadData();
     }
