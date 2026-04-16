@@ -24,6 +24,11 @@ public class DashboardController implements Initializable {
     private VBox helpSubMenu, challengeSubMenu, eventSubMenu, courseSubMenu, notesSubMenu, userSubMenu;
     @FXML
     private Button adminOnlyTickets, adminUserStats, adminWallets, adminJournalStats;
+    
+    @FXML
+    private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
+    @FXML
+    private Button adminCatalogBtn, adminSuggestionsBtn;
 
     private boolean isAdmin = false;
 
@@ -52,10 +57,37 @@ public class DashboardController implements Initializable {
                 adminJournalStats.setVisible(true);
                 adminJournalStats.setManaged(true);
             }
+            if (adminCatalogBtn != null) {
+                adminCatalogBtn.setVisible(true);
+                adminCatalogBtn.setManaged(true);
+            }
+            if (adminSuggestionsBtn != null) {
+                adminSuggestionsBtn.setVisible(true);
+                adminSuggestionsBtn.setManaged(true);
+            }
+            
+            if (studentCatalogBtn != null) {
+                studentCatalogBtn.setVisible(false);
+                studentCatalogBtn.setManaged(false);
+            }
+            if (studentLearningBtn != null) {
+                studentLearningBtn.setVisible(false);
+                studentLearningBtn.setManaged(false);
+            }
+            if (studentSuggestionsBtn != null) {
+                studentSuggestionsBtn.setVisible(false);
+                studentSuggestionsBtn.setManaged(false);
+            }
         } else {
             contextLabel.setText("Student Frontoffice");
         }
     }
+
+    @FXML public void showCatalog() { loadView("/view/courses/MatiereList.fxml"); }
+    @FXML public void showMyLearning() { loadView("/view/courses/MyLearning.fxml"); }
+    @FXML public void showStudentSuggestions() { loadView("/view/courses/StudentSuggestions.fxml"); }
+    @FXML public void showManageCatalog() { loadView("/view/courses/ManageMatiere.fxml"); }
+    @FXML public void showManageSuggestions() { loadView("/view/courses/ManageSuggestions.fxml"); }
 
     @FXML
     public void showAdminJournalStats() {

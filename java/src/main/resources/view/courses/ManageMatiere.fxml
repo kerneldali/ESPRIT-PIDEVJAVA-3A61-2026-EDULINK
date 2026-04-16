@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.courses.ManageMatiereController">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <VBox HBox.hgrow="ALWAYS">
+                <Label text="Categories" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            </VBox>
+            <Button text="+ New Category" onAction="#handleNewMatiere" style="-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+        
+        <!-- Search Bar -->
+        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
+            <TextField fx:id="searchField" promptText="🔍 Search categories..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="filterCombo" promptText="Alphabetical (A-Z)" style="-fx-background-color: #2a2a3e;"/>
+            <Button text="Apply" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"/>
+        </HBox>
+        
+        <!-- Cards -->
+        <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+            <FlowPane fx:id="cardContainer" hgap="20" vgap="20" />
+        </ScrollPane>
+    </VBox>
+    
+    <!-- Overlay Form -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false" style="-fx-background-color: #000000bb;">
+        <VBox spacing="15" maxWidth="450" style="-fx-background-color: #16162a; -fx-padding: 30; -fx-border-radius: 12; -fx-background-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+            <Label fx:id="formTitle" text="New Category" style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+            
+            <VBox spacing="5">
+                <Label text="Category Name *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="nameField" promptText="Enter category name" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="nameError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="Status" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <ComboBox fx:id="statusCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+            </VBox>
+            
+            <VBox spacing="5">
+                <Label text="Cover Image" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <HBox spacing="10">
+                    <TextField fx:id="imagePathField" editable="false" HBox.hgrow="ALWAYS" promptText="No image selected" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                    <Button fx:id="browseBtn" text="Browse" onAction="#handleBrowseImage" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                </HBox>
+            </VBox>
+            
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseForm" style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="saveBtn" text="Save Category" onAction="#handleSaveMatiere" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+</StackPane>

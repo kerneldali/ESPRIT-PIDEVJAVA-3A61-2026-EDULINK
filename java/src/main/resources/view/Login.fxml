@@ -25,8 +25,8 @@
             <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
             <Label text="Login" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
             
-            <TextField fx:id="emailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
-            <PasswordField fx:id="passwordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            <TextField fx:id="emailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+            <PasswordField fx:id="passwordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
             
             <Label fx:id="errorLabel" style="-fx-text-fill: #ef4444;"/>
             <Label fx:id="loadingLabel" text="" styleClass="splash-loading" visible="false"/>
@@ -40,9 +40,9 @@
             <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
             <Label text="Register" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
             
-            <TextField fx:id="regFullNameField" promptText="Full Name" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
-            <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
-            <PasswordField fx:id="regPasswordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px;"/>
+            <TextField fx:id="regFullNameField" promptText="Full Name" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+            <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+            <PasswordField fx:id="regPasswordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
             
             <Label fx:id="regErrorLabel" style="-fx-text-fill: #ef4444;"/>
             
