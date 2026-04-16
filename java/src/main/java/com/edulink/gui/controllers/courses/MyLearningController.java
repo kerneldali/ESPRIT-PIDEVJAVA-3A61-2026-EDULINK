@@ -163,42 +163,51 @@ public class MyLearningController implements Initializable {
     }
 
     private void generateCertificate(Course currentCourse) {
-        String studentName = "Student";
-        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
-            studentName = com.edulink.gui.util.SessionManager.getCurrentUser().getFullName();
-        }
+        com.edulink.gui.models.User student = com.edulink.gui.util.SessionManager.getCurrentUser();
+        if (student == null) return;
 
-        FileChooser fc = new FileChooser();
-        fc.setTitle("Save Certificate");
-        fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + ".txt");
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text Certificate", "*.txt"));
+        com.edulink.gui.services.PdfExportService exporter = new com.edulink.gui.services.PdfExportService();
 
-        File file = fc.showSaveDialog(cardContainer.getScene().getWindow());
-        if (file != null) {
-            try (PrintWriter writer = new PrintWriter(file)) {
-                writer.println("=================================================");
-                writer.println("                EDULINK ACADEMY                ");
-                writer.println("=================================================");
-                writer.println();
-                writer.println("           CERTIFICATE OF COMPLETION           ");
-                writer.println();
-                writer.println("This is to certify that:");
-                writer.println("      " + studentName.toUpperCase());
-                writer.println();
-                writer.println("Has successfully completed the course:");
-                writer.println("      " + currentCourse.getTitle().toUpperCase());
-                writer.println();
-                writer.println("Level: " + currentCourse.getLevel());
-                writer.println("XP Gained: " + currentCourse.getXp());
-                writer.println("Date: " + LocalDateTime.now().toLocalDate());
-                writer.println();
-                writer.println("=================================================");
-                writer.println("            KEEP LEARNING, KEEP GROWING          ");
-                writer.println("=================================================");
-                
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Certificate Saved", "Your certificate has been saved to:\n" + file.getAbsolutePath());
-            } catch (Exception ex) {
-                EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", "Failed to save certificate: " + ex.getMessage());
+        // Format Selection Dialog
+        ButtonType pdfBtn = new ButtonType("🎓 Professional PDF", ButtonBar.ButtonData.OK_DONE);
+        ButtonType pngBtn = new ButtonType("🖼️ High-Res Image (PNG)", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("Elite Certification");
+        alert.setHeaderText("Congratulations, " + student.getFullName() + "!");
+        alert.setContentText("Your achievement is verified. How would you like to save your certificate?");
+        alert.getButtonTypes().setAll(pdfBtn, pngBtn, cancelBtn);
+        alert.initOwner(cardContainer.getScene().getWindow());
+
+        java.util.Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() != cancelBtn) {
+            boolean isPdf = result.get() == pdfBtn;
+            
+            FileChooser fc = new FileChooser();
+            fc.setTitle("Save Certificate");
+            fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
+
+            File file = fc.showSaveDialog(cardContainer.getScene().getWindow());
+            if (file != null) {
+                try {
+                    if (isPdf) {
+                        exporter.exportCertificate(student, currentCourse, file);
+                    } else {
+                        exporter.exportCertificateAsImage(student, currentCourse, file);
+                    }
+                    
+                    EduAlert.show(EduAlert.AlertType.SUCCESS, "Export Success", 
+                        "Your certificate has been saved to:\n" + file.getAbsolutePath());
+                    
+                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                        new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", file.getAbsolutePath()).start();
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", ex.getMessage());
+                }
             }
         }
     }
