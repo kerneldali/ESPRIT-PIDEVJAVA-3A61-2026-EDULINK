@@ -20,6 +20,8 @@
         
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
             <TextField fx:id="searchField" promptText="🔍 Search courses..." HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="levelFilterCombo" promptText="Level" style="-fx-background-color: #2a2a3e; -fx-text-fill: white;" />
+            <ComboBox fx:id="sortCombo" promptText="Sort By" style="-fx-background-color: #2a2a3e; -fx-text-fill: white;" />
         </HBox>
         
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">

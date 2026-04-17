@@ -118,10 +118,37 @@ public class CourseService implements IService<Course> {
     @Override
     public void delete(int id) {
         try {
+            // 1. Delete resource completions first (nested dependency)
+            String delCompletions = "DELETE FROM resource_completion WHERE resource_id IN (SELECT id FROM resource WHERE cours_id = ?)";
+            PreparedStatement pstComp = cnx.prepareStatement(delCompletions);
+            pstComp.setInt(1, id);
+            pstComp.executeUpdate();
+
+            // 2. Delete resources
+            PreparedStatement pstRes = cnx.prepareStatement("DELETE FROM resource WHERE cours_id = ?");
+            pstRes.setInt(1, id);
+            pstRes.executeUpdate();
+
+            // 3. Delete enrollments
+            PreparedStatement pstEnr = cnx.prepareStatement("DELETE FROM enrollment WHERE cours_id = ?");
+            pstEnr.setInt(1, id);
+            pstEnr.executeUpdate();
+            
+            // Fallback for different naming 'course_id'
+            PreparedStatement pstEnr2 = cnx.prepareStatement("DELETE FROM enrollment WHERE course_id = ?");
+            pstEnr2.setInt(1, id);
+            try { pstEnr2.executeUpdate(); } catch (SQLException e) { /* ignore if column doesn't exist */ }
+
+            // 4. Finally delete the course
             PreparedStatement pst = cnx.prepareStatement("DELETE FROM cours WHERE id=?");
             pst.setInt(1, id);
-            pst.executeUpdate();
-            System.out.println("✅ Course deleted!");
+            int rows = pst.executeUpdate();
+            
+            if (rows > 0) {
+                System.out.println("✅ Course " + id + " and all its dependencies (enrolled users, resources) deleted!");
+            } else {
+                System.out.println("⚠ Course " + id + " not found or already deleted.");
+            }
         } catch (SQLException e) {
             System.err.println("❌ Course delete failed: " + e.getMessage());
         }
