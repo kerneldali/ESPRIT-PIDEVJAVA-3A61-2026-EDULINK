@@ -96,10 +96,18 @@ public class MatiereService implements IService<Matiere> {
     @Override
     public void delete(int id) {
         try {
+            // Cascade delete courses in this matiere
+            CourseService courseService = new CourseService();
+            List<com.edulink.gui.models.courses.Course> courses = courseService.findByMatiere(id);
+            for (com.edulink.gui.models.courses.Course c : courses) {
+                courseService.delete(c.getId());
+            }
+
+            // Finally delete the matiere
             PreparedStatement pst = cnx.prepareStatement("DELETE FROM matiere WHERE id=?");
             pst.setInt(1, id);
             pst.executeUpdate();
-            System.out.println("✅ Matiere deleted!");
+            System.out.println("✅ Matiere and all its courses deleted!");
         } catch (SQLException e) {
             System.err.println("❌ Matiere delete failed: " + e.getMessage());
         }

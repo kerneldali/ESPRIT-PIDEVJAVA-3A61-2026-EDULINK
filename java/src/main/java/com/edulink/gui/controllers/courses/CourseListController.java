@@ -25,6 +25,8 @@ public class CourseListController implements Initializable {
 
     @FXML private StackPane rootPane;
     @FXML private FlowPane courseContainer;
+    @FXML private ComboBox<String> levelFilterCombo;
+    @FXML private ComboBox<String> sortCombo;
     @FXML private TextField searchField;
     @FXML private Label pageTitle;
 
@@ -46,22 +48,44 @@ public class CourseListController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        levelFilterCombo.setItems(FXCollections.observableArrayList("All Levels", "BEGINNER", "INTERMEDIATE", "ADVANCED"));
+        levelFilterCombo.setValue("All Levels");
+
+        sortCombo.setItems(FXCollections.observableArrayList("Newest First", "Alphabetical (A-Z)", "Highest XP"));
+        sortCombo.setValue("Newest First");
+
         suggestLevelCombo.setItems(FXCollections.observableArrayList("BEGINNER", "INTERMEDIATE", "ADVANCED"));
         suggestLevelCombo.setValue("BEGINNER");
 
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || newVal.trim().isEmpty()) {
-                displayCourses(allCourses);
-            } else {
-                List<Course> filtered = allCourses.stream()
-                        .filter(c -> c.getTitle() != null && c.getTitle().toLowerCase().contains(newVal.toLowerCase()))
-                        .toList();
-                displayCourses(filtered);
-            }
-        });
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        levelFilterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        sortCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         suggestTitleField.textProperty().addListener((obs, o, n) -> validateSuggest());
         suggestDescField.textProperty().addListener((obs, o, n) -> validateSuggest());
+    }
+
+    private void applyFilters() {
+        if (allCourses == null) return;
+
+        String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
+        String level = levelFilterCombo.getValue();
+
+        java.util.List<Course> filtered = new java.util.ArrayList<>(allCourses.stream()
+                .filter(c -> c.getTitle() != null && c.getTitle().toLowerCase().contains(query))
+                .filter(c -> "All Levels".equals(level) || level.equals(c.getLevel()))
+                .toList());
+
+        String sortType = sortCombo.getValue();
+        if ("Alphabetical (A-Z)".equals(sortType)) {
+            filtered.sort((a, b) -> (a.getTitle() == null ? "" : a.getTitle()).compareToIgnoreCase(b.getTitle() == null ? "" : b.getTitle()));
+        } else if ("Newest First".equals(sortType)) {
+            filtered.sort((a, b) -> (b.getCreatedAt() == null ? LocalDateTime.MIN : b.getCreatedAt()).compareTo(a.getCreatedAt() == null ? LocalDateTime.MIN : a.getCreatedAt()));
+        } else if ("Highest XP".equals(sortType)) {
+            filtered.sort((a, b) -> Integer.compare(b.getXp(), a.getXp()));
+        }
+
+        displayCourses(filtered);
     }
 
     private void validateSuggest() {

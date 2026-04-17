@@ -59,6 +59,7 @@ public class ManageCoursesController implements Initializable {
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData());
         levelComboFilter.valueProperty().addListener((obs, oldV, newV) -> filterData());
+        sortCombo.valueProperty().addListener((obs, oldV, newV) -> filterData());
 
         // Form validation listeners
         titleField.textProperty().addListener((obs, old, newV) -> validateForm());
@@ -118,12 +119,23 @@ public class ManageCoursesController implements Initializable {
         String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         String level = levelComboFilter.getValue();
 
-        for (Course c : courseList) {
-            boolean matchesSearch = c.getTitle() == null || c.getTitle().toLowerCase().contains(query);
-            boolean matchesLevel = "All Levels".equals(level) || level.equals(c.getLevel());
-            if (matchesSearch && matchesLevel) {
-                cardContainer.getChildren().add(createRow(c));
-            }
+        java.util.List<Course> filtered = courseList.stream()
+            .filter(c -> (c.getTitle() != null && c.getTitle().toLowerCase().contains(query)))
+            .filter(c -> "All Levels".equals(level) || level.equals(c.getLevel()))
+            .collect(java.util.stream.Collectors.toList());
+
+        // Apply Sorting
+        String sortType = sortCombo.getValue();
+        if ("Name A-Z".equals(sortType)) {
+            filtered.sort((a, b) -> (a.getTitle() == null ? "" : a.getTitle()).compareToIgnoreCase(b.getTitle() == null ? "" : b.getTitle()));
+        } else if ("Newest First".equals(sortType)) {
+            filtered.sort((a, b) -> (b.getCreatedAt() == null ? LocalDateTime.MIN : b.getCreatedAt()).compareTo(a.getCreatedAt() == null ? LocalDateTime.MIN : a.getCreatedAt()));
+        } else if ("Oldest First".equals(sortType)) {
+            filtered.sort((a, b) -> (a.getCreatedAt() == null ? LocalDateTime.MIN : a.getCreatedAt()).compareTo(b.getCreatedAt() == null ? LocalDateTime.MIN : b.getCreatedAt()));
+        }
+
+        for (Course c : filtered) {
+            cardContainer.getChildren().add(createRow(c));
         }
     }
 
