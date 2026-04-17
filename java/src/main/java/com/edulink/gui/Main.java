@@ -66,9 +66,11 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         try {
-            launch();
+            launch(args);
         } catch (Exception e) {
+            System.err.println("Fatal error starting application:");
             e.printStackTrace();
+            System.exit(1);
         }
     }
 }
