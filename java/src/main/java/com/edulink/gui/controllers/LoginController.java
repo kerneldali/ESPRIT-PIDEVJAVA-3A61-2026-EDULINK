@@ -63,6 +63,11 @@ public class LoginController {
             return;
         }
 
+        if (!email.contains("@")) {
+            errorLabel.setText("Email must contain '@'");
+            return;
+        }
+
         User user = userService.authenticate(email, password);
         if (user != null) {
             com.edulink.gui.util.SessionManager.setCurrentUser(user);
@@ -81,6 +86,11 @@ public class LoginController {
         
         if (email.isEmpty() || fullName.isEmpty() || password.isEmpty()) {
             regErrorLabel.setText("Please fill in all fields");
+            return;
+        }
+
+        if (!email.contains("@")) {
+            regErrorLabel.setText("Email must contain '@'");
             return;
         }
 
