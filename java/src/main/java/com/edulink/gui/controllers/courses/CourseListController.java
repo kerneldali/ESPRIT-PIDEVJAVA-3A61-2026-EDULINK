@@ -201,20 +201,7 @@ public class CourseListController implements Initializable {
         return card;
     }
 
-    private void directEnrollFallback(int studentId, int courseId) {
-        try {
-            java.sql.Connection conn = com.edulink.gui.util.MyConnection.getInstance().getCnx();
-            java.sql.PreparedStatement pst = conn.prepareStatement(
-                    "INSERT INTO enrollment (student_id, cours_id, progress, enrolled_at, last_accessed) VALUES (?, ?, 0, NOW(), NOW())");
-            pst.setInt(1, studentId);
-            pst.setInt(2, courseId);
-            int rows = pst.executeUpdate();
-            System.out.println("✅ Direct enrollment fallback: rows=" + rows);
-        } catch (Exception e) {
-            System.err.println("❌ Direct enrollment fallback failed: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+
 
     private void showCourseDetails(Course c) {
         try {
