@@ -217,12 +217,7 @@ public class HelpRequestListController implements Initializable {
         cardsContainer.getChildren().add(card);
     }
 
-    private void showErrorCard(String t, String d) {
-        // ... (simplified error view)
-        Label l = new Label(t + ": " + d);
-        l.getStyleClass().add("card-title");
-        cardsContainer.getChildren().add(l);
-    }
+
 
     private StackPane findContentArea() {
         javafx.scene.Node n = cardsContainer;
