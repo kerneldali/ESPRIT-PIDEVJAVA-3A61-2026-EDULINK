@@ -203,6 +203,7 @@ public class ManageSuggestionsController implements Initializable {
 
         actions.getChildren().addAll(viewBtn, acceptBtn, rejectBtn);
         card.getChildren().addAll(top, desc, meta, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 }

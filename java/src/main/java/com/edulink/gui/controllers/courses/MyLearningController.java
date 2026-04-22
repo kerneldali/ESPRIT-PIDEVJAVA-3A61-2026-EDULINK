@@ -159,6 +159,7 @@ public class MyLearningController implements Initializable {
 
         infoBox.getChildren().addAll(title, metaRow, progress, progressText, actions, viewBtn);
         card.getChildren().addAll(header, infoBox);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

@@ -116,10 +116,13 @@
             <Separator styleClass="sidebar-separator"/>
             
             <!-- Bottom Actions -->
-            <VBox>
+            <VBox spacing="10">
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
+                <Button styleClass="module-button" text="🌗 Toggle Theme" 
+                        onAction="#handleToggleTheme" maxWidth="1.7976931348623157E308"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
                 <Button styleClass="logout-button" text="↩  Exit to Workspace" 
                         onAction="#handleExit" maxWidth="1.7976931348623157E308"/>
             </VBox>

@@ -186,6 +186,7 @@ public class ManageCoursesController implements Initializable {
         });
 
         row.getChildren().addAll(title, levelLabel, xp, resLabel, spacer, manageRes, editBtn, delBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 

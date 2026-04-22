@@ -198,6 +198,7 @@ public class CourseListController implements Initializable {
         }
 
         card.getChildren().addAll(title, desc, meta, actionBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
