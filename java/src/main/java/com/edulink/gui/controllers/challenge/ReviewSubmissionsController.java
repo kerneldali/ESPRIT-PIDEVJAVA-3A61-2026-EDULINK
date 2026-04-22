@@ -183,6 +183,7 @@ public class ReviewSubmissionsController implements Initializable {
         actions.getChildren().addAll(rejectBtn, validateBtn);
 
         card.getChildren().addAll(header, new Separator(), submissionBox, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

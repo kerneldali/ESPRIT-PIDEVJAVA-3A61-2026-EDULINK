@@ -153,6 +153,7 @@ public class ChallengeListController implements Initializable {
         footer.getChildren().addAll(deadlineLabel, footerSpacer, actionBtn);
 
         card.getChildren().addAll(header, descLabel, footer);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

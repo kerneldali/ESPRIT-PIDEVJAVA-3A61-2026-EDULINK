@@ -80,6 +80,7 @@ public class TaskController implements Initializable {
         });
 
         row.getChildren().addAll(cb, title, spacer, deleteBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 

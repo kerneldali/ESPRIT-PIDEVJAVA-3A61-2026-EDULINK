@@ -158,6 +158,7 @@ public class AdminAssistanceController implements Initializable {
         actions.getChildren().addAll(resolveBtn, deleteBtn);
 
         card.getChildren().addAll(header, titleLabel, descLabel, new Separator(), actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

@@ -193,6 +193,7 @@ public class ManageChallengesController implements Initializable {
         });
 
         row.getChildren().addAll(titleLabel, diffLabel, xpLabel, statusLabel, deadlineLabel, spacer, editBtn, delBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 

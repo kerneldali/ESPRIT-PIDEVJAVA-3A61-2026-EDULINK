@@ -91,6 +91,7 @@ public class NoteController {
 
         actions.getChildren().addAll(editBtn, pdfBtn, deleteBtn);
         card.getChildren().addAll(header, contentPreview, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

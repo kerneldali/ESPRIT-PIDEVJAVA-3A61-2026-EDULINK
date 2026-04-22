@@ -203,6 +203,7 @@ public class MyChallengesController implements Initializable {
         }
 
         card.getChildren().addAll(header, statusBadge, descLbl, footer);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

@@ -124,6 +124,7 @@ public class MatiereListController implements Initializable {
 
         infoBox.getChildren().addAll(title, viewBtn);
         card.getChildren().addAll(imageBox, infoBox);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
