@@ -134,7 +134,7 @@ public class AdminUserManagementController implements Initializable {
         detailBadgeBox.setManaged(true);
         selectedNameLabel.setText(user.getFullName());
         selectedRolesLabel.setText("System Roles: " + user.getRoles());
-        selectedWalletLabel.setText(String.format("%.2f TND", user.getWalletBalance()));
+        selectedWalletLabel.setText(String.format("%.2f XP", user.getWalletBalance()));
         
         formNameField.setText(user.getFullName());
         formEmailField.setText(user.getEmail());
