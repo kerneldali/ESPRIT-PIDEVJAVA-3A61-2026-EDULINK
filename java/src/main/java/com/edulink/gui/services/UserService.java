@@ -153,6 +153,7 @@ public class UserService implements IService<User> {
     }
 
     public User authenticate(String email, String password) {
+        if (cnx == null) return null;
         String qry = "SELECT * FROM user WHERE email = ? AND password = ?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setString(1, email);
@@ -161,7 +162,7 @@ public class UserService implements IService<User> {
             if (rs.next()) {
                 return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

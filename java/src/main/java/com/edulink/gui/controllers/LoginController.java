@@ -55,26 +55,37 @@ public class LoginController {
 
     @FXML
     public void handleLogin() {
-        String email = emailField.getText();
+        String email    = emailField.getText();
         String password = passwordField.getText();
-        
+        errorLabel.setStyle("-fx-text-fill: #ef4444;");
+
         if (email.isEmpty() || password.isEmpty()) {
             errorLabel.setText("Please fill in all fields");
             return;
         }
-
         if (!email.contains("@")) {
             errorLabel.setText("Email must contain '@'");
             return;
         }
 
-        User user = userService.authenticate(email, password);
-        if (user != null) {
-            com.edulink.gui.util.SessionManager.setCurrentUser(user);
-            boolean isAdmin = user.hasRole("ROLE_ADMIN") || user.hasRole("ROLE_FACULTY");
-            launchDashboard(isAdmin);
-        } else {
-            errorLabel.setText("Invalid email or password");
+        // Vérifier la connexion DB avant de tenter l'auth
+        if (!userService.isConnected()) {
+            errorLabel.setText("⚠ Database unavailable. Make sure MySQL is running.");
+            return;
+        }
+
+        try {
+            User user = userService.authenticate(email, password);
+            if (user != null) {
+                com.edulink.gui.util.SessionManager.setCurrentUser(user);
+                boolean isAdmin = user.hasRole("ROLE_ADMIN") || user.hasRole("ROLE_FACULTY");
+                launchDashboard(isAdmin);
+            } else {
+                errorLabel.setText("Invalid email or password");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            errorLabel.setText("Login error: " + e.getMessage());
         }
     }
 
