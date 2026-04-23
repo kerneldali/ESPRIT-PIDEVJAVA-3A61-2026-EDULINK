@@ -286,7 +286,12 @@ public class ManageChallengesController implements Initializable {
                 currentTaskChallenge.getId(), title,
                 newTaskDescField.getText().trim(), order,
                 newTaskRequiredCheck.isSelected());
-        taskService.add(task);
+        boolean saved = taskService.add(task);
+        if (!saved) {
+            EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
+                    "La tâche n'a pas pu être sauvegardée. Vérifie la console IntelliJ pour le détail.");
+            return;
+        }
         newTaskTitleField.clear();
         newTaskDescField.clear();
         newTaskRequiredCheck.setSelected(true);
