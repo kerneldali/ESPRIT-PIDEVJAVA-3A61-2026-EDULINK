@@ -41,8 +41,9 @@ public class MyConnection {
     }
 
     // 3. Static Getter with verification (if exists, use it; otherwise create new)
+    // If the previous attempt failed (cnx == null), retry automatically.
     public static MyConnection getInstance() {
-        if (instance == null) {
+        if (instance == null || instance.cnx == null) {
             instance = new MyConnection();
         }
         return instance;

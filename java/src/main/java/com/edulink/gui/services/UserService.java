@@ -26,6 +26,8 @@ public class UserService implements IService<User> {
     }
 
     public boolean isConnected() {
+        // Refresh local cnx in case MyConnection retried and succeeded
+        this.cnx = MyConnection.getInstance().getCnx();
         return MyConnection.getInstance().isConnected();
     }
 
