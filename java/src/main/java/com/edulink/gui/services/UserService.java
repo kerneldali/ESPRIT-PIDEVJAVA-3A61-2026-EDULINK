@@ -17,9 +17,10 @@ public class UserService implements IService<User> {
     }
 
     private void ensureXpColumn() {
+        if (cnx == null) return;
         try (Statement st = cnx.createStatement()) {
             st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             // Might already exist or dialect doesn't support IF NOT EXISTS
         }
     }
