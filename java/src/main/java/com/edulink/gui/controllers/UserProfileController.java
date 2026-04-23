@@ -56,7 +56,7 @@ public class UserProfileController implements Initializable {
         nameDisplayLabel.setText(currentUser.getFullName());
         roleDisplayLabel.setText("Roles: " + currentUser.getRoles());
         
-        walletBalanceLabel.setText(String.format("%.2f TND", currentUser.getWalletBalance()));
+        walletBalanceLabel.setText(String.format("%.2f XP", currentUser.getWalletBalance()));
         
         // Load persistent logs
         logsListView.getItems().clear();
@@ -82,6 +82,12 @@ public class UserProfileController implements Initializable {
         if (newName.isEmpty() || newEmail.isEmpty()) {
             statusLabel.setStyle("-fx-text-fill: #ef4444;");
             statusLabel.setText("Name and Email cannot be empty.");
+            return;
+        }
+
+        if (!newEmail.contains("@")) {
+            statusLabel.setStyle("-fx-text-fill: #ef4444;");
+            statusLabel.setText("Email must contain '@'.");
             return;
         }
 
@@ -154,8 +160,8 @@ public class UserProfileController implements Initializable {
             friendEmailField.clear();
             sendAmountField.clear();
             statusLabel.setStyle("-fx-text-fill: #10b981;");
-            statusLabel.setText("Successfully sent " + amount + " TND to " + friend.getFullName() + ".");
-            addLog("Sent " + amount + " TND to friend at '" + friendEmail + "'.");
+            statusLabel.setText("Successfully sent " + amount + " XP to " + friend.getFullName() + ".");
+            addLog("Sent " + amount + " XP to friend at '" + friendEmail + "'.");
             
         } catch (NumberFormatException e) {
             statusLabel.setStyle("-fx-text-fill: #ef4444;");

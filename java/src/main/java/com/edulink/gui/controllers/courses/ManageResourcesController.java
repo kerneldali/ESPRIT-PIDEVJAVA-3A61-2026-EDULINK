@@ -151,6 +151,7 @@ public class ManageResourcesController implements Initializable {
         });
 
         row.getChildren().addAll(icon, info, spacer, editBtn, delBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 

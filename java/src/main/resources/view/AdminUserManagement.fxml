@@ -7,31 +7,31 @@
 
 <ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.AdminUserManagementController" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0;">
     
-    <VBox spacing="35" style="-fx-padding: 40; -fx-background-color: #f0f4f8; -fx-font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;">
+    <VBox spacing="35" style="-fx-padding: 40; -fx-background-color: #0f0f1a; -fx-font-family: 'Segoe UI', Tahoma, Verdana, sans-serif;">
         <!-- Header & Stats Area -->
         <VBox spacing="25">
             <VBox spacing="8">
-                <Label text="Global User Intelligence" style="-fx-font-size: 38px; -fx-font-weight: 900; -fx-text-fill: #1e293b; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 4);"/>
-                <Label text="Strategic oversight of all edulink platform accounts and roles." style="-fx-font-size: 18px; -fx-text-fill: #64748b;"/>
+                <Label text="Global User Intelligence" style="-fx-font-size: 38px; -fx-font-weight: 900; -fx-text-fill: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 4);"/>
+                <Label text="Strategic oversight of all edulink platform accounts and roles." style="-fx-font-size: 18px; -fx-text-fill: #a0a0ab;"/>
             </VBox>
             
             <HBox spacing="30">
-                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.1), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20; -fx-border-width: 1;">
+                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.1), 30, 0, 0, 10); -fx-border-color: #ffffff11; -fx-border-radius: 20; -fx-border-width: 1;">
                     <StackPane style="-fx-background-color: linear-gradient(to bottom right, #3b82f6, #1d4ed8); -fx-background-radius: 18; -fx-min-width: 75; -fx-min-height: 75; -fx-max-width: 75; -fx-max-height: 75;">
                         <Label text="👥" style="-fx-font-size: 35px;"/>
                     </StackPane>
                     <VBox spacing="4">
-                        <Label text="Total Population" style="-fx-text-fill: #94a3b8; -fx-font-size: 15px; -fx-font-weight: 700;"/>
-                        <Label fx:id="totalUsersLabel" text="0" style="-fx-text-fill: #0f172a; -fx-font-size: 36px; -fx-font-weight: 950;"/>
+                        <Label text="Total Population" style="-fx-text-fill: #a0a0ab; -fx-font-size: 15px; -fx-font-weight: 700;"/>
+                        <Label fx:id="totalUsersLabel" text="0" style="-fx-text-fill: white; -fx-font-size: 36px; -fx-font-weight: 950;"/>
                     </VBox>
                 </HBox>
 
-                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.1), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20; -fx-border-width: 1;">
+                <HBox spacing="25" HBox.hgrow="ALWAYS" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(16,185,129,0.1), 30, 0, 0, 10); -fx-border-color: #ffffff11; -fx-border-radius: 20; -fx-border-width: 1;">
                     <StackPane style="-fx-background-color: linear-gradient(to bottom right, #10b981, #047857); -fx-background-radius: 18; -fx-min-width: 75; -fx-min-height: 75; -fx-max-width: 75; -fx-max-height: 75;">
                         <Label text="🛡️" style="-fx-font-size: 35px;"/>
                     </StackPane>
                     <VBox spacing="4">
-                        <Label text="Verified Assets" style="-fx-text-fill: #94a3b8; -fx-font-size: 15px; -fx-font-weight: 700;"/>
+                        <Label text="Verified Assets" style="-fx-text-fill: #a0a0ab; -fx-font-size: 15px; -fx-font-weight: 700;"/>
                         <Label fx:id="totalVerifiedLabel" text="0" style="-fx-text-fill: #166534; -fx-font-size: 36px; -fx-font-weight: 950;"/>
                     </VBox>
                 </HBox>
@@ -39,20 +39,20 @@
         </VBox>
 
         <!-- Search & Sort Bar -->
-        <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-background-color: white; -fx-padding: 20 30; -fx-background-radius: 18; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 20, 0, 0, 5);">
+        <HBox spacing="20" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 20 30; -fx-background-radius: 18; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 20, 0, 0, 5);">
             <Label text="🔍" style="-fx-font-size: 20px;"/>
-            <TextField fx:id="searchField" promptText="Search by name, email, or role..." HBox.hgrow="ALWAYS" style="-fx-background-color: transparent; -fx-font-size: 16px; -fx-text-fill: #0f172a;"/>
+            <TextField fx:id="searchField" promptText="Search by name, email, or role..." HBox.hgrow="ALWAYS" style="-fx-background-color: transparent; -fx-font-size: 16px; -fx-text-fill: white;"/>
             <Separator orientation="VERTICAL" style="-fx-padding: 0 10;"/>
-            <Label text="Sort By:" style="-fx-font-weight: 800; -fx-text-fill: #64748b;"/>
-            <ComboBox fx:id="sortCombo" prefWidth="250" style="-fx-background-color: #f1f5f9; -fx-background-radius: 10; -fx-padding: 5 10;"/>
+            <Label text="Sort By:" style="-fx-font-weight: 800; -fx-text-fill: #a0a0ab;"/>
+            <ComboBox fx:id="sortCombo" prefWidth="250" style="-fx-background-color: #2a2a3e; -fx-background-radius: 10; -fx-padding: 5 10;"/>
         </HBox>
 
         <!-- Main Workspace -->
         <HBox spacing="35">
             <!-- Left: Table View Area -->
-            <VBox spacing="20" HBox.hgrow="ALWAYS" style="-fx-background-color: white; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20;">
-                <Label text="Directory Ledger" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: #0f172a;"/>
-                <TableView fx:id="userTable" prefHeight="650" style="-fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #f1f5f9; -fx-font-size: 15px; -fx-selection-bar: #dbeafe;">
+            <VBox spacing="20" HBox.hgrow="ALWAYS" style="-fx-background-color: #1a1a2e; -fx-padding: 30; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #ffffff11; -fx-border-radius: 20;">
+                <Label text="Directory Ledger" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: white;"/>
+                <TableView fx:id="userTable" prefHeight="650" style="-fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: #ffffff11; -fx-font-size: 15px; -fx-selection-bar: #dbeafe;">
                     <columns>
                         <TableColumn fx:id="idCol" text="ID" prefWidth="70"/>
                         <TableColumn fx:id="nameCol" text="Full Name" prefWidth="240"/>
@@ -63,9 +63,9 @@
             </VBox>
 
             <!-- Right: Inspector Panel -->
-            <VBox spacing="30" minWidth="420" maxWidth="450" style="-fx-background-color: white; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #e2e8f0; -fx-border-radius: 20;">
+            <VBox spacing="30" minWidth="420" maxWidth="450" style="-fx-background-color: #1a1a2e; -fx-padding: 35; -fx-background-radius: 20; -fx-effect: dropshadow(gaussian, rgba(15,23,42,0.06), 30, 0, 0, 10); -fx-border-color: #ffffff11; -fx-border-radius: 20;">
                 
-                <Label text="User Profile Inspector" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #1e293b;"/>
+                <Label text="User Profile Inspector" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: white;"/>
 
                 <!-- Dynamic Badge -->
                 <VBox fx:id="detailBadgeBox" alignment="CENTER" spacing="15" visible="false" managed="false" style="-fx-background-color: linear-gradient(to bottom right, #f8fafc, #eff6ff); -fx-padding: 30; -fx-background-radius: 20; -fx-border-color: #bfdbfe; -fx-border-radius: 20; -fx-effect: innershadow(gaussian, rgba(37,99,235,0.05), 20,0,0,5);">
@@ -73,20 +73,20 @@
                         <Label text="👤" style="-fx-font-size: 45px;"/>
                     </StackPane>
                     <VBox alignment="CENTER" spacing="5">
-                        <Label fx:id="selectedNameLabel" text="Selected Name" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: #0f172a;"/>
+                        <Label fx:id="selectedNameLabel" text="Selected Name" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: white;"/>
                         <Label fx:id="selectedRolesLabel" text="Roles" style="-fx-text-fill: #2563eb; -fx-font-size: 14px; -fx-font-weight: 800; -fx-background-color: #dbeafe; -fx-padding: 6 15; -fx-background-radius: 15;"/>
-                        <Label fx:id="selectedWalletLabel" text="0.00 TND" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #10b981; -fx-padding: 10 0 0 0;"/>
+                        <Label fx:id="selectedWalletLabel" text="0.00 XP" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #10b981; -fx-padding: 10 0 0 0;"/>
                     </VBox>
                 </VBox>
 
                 <!-- Activity Log Section -->
                 <VBox spacing="15">
                     <HBox alignment="CENTER_LEFT">
-                        <Label text="Traceable Event Logs" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #334155;"/>
+                        <Label text="Traceable Event Logs" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: white;"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Label text="LIVE" style="-fx-background-color: #fee2e2; -fx-text-fill: #ef4444; -fx-padding: 2 10; -fx-background-radius: 8; -fx-font-size: 11px; -fx-font-weight: 900;"/>
                     </HBox>
-                    <ListView fx:id="logsListView" prefHeight="250" style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-radius: 12; -fx-background-radius: 12; -fx-font-family: 'Consolas', monospace; -fx-font-size: 13px;"/>
+                    <ListView fx:id="logsListView" prefHeight="250" style="-fx-background-color: #0f0f1a; -fx-border-color: #ffffff11; -fx-border-radius: 12; -fx-background-radius: 12; -fx-font-family: 'Consolas', monospace; -fx-font-size: 13px;"/>
                 </VBox>
 
                 <Separator/>
@@ -94,7 +94,7 @@
                 <!-- Control Center Form -->
                 <VBox spacing="20">
                     <HBox alignment="CENTER_LEFT">
-                        <Label text="Account Override" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: #1e293b;"/>
+                        <Label text="Account Override" style="-fx-font-size: 18px; -fx-font-weight: 800; -fx-text-fill: white;"/>
                         <Region HBox.hgrow="ALWAYS"/>
                         <Button text="Clean State" onAction="#handleClear" style="-fx-background-color: transparent; -fx-text-fill: #3b82f6; -fx-font-weight: 900; -fx-cursor: hand; -fx-font-size: 14px; -fx-underline: true;"/>
                     </HBox>
@@ -103,20 +103,20 @@
 
                     <VBox spacing="15">
                         <VBox spacing="8">
-                            <Label text="FULL LEGAL NAME" style="-fx-font-weight: 800; -fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
-                            <TextField fx:id="formNameField" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: #0f172a; -fx-font-weight: 600;"/>
+                            <Label text="FULL LEGAL NAME" style="-fx-font-weight: 800; -fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                            <TextField fx:id="formNameField" style="-fx-padding: 14; -fx-background-color: #0f0f1a; -fx-border-color: #ffffff11; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: 600;"/>
                         </VBox>
                         <VBox spacing="8">
-                            <Label text="PRIMARY EMAIL ACCESS" style="-fx-font-weight: 800; -fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
-                            <TextField fx:id="formEmailField" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: #0f172a; -fx-font-weight: 600;"/>
+                            <Label text="PRIMARY EMAIL ACCESS" style="-fx-font-weight: 800; -fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                            <TextField fx:id="formEmailField" style="-fx-padding: 14; -fx-background-color: #0f0f1a; -fx-border-color: #ffffff11; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: 600;"/>
                         </VBox>
                         <VBox spacing="8">
-                            <Label text="SECURITY CREDENTIAL (PASSWORD)" style="-fx-font-weight: 800; -fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
-                            <TextField fx:id="formPasswordField" promptText="Input only if creating/resetting" style="-fx-padding: 14; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: #0f172a; -fx-font-weight: 600;"/>
+                            <Label text="SECURITY CREDENTIAL (PASSWORD)" style="-fx-font-weight: 800; -fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                            <TextField fx:id="formPasswordField" promptText="Input only if creating/resetting" style="-fx-padding: 14; -fx-background-color: #0f0f1a; -fx-border-color: #ffffff11; -fx-border-radius: 12; -fx-background-radius: 12; -fx-text-fill: white; -fx-font-weight: 600;"/>
                         </VBox>
                         <VBox spacing="8">
-                            <Label text="SYSTEM AUTHORITY ROLE" style="-fx-font-weight: 800; -fx-text-fill: #94a3b8; -fx-font-size: 12px;"/>
-                            <ComboBox fx:id="formRoleCombo" maxWidth="Infinity" style="-fx-padding: 10; -fx-background-color: #f8fafc; -fx-border-color: #cbd5e1; -fx-border-radius: 12; -fx-background-radius: 12; -fx-font-weight: 700;"/>
+                            <Label text="SYSTEM AUTHORITY ROLE" style="-fx-font-weight: 800; -fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                            <ComboBox fx:id="formRoleCombo" maxWidth="Infinity" style="-fx-padding: 10; -fx-background-color: #0f0f1a; -fx-border-color: #ffffff11; -fx-border-radius: 12; -fx-background-radius: 12; -fx-font-weight: 700;"/>
                         </VBox>
                     </VBox>
 

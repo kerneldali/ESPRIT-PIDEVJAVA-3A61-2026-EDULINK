@@ -162,6 +162,7 @@ public class ReservationController implements Initializable {
         VBox.setVgrow(spacer2, Priority.ALWAYS);
 
         card.getChildren().addAll(header, new Separator(), dateLbl, locLbl, resLbl, spacer2, cancelBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 }

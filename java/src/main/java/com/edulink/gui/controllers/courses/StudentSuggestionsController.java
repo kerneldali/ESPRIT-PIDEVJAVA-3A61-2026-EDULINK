@@ -101,6 +101,7 @@ public class StudentSuggestionsController implements Initializable {
         desc.setMaxHeight(40);
         HBox actions = createActionButtons(p);
         card.getChildren().addAll(top, desc, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
@@ -111,6 +112,7 @@ public class StudentSuggestionsController implements Initializable {
         title.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
         row.getChildren().addAll(title, new Region(), createStatusBadge(p.getStatus()), createActionButtons(p));
         HBox.setHgrow(row.getChildren().get(1), Priority.ALWAYS);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 
