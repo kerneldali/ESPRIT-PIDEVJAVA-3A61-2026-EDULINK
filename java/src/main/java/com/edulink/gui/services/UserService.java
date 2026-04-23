@@ -14,6 +14,7 @@ public class UserService implements IService<User> {
     public UserService() {
         cnx = MyConnection.getInstance().getCnx();
         ensureXpColumn();
+        ensureTransactionLogTable();
     }
 
     private void ensureXpColumn() {
@@ -21,7 +22,22 @@ public class UserService implements IService<User> {
         try (Statement st = cnx.createStatement()) {
             st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
         } catch (Exception e) {
-            // Might already exist or dialect doesn't support IF NOT EXISTS
+            // colonne déjà existante ou syntaxe non supportée
+        }
+    }
+
+    private void ensureTransactionLogTable() {
+        if (cnx == null) return;
+        String sql = "CREATE TABLE IF NOT EXISTS transaction_log (" +
+                     "  id INT AUTO_INCREMENT PRIMARY KEY," +
+                     "  user_id INT NOT NULL," +
+                     "  message VARCHAR(500)," +
+                     "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                     ")";
+        try (Statement st = cnx.createStatement()) {
+            st.execute(sql);
+        } catch (Exception e) {
+            System.err.println("transaction_log table: " + e.getMessage());
         }
     }
 
@@ -92,15 +108,19 @@ public class UserService implements IService<User> {
     }
 
     public void updateXp(int userId, int amountToAdd) {
+        if (cnx == null) { System.err.println("❌ updateXp: no DB connection"); return; }
         String qry = "UPDATE user SET xp = xp + ? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setInt(1, amountToAdd);
             pstm.setInt(2, userId);
-            pstm.executeUpdate();
-            addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
+            int rows = pstm.executeUpdate();
+            System.out.println("✅ XP updated: +" + amountToAdd + " for userId=" + userId + " (rows=" + rows + ")");
         } catch (SQLException e) {
+            System.err.println("❌ updateXp failed: " + e.getMessage());
             e.printStackTrace();
         }
+        // Log séparé — ne doit pas bloquer l'XP
+        addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
     }
 
     public void updateWallet(int userId, double amountToAdd) {

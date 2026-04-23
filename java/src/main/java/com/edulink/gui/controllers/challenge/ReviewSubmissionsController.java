@@ -198,18 +198,23 @@ public class ReviewSubmissionsController implements Initializable {
         if (!ok) return;
 
         participationService.validate(p.getId(), p.getUserId(), c.getXpReward());
+        EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
+                "+" + c.getXpReward() + " XP accordés à " + userName + ".");
 
-        // Générer le certificat PDF
-        String certPath = certificateService.generateCertificate(
-                userName, c.getTitle(), c.getXpReward(), c.getDifficulty());
-
-        if (certPath != null) {
-            EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
-                    "+" + c.getXpReward() + " XP accordés à " + userName + ".\n\n" +
-                    "📄 Certificat généré :\n" + certPath);
-        } else {
-            EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
-                    "+" + c.getXpReward() + " XP accordés à " + userName + ".");
+        // Demander confirmation avant de générer le certificat
+        boolean genCert = EduAlert.confirm("Générer le certificat PDF",
+                "Voulez-vous générer un certificat PDF pour " + userName + " ?\n" +
+                "Le fichier sera sauvegardé sur le Bureau.");
+        if (genCert) {
+            String certPath = certificateService.generateCertificate(
+                    userName, c.getTitle(), c.getXpReward(), c.getDifficulty());
+            if (certPath != null) {
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Certificat généré !",
+                        "📄 Fichier sauvegardé :\n" + certPath);
+            } else {
+                EduAlert.show(EduAlert.AlertType.WARNING, "Certificat",
+                        "Le certificat n'a pas pu être généré. Vérifiez la console.");
+            }
         }
         loadData();
     }
