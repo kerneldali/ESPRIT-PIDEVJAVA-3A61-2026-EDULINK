@@ -70,7 +70,7 @@ public class LoginController {
 
         // Vérifier la connexion DB avant de tenter l'auth
         if (!userService.isConnected()) {
-            errorLabel.setText("⚠ Database unavailable. Make sure MySQL is running.");
+            errorLabel.setText("⚠ DB Error: " + com.edulink.gui.util.MyConnection.getLastError());
             return;
         }
 
