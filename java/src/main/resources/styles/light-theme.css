@@ -7,6 +7,7 @@
 /* --- Splash Screen --- */
 .splash-container {
     -fx-background-color: linear-gradient(to bottom right, #f4f7fb, #e2e8f0);
+    background-color: linear-gradient(to bottom right, #f4f7fb, #e2e8f0);
 }
 
 .label {
@@ -16,6 +17,7 @@
 /* === SIDEBAR === */
 .sidebar {
     -fx-background-color: linear-gradient(to bottom, #ffffff, #f8fafc);
+    background-color: linear-gradient(to bottom, #ffffff, #f8fafc);
     -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 12, 0, 4, 0);
 }
 
@@ -29,6 +31,7 @@
 
 .sidebar-separator {
     -fx-border-color: transparent transparent #e2e8f0 transparent;
+    border-color: transparent transparent #e2e8f0 transparent;
 }
 
 .nav-section-label {
@@ -41,11 +44,13 @@
 
 .nav-button:hover, .module-button:hover {
     -fx-background-color: rgba(37, 99, 235, 0.1);
+    background-color: rgba(37, 99, 235, 0.1);
     -fx-text-fill: #1e293b;
 }
 
 .sub-menu {
     -fx-background-color: rgba(0, 0, 0, 0.03);
+    background-color: rgba(0, 0, 0, 0.03);
 }
 
 .sub-nav-button {
@@ -67,6 +72,7 @@
 /* === CONTENT AREA === */
 .content-area {
     -fx-background-color: #f4f7fb;
+    background-color: #f4f7fb;
 }
 
 /* === STATUS LABEL === */
@@ -77,13 +83,17 @@
 /* === CARDS === */
 .card {
     -fx-background-color: white;
+    background-color: white;
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 4);
     -fx-border-color: #e2e8f0;
+    border-color: #e2e8f0;
 }
 
 .card:hover {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
     -fx-border-color: #2563eb;
+    border-color: #2563eb;
     -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.15), 16, 0, 0, 0);
 }
 
@@ -106,39 +116,47 @@
 /* === BUTTONS === */
 .edit-button {
     -fx-background-color: #f1f5f9;
+    background-color: #f1f5f9;
     -fx-text-fill: #1e293b;
 }
 
 .edit-button:hover {
     -fx-background-color: #e2e8f0;
+    background-color: #e2e8f0;
     -fx-text-fill: #0f172a;
 }
 
 .delete-button {
     -fx-border-color: #ef4444;
+    border-color: #ef4444;
     -fx-text-fill: #ef4444;
 }
 
 .delete-button:hover {
     -fx-background-color: rgba(239, 68, 68, 0.1);
+    background-color: rgba(239, 68, 68, 0.1);
 }
 
 .primary-button {
     -fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+    background-color: linear-gradient(to right, #3b82f6, #2563eb);
     -fx-text-fill: white;
 }
 
 .primary-button:hover {
     -fx-background-color: linear-gradient(to right, #60a5fa, #3b82f6);
+    background-color: linear-gradient(to right, #60a5fa, #3b82f6);
 }
 
 .secondary-button {
     -fx-background-color: #f1f5f9;
+    background-color: #f1f5f9;
     -fx-text-fill: #1e293b;
 }
 
 .secondary-button:hover {
     -fx-background-color: #e2e8f0;
+    background-color: #e2e8f0;
 }
 
 /* === FORMS === */
@@ -148,42 +166,53 @@
 
 .text-field, .text-area, .combo-box {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
     -fx-text-fill: #0f172a;
     -fx-prompt-text-fill: #94a3b8;
     -fx-border-color: #cbd5e1;
+    border-color: #cbd5e1;
 }
 
 .text-field:focused, .text-area:focused, .combo-box:focused {
     -fx-border-color: #2563eb;
+    border-color: #2563eb;
     -fx-background-color: white;
+    background-color: white;
 }
 
 .text-area .content {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
 }
 
 .text-area:focused .content {
     -fx-background-color: white;
+    background-color: white;
 }
 
 /* ComboBox styling */
 .combo-box .list-cell {
     -fx-background-color: transparent;
+    background-color: transparent;
     -fx-text-fill: #0f172a;
 }
 
 .combo-box-popup .list-view {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #cbd5e1;
+    border-color: #cbd5e1;
 }
 
 .combo-box-popup .list-view .list-cell {
     -fx-background-color: white;
+    background-color: white;
     -fx-text-fill: #0f172a;
 }
 
 .combo-box-popup .list-view .list-cell:filled:hover {
     -fx-background-color: #e2e8f0;
+    background-color: #e2e8f0;
 }
 
 /* CheckBox */
@@ -193,50 +222,66 @@
 
 .check-box .box {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #cbd5e1;
+    border-color: #cbd5e1;
 }
 
 .check-box:selected .box {
     -fx-background-color: #2563eb;
+    background-color: #2563eb;
     -fx-border-color: #2563eb;
+    border-color: #2563eb;
 }
 
 .check-box:selected .mark {
     -fx-background-color: white;
+    background-color: white;
 }
 
 
 /* Extra Overrides for Modules */
 .main-container {
     -fx-background-color: #f4f7fb;
+    background-color: #f4f7fb;
 }
 .community-root {
     -fx-background-color: #f4f7fb;
+    background-color: #f4f7fb;
 }
 .community-split-pane {
     -fx-background-color: #f4f7fb;
+    background-color: #f4f7fb;
 }
 .threads-list {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #e2e8f0;
+    border-color: #e2e8f0;
 }
 .threads-list .list-cell {
     -fx-text-fill: #1e293b;
     -fx-border-color: #e2e8f0;
+    border-color: #e2e8f0;
 }
 .threads-list .list-cell .label {
     -fx-text-fill: #1e293b;
 }
 .threads-list .list-cell:filled:hover {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
 }
 .threads-list .list-cell:selected {
     -fx-background-color: #f1f5f9;
+    background-color: #f1f5f9;
     -fx-border-color: #2563eb;
+    border-color: #2563eb;
 }
 .thread-focus-area {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #e2e8f0;
+    border-color: #e2e8f0;
 }
 .thread-focus-title {
     -fx-text-fill: #1e293b;
@@ -249,6 +294,7 @@
 }
 .replies-list .list-cell {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
     -fx-text-fill: #1e293b;
 }
 .replies-list .list-cell .label {
@@ -256,25 +302,33 @@
 }
 .new-reply-field {
     -fx-background-color: #f4f7fb;
+    background-color: #f4f7fb;
     -fx-border-color: #cbd5e1;
+    border-color: #cbd5e1;
     -fx-text-fill: #1e293b;
 }
 .event-card {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #e2e8f0;
+    border-color: #e2e8f0;
 }
 .event-card:hover {
     -fx-background-color: #f8fafc;
+    background-color: #f8fafc;
 }
 .event-title {
     -fx-text-fill: #1e293b;
 }
 .popup-container {
     -fx-background-color: white;
+    background-color: white;
     -fx-border-color: #cbd5e1;
+    border-color: #cbd5e1;
 }
 .popup-header-section {
     -fx-background-color: linear-gradient(to right bottom, #f1f5f9, #e2e8f0);
+    background-color: linear-gradient(to right bottom, #f1f5f9, #e2e8f0);
 }
 .popup-title-large {
     -fx-text-fill: #1e293b;
@@ -293,10 +347,12 @@
 }
 .popup-footer-section {
     -fx-background-color: white;
+    background-color: white;
 }
 .title-header {
     -fx-text-fill: #1e293b;
 }
 .filter-bar {
     -fx-background-color: white;
+    background-color: white;
 }
