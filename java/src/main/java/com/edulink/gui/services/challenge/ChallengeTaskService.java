@@ -46,7 +46,11 @@ public class ChallengeTaskService {
 
     // ── CRUD Tasks ────────────────────────────────────────────────────────────
 
-    public void add(ChallengeTask task) {
+    public boolean add(ChallengeTask task) {
+        if (cnx == null) {
+            System.err.println("❌ add task: no DB connection");
+            return false;
+        }
         String sql = "INSERT INTO challenge_task (challenge_id, title, description, order_index, is_required) VALUES (?,?,?,?,?)";
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setInt(1, task.getChallengeId());
@@ -54,8 +58,14 @@ public class ChallengeTaskService {
             ps.setString(3, task.getDescription());
             ps.setInt(4, task.getOrderIndex());
             ps.setBoolean(5, task.isRequired());
-            ps.executeUpdate();
-        } catch (SQLException e) { System.out.println("❌ add task: " + e.getMessage()); }
+            int rows = ps.executeUpdate();
+            System.out.println("✅ task added, rows=" + rows + ", challengeId=" + task.getChallengeId());
+            return rows > 0;
+        } catch (Exception e) {
+            System.err.println("❌ add task: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void edit(ChallengeTask task) {
