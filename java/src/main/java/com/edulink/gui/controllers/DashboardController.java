@@ -33,6 +33,8 @@ public class DashboardController implements Initializable {
     private Button adminChallengesBtn;
     @FXML
     private Button adminReviewSubmissionsBtn;
+    @FXML
+    private Button adminChallengeStatsBtn;
 
     private boolean isAdmin = false;
 
@@ -77,6 +79,10 @@ public class DashboardController implements Initializable {
                 adminReviewSubmissionsBtn.setVisible(true);
                 adminReviewSubmissionsBtn.setManaged(true);
             }
+            if (adminChallengeStatsBtn != null) {
+                adminChallengeStatsBtn.setVisible(true);
+                adminChallengeStatsBtn.setManaged(true);
+            }
             
             if (studentCatalogBtn != null) {
                 studentCatalogBtn.setVisible(false);
@@ -99,6 +105,7 @@ public class DashboardController implements Initializable {
     @FXML public void showMyChallenges()         { loadView("/view/challenge/MyChallenges.fxml"); }
     @FXML public void showManageChallenges()     { loadView("/view/challenge/ManageChallenges.fxml"); }
     @FXML public void showReviewSubmissions()    { loadView("/view/challenge/ReviewSubmissions.fxml"); }
+    @FXML public void showChallengeStats()       { loadView("/view/challenge/ChallengeStats.fxml"); }
 
     // ── Events ──────────────────────────────────────────────────────────────
     @FXML public void showEvent()                { loadView("/view/event/event.fxml"); }
