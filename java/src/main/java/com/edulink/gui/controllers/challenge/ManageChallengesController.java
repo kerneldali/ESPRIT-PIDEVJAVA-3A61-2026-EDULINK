@@ -1,7 +1,9 @@
 package com.edulink.gui.controllers.challenge;
 
 import com.edulink.gui.models.challenge.Challenge;
+import com.edulink.gui.models.challenge.ChallengeTask;
 import com.edulink.gui.services.challenge.ChallengeService;
+import com.edulink.gui.services.challenge.ChallengeTaskService;
 import com.edulink.gui.util.EduAlert;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -47,9 +49,19 @@ public class ManageChallengesController implements Initializable {
     @FXML private Label xpError;
     @FXML private Label deadlineError;
 
-    private final ChallengeService challengeService = new ChallengeService();
+    // --- Task overlay ---
+    @FXML private VBox taskOverlay;
+    @FXML private Label taskOverlayTitle;
+    @FXML private VBox taskListContainer;
+    @FXML private TextField newTaskTitleField;
+    @FXML private TextField newTaskDescField;
+    @FXML private CheckBox newTaskRequiredCheck;
+
+    private final ChallengeService challengeService     = new ChallengeService();
+    private final ChallengeTaskService taskService      = new ChallengeTaskService();
     private final ObservableList<Challenge> challengeList = FXCollections.observableArrayList();
-    private Challenge currentEditable = null;
+    private Challenge currentEditable  = null;
+    private Challenge currentTaskChallenge = null; // challenge dont on gère les tâches
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -192,9 +204,104 @@ public class ManageChallengesController implements Initializable {
             }
         });
 
-        row.getChildren().addAll(titleLabel, diffLabel, xpLabel, statusLabel, deadlineLabel, spacer, editBtn, delBtn);
+        Button tasksBtn = new Button("📋 Tasks");
+        tasksBtn.setStyle("-fx-background-color: #7c3aed33; -fx-text-fill: #bb86fc; " +
+                "-fx-border-color: #7c3aed55; -fx-border-radius: 5; -fx-cursor: hand; -fx-padding: 4 10;");
+        tasksBtn.setOnAction(e -> openTaskOverlay(c));
+
+        row.getChildren().addAll(titleLabel, diffLabel, xpLabel, statusLabel, deadlineLabel, spacer, tasksBtn, editBtn, delBtn);
         com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
+    }
+
+    // ======================== TASK OVERLAY ========================
+
+    private void openTaskOverlay(Challenge c) {
+        currentTaskChallenge = c;
+        taskOverlayTitle.setText("📋  Tâches — " + c.getTitle());
+        newTaskTitleField.clear();
+        newTaskDescField.clear();
+        newTaskRequiredCheck.setSelected(true);
+        refreshTaskList();
+        taskOverlay.setVisible(true);
+        taskOverlay.toFront();
+    }
+
+    private void refreshTaskList() {
+        taskListContainer.getChildren().clear();
+        if (currentTaskChallenge == null) return;
+        List<ChallengeTask> tasks = taskService.getByChallenge(currentTaskChallenge.getId());
+        if (tasks.isEmpty()) {
+            Label empty = new Label("Aucune tâche pour ce challenge.");
+            empty.setStyle("-fx-text-fill: #a0a0ab; -fx-font-size: 13px;");
+            taskListContainer.getChildren().add(empty);
+            return;
+        }
+        for (ChallengeTask t : tasks) {
+            HBox row = new HBox(10);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setStyle("-fx-padding: 10 12; -fx-background-color: #2a2a3e; " +
+                         "-fx-background-radius: 8; -fx-border-color: #ffffff11; -fx-border-radius: 8;");
+
+            Label orderLbl = new Label(String.valueOf(t.getOrderIndex()));
+            orderLbl.setStyle("-fx-text-fill: #7B7FA0; -fx-font-size: 11px;");
+            orderLbl.setPrefWidth(20);
+
+            Label reqBadge = new Label(t.isRequired() ? "Obligatoire" : "Optionnel");
+            reqBadge.setStyle("-fx-background-color: " + (t.isRequired() ? "#ef444433" : "#3b82f633") + "; " +
+                    "-fx-text-fill: " + (t.isRequired() ? "#ef4444" : "#3b82f6") + "; " +
+                    "-fx-padding: 2 8; -fx-background-radius: 8; -fx-font-size: 10px;");
+
+            Label titleLbl = new Label(t.getTitle());
+            titleLbl.setStyle("-fx-text-fill: white; -fx-font-weight: bold;");
+            HBox.setHgrow(titleLbl, Priority.ALWAYS);
+
+            Label descLbl = new Label(t.getDescription() != null ? t.getDescription() : "");
+            descLbl.setStyle("-fx-text-fill: #a0a0ab; -fx-font-size: 12px;");
+            descLbl.setPrefWidth(180);
+
+            Button delTaskBtn = new Button("🗑");
+            delTaskBtn.setStyle("-fx-background-color: #ef444433; -fx-text-fill: #ef4444; " +
+                    "-fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 4 8;");
+            delTaskBtn.setOnAction(e -> {
+                taskService.delete(t.getId());
+                refreshTaskList();
+            });
+
+            row.getChildren().addAll(orderLbl, reqBadge, titleLbl, descLbl, delTaskBtn);
+            taskListContainer.getChildren().add(row);
+        }
+    }
+
+    @FXML
+    private void handleAddTask() {
+        if (currentTaskChallenge == null) return;
+        String title = newTaskTitleField.getText().trim();
+        if (title.isEmpty()) {
+            EduAlert.show(EduAlert.AlertType.WARNING, "Champ requis", "Le titre de la tâche est obligatoire.");
+            return;
+        }
+        int order = taskService.getByChallenge(currentTaskChallenge.getId()).size() + 1;
+        ChallengeTask task = new ChallengeTask(
+                currentTaskChallenge.getId(), title,
+                newTaskDescField.getText().trim(), order,
+                newTaskRequiredCheck.isSelected());
+        boolean saved = taskService.add(task);
+        if (!saved) {
+            EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
+                    "La tâche n'a pas pu être sauvegardée. Vérifie la console IntelliJ pour le détail.");
+            return;
+        }
+        newTaskTitleField.clear();
+        newTaskDescField.clear();
+        newTaskRequiredCheck.setSelected(true);
+        refreshTaskList();
+    }
+
+    @FXML
+    private void handleCloseTaskOverlay() {
+        taskOverlay.setVisible(false);
+        currentTaskChallenge = null;
     }
 
     // ======================== FORMULAIRE ========================

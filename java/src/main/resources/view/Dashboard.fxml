@@ -58,6 +58,7 @@
                             <!-- Admin -->
                             <Button fx:id="adminChallengesBtn"          styleClass="sub-nav-button" text="• Manage Challenges"    onAction="#showManageChallenges"    visible="false" managed="false"/>
                             <Button fx:id="adminReviewSubmissionsBtn"   styleClass="sub-nav-button" text="• Review Submissions"   onAction="#showReviewSubmissions"   visible="false" managed="false"/>
+                            <Button fx:id="adminChallengeStatsBtn"      styleClass="sub-nav-button" text="• Statistiques"         onAction="#showChallengeStats"      visible="false" managed="false"/>
                         </VBox>
                     </VBox>
 

@@ -4,6 +4,7 @@ import com.edulink.gui.models.User;
 import com.edulink.gui.models.challenge.Challenge;
 import com.edulink.gui.models.challenge.ChallengeParticipation;
 import com.edulink.gui.services.UserService;
+import com.edulink.gui.services.challenge.CertificateService;
 import com.edulink.gui.services.challenge.ChallengeParticipationService;
 import com.edulink.gui.services.challenge.ChallengeService;
 import com.edulink.gui.util.EduAlert;
@@ -33,6 +34,7 @@ public class ReviewSubmissionsController implements Initializable {
     private final ChallengeParticipationService participationService = new ChallengeParticipationService();
     private final ChallengeService challengeService                  = new ChallengeService();
     private final UserService userService                            = new UserService();
+    private final CertificateService certificateService             = new CertificateService();
 
     // cache des soumissions en attente pour le filtrage
     private final ObservableList<ChallengeParticipation> pendingList = FXCollections.observableArrayList();
@@ -198,6 +200,22 @@ public class ReviewSubmissionsController implements Initializable {
         participationService.validate(p.getId(), p.getUserId(), c.getXpReward());
         EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
                 "+" + c.getXpReward() + " XP accordés à " + userName + ".");
+
+        // Demander confirmation avant de générer le certificat
+        boolean genCert = EduAlert.confirm("Générer le certificat PDF",
+                "Voulez-vous générer un certificat PDF pour " + userName + " ?\n" +
+                "Le fichier sera sauvegardé sur le Bureau.");
+        if (genCert) {
+            String certPath = certificateService.generateCertificate(
+                    userName, c.getTitle(), c.getXpReward(), c.getDifficulty());
+            if (certPath != null) {
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Certificat généré !",
+                        "📄 Fichier sauvegardé :\n" + certPath);
+            } else {
+                EduAlert.show(EduAlert.AlertType.WARNING, "Certificat",
+                        "Le certificat n'a pas pu être généré. Vérifiez la console.");
+            }
+        }
         loadData();
     }
 

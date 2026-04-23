@@ -14,17 +14,36 @@ public class UserService implements IService<User> {
     public UserService() {
         cnx = MyConnection.getInstance().getCnx();
         ensureXpColumn();
+        ensureTransactionLogTable();
     }
 
     private void ensureXpColumn() {
+        if (cnx == null) return;
         try (Statement st = cnx.createStatement()) {
             st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
-        } catch (SQLException e) {
-            // Might already exist or dialect doesn't support IF NOT EXISTS
+        } catch (Exception e) {
+            // colonne déjà existante ou syntaxe non supportée
+        }
+    }
+
+    private void ensureTransactionLogTable() {
+        if (cnx == null) return;
+        String sql = "CREATE TABLE IF NOT EXISTS transaction_log (" +
+                     "  id INT AUTO_INCREMENT PRIMARY KEY," +
+                     "  user_id INT NOT NULL," +
+                     "  message VARCHAR(500)," +
+                     "  created_at DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                     ")";
+        try (Statement st = cnx.createStatement()) {
+            st.execute(sql);
+        } catch (Exception e) {
+            System.err.println("transaction_log table: " + e.getMessage());
         }
     }
 
     public boolean isConnected() {
+        // Refresh local cnx in case MyConnection retried and succeeded
+        this.cnx = MyConnection.getInstance().getCnx();
         return MyConnection.getInstance().isConnected();
     }
 
@@ -89,15 +108,19 @@ public class UserService implements IService<User> {
     }
 
     public void updateXp(int userId, int amountToAdd) {
+        if (cnx == null) { System.err.println("❌ updateXp: no DB connection"); return; }
         String qry = "UPDATE user SET xp = xp + ? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setInt(1, amountToAdd);
             pstm.setInt(2, userId);
-            pstm.executeUpdate();
-            addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
+            int rows = pstm.executeUpdate();
+            System.out.println("✅ XP updated: +" + amountToAdd + " for userId=" + userId + " (rows=" + rows + ")");
         } catch (SQLException e) {
+            System.err.println("❌ updateXp failed: " + e.getMessage());
             e.printStackTrace();
         }
+        // Log séparé — ne doit pas bloquer l'XP
+        addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
     }
 
     public void updateWallet(int userId, double amountToAdd) {
@@ -152,6 +175,7 @@ public class UserService implements IService<User> {
     }
 
     public User authenticate(String email, String password) {
+        if (cnx == null) return null;
         String qry = "SELECT * FROM user WHERE email = ? AND password = ?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setString(1, email);
@@ -160,7 +184,7 @@ public class UserService implements IService<User> {
             if (rs.next()) {
                 return mapResultSetToUser(rs);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
