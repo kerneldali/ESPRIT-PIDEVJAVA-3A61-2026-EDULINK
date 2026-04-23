@@ -17,14 +17,15 @@ public class ChallengeTaskService {
     }
 
     private void ensureTables() {
+        if (cnx == null) return;
+        // Pas de FK pour éviter les erreurs si le moteur ne les supporte pas
         String tasks = "CREATE TABLE IF NOT EXISTS challenge_task (" +
                 "  id INT AUTO_INCREMENT PRIMARY KEY," +
                 "  challenge_id INT NOT NULL," +
                 "  title VARCHAR(255) NOT NULL," +
                 "  description TEXT," +
                 "  order_index INT DEFAULT 0," +
-                "  is_required TINYINT(1) DEFAULT 1," +
-                "  FOREIGN KEY (challenge_id) REFERENCES challenge(id) ON DELETE CASCADE" +
+                "  is_required TINYINT(1) DEFAULT 1" +
                 ")";
         String completions = "CREATE TABLE IF NOT EXISTS task_completion (" +
                 "  id INT AUTO_INCREMENT PRIMARY KEY," +
@@ -35,7 +36,9 @@ public class ChallengeTaskService {
                 ")";
         try (Statement st = cnx.createStatement()) {
             st.execute(tasks);
+            System.out.println("✅ Table challenge_task OK");
             st.execute(completions);
+            System.out.println("✅ Table task_completion OK");
         } catch (SQLException e) {
             System.out.println("❌ ensureTables: " + e.getMessage());
         }
