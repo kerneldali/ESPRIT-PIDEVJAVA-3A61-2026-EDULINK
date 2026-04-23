@@ -92,6 +92,13 @@
                           -fx-padding: 8 12; -fx-background-radius: 6;"
                    wrapText="true" maxWidth="460"/>
 
+            <!-- Checklist des tâches -->
+            <VBox fx:id="taskChecklistContainer" spacing="8" visible="false" managed="false"
+                  style="-fx-background-color: #2a2a3e; -fx-padding: 12; -fx-background-radius: 8;">
+                <Label text="✅  Tâches à compléter (* = obligatoire)"
+                       style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+            </VBox>
+
             <!-- Zone de texte -->
             <VBox spacing="6">
                 <Label text="Description / Notes"

@@ -2,15 +2,19 @@ package com.edulink.gui.controllers.challenge;
 
 import com.edulink.gui.models.challenge.Challenge;
 import com.edulink.gui.models.challenge.ChallengeParticipation;
+import com.edulink.gui.models.challenge.ChallengeTask;
 import com.edulink.gui.services.challenge.ChallengeParticipationService;
 import com.edulink.gui.services.challenge.ChallengeService;
+import com.edulink.gui.services.challenge.ChallengeTaskService;
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -21,7 +25,6 @@ import javafx.stage.FileChooser;
 import java.io.File;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class MyChallengesController implements Initializable {
@@ -34,14 +37,17 @@ public class MyChallengesController implements Initializable {
     // Overlay de soumission
     @FXML private VBox submissionOverlay;
     @FXML private Label overlayTitle;
+    @FXML private VBox taskChecklistContainer;
     @FXML private TextArea submissionTextArea;
     @FXML private Label selectedFileLabel;
     @FXML private Label submissionHint; // message rejet éventuel
 
     private final ChallengeService challengeService               = new ChallengeService();
     private final ChallengeParticipationService participationService = new ChallengeParticipationService();
+    private final ChallengeTaskService taskService                = new ChallengeTaskService();
 
     private int currentUserId;
+    private int currentChallengeId = -1;
     private String selectedFilePath = null;
     private ChallengeParticipation currentParticipation = null; // participation en cours de soumission
     private final ObservableList<ChallengeParticipation> participationList = FXCollections.observableArrayList();
@@ -211,6 +217,7 @@ public class MyChallengesController implements Initializable {
 
     private void openSubmissionOverlay(ChallengeParticipation p, Challenge c, String hint) {
         currentParticipation = p;
+        currentChallengeId   = c.getId();
         selectedFilePath     = null;
 
         overlayTitle.setText("Soumettre pour : " + c.getTitle());
@@ -226,8 +233,40 @@ public class MyChallengesController implements Initializable {
             submissionHint.setManaged(false);
         }
 
+        loadTaskChecklist(c.getId(), p.getId());
+
         submissionOverlay.setVisible(true);
         submissionOverlay.toFront();
+    }
+
+    private void loadTaskChecklist(int challengeId, int participationId) {
+        taskChecklistContainer.getChildren().clear();
+        List<ChallengeTask> tasks = taskService.getByChallenge(challengeId);
+        if (tasks.isEmpty()) {
+            taskChecklistContainer.setVisible(false);
+            taskChecklistContainer.setManaged(false);
+            return;
+        }
+        taskChecklistContainer.setVisible(true);
+        taskChecklistContainer.setManaged(true);
+
+        Set<Integer> completed = new HashSet<>(taskService.getCompletedTaskIds(participationId));
+
+        for (ChallengeTask task : tasks) {
+            String label = task.getTitle() + (task.isRequired() ? "  *" : "");
+            CheckBox cb = new CheckBox(label);
+            cb.setSelected(completed.contains(task.getId()));
+            cb.setStyle("-fx-text-fill: white; -fx-font-size: 13px;");
+
+            cb.selectedProperty().addListener((obs, wasOn, isOn) -> {
+                if (isOn) {
+                    taskService.markCompleted(participationId, task.getId());
+                } else {
+                    taskService.markUncompleted(participationId, task.getId());
+                }
+            });
+            taskChecklistContainer.getChildren().add(cb);
+        }
     }
 
     @FXML
@@ -251,6 +290,14 @@ public class MyChallengesController implements Initializable {
     private void handleSubmit() {
         if (currentParticipation == null) return;
 
+        // Vérifier que toutes les tâches obligatoires sont cochées
+        List<ChallengeTask> tasks = taskService.getByChallenge(currentChallengeId);
+        if (!tasks.isEmpty() && !taskService.allRequiredCompleted(currentParticipation.getId(), currentChallengeId)) {
+            EduAlert.show(EduAlert.AlertType.WARNING, "Tâches incomplètes",
+                    "Complète toutes les tâches obligatoires (*) avant de soumettre.");
+            return;
+        }
+
         String text = submissionTextArea.getText().trim();
         if (text.isEmpty() && selectedFilePath == null) {
             EduAlert.show(EduAlert.AlertType.WARNING, "Soumission vide",
@@ -271,7 +318,9 @@ public class MyChallengesController implements Initializable {
     private void handleCloseOverlay() {
         submissionOverlay.setVisible(false);
         currentParticipation = null;
-        selectedFilePath      = null;
+        currentChallengeId   = -1;
+        selectedFilePath     = null;
+        if (taskChecklistContainer != null) taskChecklistContainer.getChildren().clear();
     }
 
     // ── Helpers visuels ───────────────────────────────────────────────────────

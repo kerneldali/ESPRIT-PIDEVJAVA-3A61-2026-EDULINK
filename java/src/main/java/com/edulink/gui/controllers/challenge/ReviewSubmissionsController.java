@@ -4,6 +4,7 @@ import com.edulink.gui.models.User;
 import com.edulink.gui.models.challenge.Challenge;
 import com.edulink.gui.models.challenge.ChallengeParticipation;
 import com.edulink.gui.services.UserService;
+import com.edulink.gui.services.challenge.CertificateService;
 import com.edulink.gui.services.challenge.ChallengeParticipationService;
 import com.edulink.gui.services.challenge.ChallengeService;
 import com.edulink.gui.util.EduAlert;
@@ -33,6 +34,7 @@ public class ReviewSubmissionsController implements Initializable {
     private final ChallengeParticipationService participationService = new ChallengeParticipationService();
     private final ChallengeService challengeService                  = new ChallengeService();
     private final UserService userService                            = new UserService();
+    private final CertificateService certificateService             = new CertificateService();
 
     // cache des soumissions en attente pour le filtrage
     private final ObservableList<ChallengeParticipation> pendingList = FXCollections.observableArrayList();
@@ -196,8 +198,19 @@ public class ReviewSubmissionsController implements Initializable {
         if (!ok) return;
 
         participationService.validate(p.getId(), p.getUserId(), c.getXpReward());
-        EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
-                "+" + c.getXpReward() + " XP accordés à " + userName + ".");
+
+        // Générer le certificat PDF
+        String certPath = certificateService.generateCertificate(
+                userName, c.getTitle(), c.getXpReward(), c.getDifficulty());
+
+        if (certPath != null) {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
+                    "+" + c.getXpReward() + " XP accordés à " + userName + ".\n\n" +
+                    "📄 Certificat généré :\n" + certPath);
+        } else {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
+                    "+" + c.getXpReward() + " XP accordés à " + userName + ".");
+        }
         loadData();
     }
 
