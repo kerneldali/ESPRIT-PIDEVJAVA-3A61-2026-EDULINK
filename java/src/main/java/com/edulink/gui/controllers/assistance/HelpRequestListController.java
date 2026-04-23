@@ -179,6 +179,7 @@ public class HelpRequestListController implements Initializable {
         actions.getChildren().addAll(editBtn, delBtn);
 
         card.getChildren().addAll(header, title, desc, details, spacer, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

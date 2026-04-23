@@ -149,6 +149,7 @@ public class ManageMatiereController implements Initializable {
         actionRow.getChildren().addAll(manageBtn, editBtn, delBtn);
         infoBox.getChildren().addAll(titleRow, actionRow);
         card.getChildren().addAll(imageBox, infoBox);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

@@ -272,6 +272,7 @@ public class EventController implements Initializable {
 
         card.getChildren().addAll(header, new Separator(), dateLbl, locLbl, capLbl, spacer2, reserveBtn, manageBox);
         card.setOnMouseClicked(evt -> showEventDetailsPopup(e));
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
