@@ -43,7 +43,7 @@ public class ManageResourcesController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         typeCombo.setItems(FXCollections.observableArrayList("PDF"));
-        statusCombo.setItems(FXCollections.observableArrayList("ACTIVE", "INACTIVE"));
+        statusCombo.setItems(FXCollections.observableArrayList("ACCEPTED", "PENDING", "REJECTED"));
 
         typeCombo.setValue("PDF");
         typeCombo.setDisable(true); // Since it's only PDF now
@@ -164,7 +164,7 @@ public class ManageResourcesController implements Initializable {
             titleField.clear();
             typeCombo.setValue("PDF");
             urlField.clear();
-            statusCombo.setValue("ACTIVE");
+            statusCombo.setValue("ACCEPTED");
         }
         formOverlay.setVisible(true);
         formOverlay.toFront();

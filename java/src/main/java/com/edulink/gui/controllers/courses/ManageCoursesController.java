@@ -240,7 +240,7 @@ public class ManageCoursesController implements Initializable {
         if (currentEditableCourse == null) {
             result.setMatiereId(filteredMatiere.getId());
             result.setAuthorId(1);
-            result.setStatus("PUBLISHED");
+            result.setStatus("ACCEPTED");
             result.setCreatedAt(LocalDateTime.now());
         }
 

@@ -45,7 +45,7 @@ public class ManageMatiereController implements Initializable {
         filterCombo.setItems(FXCollections.observableArrayList("Alphabetical (A-Z)", "Newest First"));
         filterCombo.setValue("Alphabetical (A-Z)");
 
-        statusCombo.setItems(FXCollections.observableArrayList("ACTIVE", "INACTIVE"));
+        statusCombo.setItems(FXCollections.observableArrayList("ACCEPTED", "PENDING", "REJECTED"));
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData(newV));
         filterCombo.valueProperty().addListener((obs, oldV, newV) -> filterData(searchField.getText()));
@@ -168,7 +168,7 @@ public class ManageMatiereController implements Initializable {
         } else {
             formTitle.setText("New Category");
             nameField.clear();
-            statusCombo.setValue("ACTIVE");
+            statusCombo.setValue("ACCEPTED");
             imagePathField.clear();
         }
         formOverlay.setVisible(true);

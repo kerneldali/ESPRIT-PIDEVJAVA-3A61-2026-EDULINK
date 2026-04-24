@@ -132,7 +132,8 @@ public class CourseDetailsController implements Initializable {
 
     private void loadResources() {
         resourcesContainer.getChildren().clear();
-        List<Resource> resources = resourceService.findByCourse(currentCourse.getId());
+        List<Resource> resources = resourceService.findByCourse(currentCourse.getId())
+                .stream().filter(r -> "ACCEPTED".equalsIgnoreCase(r.getStatus())).toList();
 
         if (resources.isEmpty()) {
             Label empty = new Label("No resources available yet.");
@@ -365,19 +366,39 @@ public class CourseDetailsController implements Initializable {
 
     @FXML
     private void handleSubmitSuggest() {
-        ContentProposal p = new ContentProposal();
-        p.setType("RESOURCE");
+        Resource p = new Resource();
+        p.setCoursId(currentCourse.getId());
         p.setTitle(suggestTitleField.getText().trim());
-        String desc = suggestDescField.getText() != null ? suggestDescField.getText().trim() : "";
-        p.setDescription(desc + " [Type: " + suggestTypeCombo.getValue() + "] [URL: " + suggestUrlField.getText() + "] [Course: " + currentCourse.getTitle() + "]");
-        p.setStatus("PENDING");
-        p.setCreatedAt(LocalDateTime.now());
-        int sid = com.edulink.gui.util.SessionManager.getCurrentUser() != null ? com.edulink.gui.util.SessionManager.getCurrentUser().getId() : 1;
-        p.setSuggestedBy(sid);
+        p.setType(suggestTypeCombo.getValue());
+        p.setUrl(suggestUrlField.getText() != null ? suggestUrlField.getText().trim() : "");
+        
+        boolean isAdmin = false;
+        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
+            com.edulink.gui.models.User u = com.edulink.gui.util.SessionManager.getCurrentUser();
+            p.setAuthorId(u.getId());
+            if (u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY")) {
+                isAdmin = true;
+            }
+        } else {
+            p.setAuthorId(1);
+        }
+        
+        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
 
-        new ContentProposalService().add2(p);
+        resourceService.add2(p);
+        
+        // Refresh immediately if it's automatically accepted
+        loadResources();
+
         handleCloseSuggest();
-        EduAlert.show(EduAlert.AlertType.SUCCESS, "Submitted", "Proposal sent for review.");
+        
+        if (isAdmin) {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Resource Added",
+                    "The resource has been automatically accepted and added.");
+        } else {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
+                    "Your resource suggestion has been sent to admin for review.");
+        }
     }
 
     private String getCourseContext() {

@@ -68,6 +68,7 @@ public class MatiereListController implements Initializable {
     private void applyFilters() {
         String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         java.util.List<Matiere> filtered = new java.util.ArrayList<>(allMatieres.stream()
+                .filter(m -> "ACCEPTED".equalsIgnoreCase(m.getStatus()))
                 .filter(m -> m.getName() != null && m.getName().toLowerCase().contains(query))
                 .toList());
 
@@ -161,21 +162,38 @@ public class MatiereListController implements Initializable {
 
     @FXML
     private void handleSubmitSuggest() {
-        ContentProposal p = new ContentProposal();
-        p.setType("MATIERE");
-        p.setTitle(suggestNameField.getText().trim());
-        p.setDescription(suggestDescField.getText() != null ? suggestDescField.getText().trim() : "");
-        p.setStatus("PENDING");
+        Matiere p = new Matiere();
+        p.setName(suggestNameField.getText().trim());
+        
+        boolean isAdmin = false;
+        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
+            com.edulink.gui.models.User u = com.edulink.gui.util.SessionManager.getCurrentUser();
+            p.setCreatorId(u.getId());
+            if (u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY")) {
+                isAdmin = true;
+            }
+        } else {
+            p.setCreatorId(1);
+        }
+        
+        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
         p.setCreatedAt(LocalDateTime.now());
-        int sid = 1;
-        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null)
-            sid = com.edulink.gui.util.SessionManager.getCurrentUser().getId();
-        p.setSuggestedBy(sid);
 
-        new ContentProposalService().add2(p);
+        new MatiereService().add2(p);
+        
+        // Refresh the list immediately if it's automatically accepted
+        allMatieres = matiereService.getAll();
+        applyFilters();
+
         handleCloseSuggest();
-        EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
-                "Your category suggestion has been sent to admin for review.");
+        
+        if (isAdmin) {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Category Added",
+                    "The category has been automatically accepted and added.");
+        } else {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
+                    "Your category suggestion has been sent to admin for review.");
+        }
     }
 
     @FXML

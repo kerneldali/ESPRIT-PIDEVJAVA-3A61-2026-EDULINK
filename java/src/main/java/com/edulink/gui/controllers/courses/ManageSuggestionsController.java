@@ -36,7 +36,44 @@ public class ManageSuggestionsController implements Initializable {
     }
 
     private void loadData() {
-        allProposals = service.getAll();
+        allProposals = new java.util.ArrayList<>();
+        for (com.edulink.gui.models.courses.Matiere m : new com.edulink.gui.services.courses.MatiereService().getAll()) {
+            ContentProposal p = new ContentProposal();
+            p.setId(m.getId());
+            p.setType("MATIERE");
+            p.setTitle(m.getName() != null ? m.getName() : "Untitled");
+            p.setStatus(m.getStatus());
+            p.setCreatedAt(m.getCreatedAt());
+            p.setSuggestedBy(m.getCreatorId());
+            allProposals.add(p);
+        }
+        for (com.edulink.gui.models.courses.Course c : new com.edulink.gui.services.courses.CourseService().getAll()) {
+            ContentProposal p = new ContentProposal();
+            p.setId(c.getId());
+            p.setType("COURSE");
+            p.setTitle(c.getTitle());
+            p.setDescription(c.getDescription());
+            p.setStatus(c.getStatus());
+            p.setCreatedAt(c.getCreatedAt());
+            p.setSuggestedBy(c.getAuthorId());
+            allProposals.add(p);
+        }
+        for (com.edulink.gui.models.courses.Resource r : new com.edulink.gui.services.courses.ResourceService().getAll()) {
+            ContentProposal p = new ContentProposal();
+            p.setId(r.getId());
+            p.setType("RESOURCE");
+            p.setTitle(r.getTitle());
+            p.setDescription(r.getUrl());
+            p.setStatus(r.getStatus());
+            p.setSuggestedBy(r.getAuthorId());
+            p.setCreatedAt(java.time.LocalDateTime.now());
+            allProposals.add(p);
+        }
+        
+        // Sort newest first
+        allProposals.sort((a, b) -> (b.getCreatedAt() == null ? java.time.LocalDateTime.MIN : b.getCreatedAt())
+                .compareTo(a.getCreatedAt() == null ? java.time.LocalDateTime.MIN : a.getCreatedAt()));
+
         filterAndDisplay();
     }
 
@@ -82,7 +119,7 @@ public class ManageSuggestionsController implements Initializable {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label status = new Label(p.getStatus());
+        Label status = new Label(p.getStatus() != null ? p.getStatus() : "UNKNOWN");
         if ("PENDING".equals(p.getStatus())) status.setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
         else if ("ACCEPTED".equals(p.getStatus())) status.setStyle("-fx-text-fill: #00d289; -fx-font-weight: bold;");
         else status.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
@@ -114,84 +151,15 @@ public class ManageSuggestionsController implements Initializable {
         Button acceptBtn = new Button("✅ Accept");
         acceptBtn.setStyle("-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
         acceptBtn.setOnAction(e -> {
-            p.setStatus("ACCEPTED");
-            service.edit(p);
-            
-            // Logic to convert proposal into actual content
-            if ("MATIERE".equals(p.getType())) {
-                com.edulink.gui.models.courses.Matiere m = new com.edulink.gui.models.courses.Matiere();
-                m.setName(p.getTitle());
-                m.setStatus("ACTIVE");
-                m.setCreatorId(p.getSuggestedBy());
-                m.setCreatedAt(java.time.LocalDateTime.now());
-                new com.edulink.gui.services.courses.MatiereService().add(m);
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Proposal accepted and '" + p.getTitle() + "' was added to the catalogue.");
-            } else if ("COURSE".equals(p.getType())) {
-                com.edulink.gui.models.courses.Course c = new com.edulink.gui.models.courses.Course();
-                c.setTitle(p.getTitle());
-                c.setDescription(p.getDescription());
-                c.setStatus("ACTIVE");
-                c.setAuthorId(1); // Default to admin author to avoid FK issues
-                c.setCreatedAt(java.time.LocalDateTime.now());
-                
-                String d = p.getDescription();
-                if (d.contains("[Level: ")) {
-                    String lvl = d.substring(d.indexOf("[Level: ") + 8, d.indexOf(",", d.indexOf("[Level: ")));
-                    c.setLevel(lvl.trim());
-                } else { c.setLevel("BEGINNER"); }
-                
-                if (d.contains(", XP: ")) {
-                    String xpStr = d.substring(d.indexOf(", XP: ") + 6, d.indexOf("]", d.indexOf(", XP: ")));
-                    try { c.setXp(Integer.parseInt(xpStr.trim())); } catch(Exception ex) { c.setXp(50); }
-                } else { c.setXp(100); }
-
-                if (d.contains("[Category: ")) {
-                    String catName = d.substring(d.indexOf("[Category: ") + 11, d.indexOf("]", d.indexOf("[Category: ")));
-                    com.edulink.gui.services.courses.MatiereService ms = new com.edulink.gui.services.courses.MatiereService();
-                    ms.getAll().stream()
-                        .filter(m -> m.getName().equalsIgnoreCase(catName.trim()))
-                        .findFirst()
-                        .ifPresent(m -> c.setMatiereId(m.getId()));
-                }
-                
-                new com.edulink.gui.services.courses.CourseService().add(c);
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Course '" + p.getTitle() + "' was added to the corresponding category.");
-            } else if ("RESOURCE".equals(p.getType())) {
-                com.edulink.gui.models.courses.Resource r = new com.edulink.gui.models.courses.Resource();
-                r.setTitle(p.getTitle());
-                r.setStatus("ACTIVE");
-                r.setAuthorId(1);
-                
-                String d = p.getDescription();
-                if (d.contains("[Type: ")) {
-                    r.setType(d.substring(d.indexOf("[Type: ") + 7, d.indexOf("]", d.indexOf("[Type: "))).trim());
-                }
-                if (d.contains("[URL: ")) {
-                    r.setUrl(d.substring(d.indexOf("[URL: ") + 6, d.indexOf("]", d.indexOf("[URL: "))).trim());
-                }
-                if (d.contains("[Course: ")) {
-                    String courseName = d.substring(d.indexOf("[Course: ") + 9, d.indexOf("]", d.indexOf("[Course: ")));
-                    com.edulink.gui.services.courses.CourseService cs = new com.edulink.gui.services.courses.CourseService();
-                    cs.getAll().stream()
-                        .filter(co -> co.getTitle().equalsIgnoreCase(courseName.trim()))
-                        .findFirst()
-                        .ifPresent(co -> r.setCoursId(co.getId()));
-                }
-                
-                new com.edulink.gui.services.courses.ResourceService().add(r);
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Resource '" + p.getTitle() + "' was added to the database.");
-            } else {
-                EduAlert.show(EduAlert.AlertType.SUCCESS, "Accepted", "Proposal '" + p.getTitle() + "' was marked as approved.");
-            }
-            
+            updateStatus(p, "ACCEPTED");
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Accepted", "Proposal '" + p.getTitle() + "' was marked as approved.");
             loadData();
         });
 
         Button rejectBtn = new Button("❌ Reject");
         rejectBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
         rejectBtn.setOnAction(e -> {
-            p.setStatus("REJECTED");
-            service.edit(p);
+            updateStatus(p, "REJECTED");
             EduAlert.show(EduAlert.AlertType.WARNING, "Rejected", "Proposal '" + p.getTitle() + "' has been rejected.");
             loadData();
         });
@@ -205,5 +173,30 @@ public class ManageSuggestionsController implements Initializable {
         card.getChildren().addAll(top, desc, meta, actions);
         com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
+    }
+
+    private void updateStatus(ContentProposal p, String newStatus) {
+        if ("MATIERE".equals(p.getType())) {
+            com.edulink.gui.services.courses.MatiereService ms = new com.edulink.gui.services.courses.MatiereService();
+            com.edulink.gui.models.courses.Matiere m = ms.getAll().stream().filter(x -> x.getId() == p.getId()).findFirst().orElse(null);
+            if (m != null) {
+                m.setStatus(newStatus);
+                ms.edit(m);
+            }
+        } else if ("COURSE".equals(p.getType())) {
+            com.edulink.gui.services.courses.CourseService cs = new com.edulink.gui.services.courses.CourseService();
+            com.edulink.gui.models.courses.Course c = cs.getAll().stream().filter(x -> x.getId() == p.getId()).findFirst().orElse(null);
+            if (c != null) {
+                c.setStatus(newStatus);
+                cs.edit(c);
+            }
+        } else if ("RESOURCE".equals(p.getType())) {
+            com.edulink.gui.services.courses.ResourceService rs = new com.edulink.gui.services.courses.ResourceService();
+            com.edulink.gui.models.courses.Resource r = rs.getAll().stream().filter(x -> x.getId() == p.getId()).findFirst().orElse(null);
+            if (r != null) {
+                r.setStatus(newStatus);
+                rs.edit(r);
+            }
+        }
     }
 }
