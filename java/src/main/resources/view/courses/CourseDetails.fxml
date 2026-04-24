@@ -17,6 +17,7 @@
                 <Label fx:id="courseTitleLabel" text="Course Title" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;"/>
                 <Label fx:id="courseDescLabel" wrapText="true" style="-fx-text-fill: #a0a0ab;"/>
             </VBox>
+            <Button text="🤖 Ask AI" onAction="#handleAskAi" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"/>
             <Button text="💡 Suggest Resource" onAction="#handleSuggestResource" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"/>
         </HBox>
         

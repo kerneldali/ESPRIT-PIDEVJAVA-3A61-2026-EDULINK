@@ -161,6 +161,14 @@ public class CourseDetailsController implements Initializable {
             Region spacer = new Region();
             HBox.setHgrow(spacer, Priority.ALWAYS);
 
+            Button summaryBtn = new Button("📄 Summary");
+            summaryBtn.setStyle("-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
+            summaryBtn.setOnAction(e -> handleGenerateSummary(r));
+
+            Button quizBtn = new Button("❓ Quiz");
+            quizBtn.setStyle("-fx-background-color: #ec4899; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
+            quizBtn.setOnAction(e -> handleGenerateQuiz(r));
+
             Button viewBtn = new Button("▶ Open");
             viewBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;");
             viewBtn.setOnAction(e -> openResource(r));
@@ -200,7 +208,7 @@ public class CourseDetailsController implements Initializable {
                 }
             });
 
-            row.getChildren().addAll(icon, infoBox, spacer, viewBtn, completeBtn);
+            row.getChildren().addAll(icon, infoBox, spacer, summaryBtn, quizBtn, viewBtn, completeBtn);
             resourcesContainer.getChildren().add(row);
         }
     }
@@ -370,5 +378,268 @@ public class CourseDetailsController implements Initializable {
         new ContentProposalService().add2(p);
         handleCloseSuggest();
         EduAlert.show(EduAlert.AlertType.SUCCESS, "Submitted", "Proposal sent for review.");
+    }
+
+    private String getCourseContext() {
+        List<Resource> resources = resourceService.findByCourse(currentCourse.getId());
+        StringBuilder context = new StringBuilder();
+        com.edulink.gui.services.PdfExtractorService pdfExtractor = new com.edulink.gui.services.PdfExtractorService();
+        for (Resource r : resources) {
+            if ("PDF".equalsIgnoreCase(r.getType())) {
+                context.append("Resource Title: ").append(r.getTitle()).append("\n");
+                context.append(pdfExtractor.extractText(r.getUrl())).append("\n\n");
+            }
+        }
+        return context.toString();
+    }
+
+    private void handleGenerateSummary(Resource r) {
+        String pdfText = new com.edulink.gui.services.PdfExtractorService().extractText(r.getUrl());
+        if (pdfText == null || pdfText.trim().isEmpty() || pdfText.startsWith("Error") || pdfText.startsWith("File not found")) {
+            com.edulink.gui.util.EduAlert.show(com.edulink.gui.util.EduAlert.AlertType.ERROR, "Extraction Failed", "Could not extract text from this PDF. It might be empty, a scanned image, or missing.");
+            return;
+        }
+        String systemPrompt = "You are an AI assistant. Provide a concise, easy-to-understand summary of the following document.";
+        showAiDialog("Summary: " + r.getTitle(), "Generating summary... Please wait.", systemPrompt, pdfText);
+    }
+
+    private void handleGenerateQuiz(Resource r) {
+        String pdfText = new com.edulink.gui.services.PdfExtractorService().extractText(r.getUrl());
+        if (pdfText == null || pdfText.trim().isEmpty() || pdfText.startsWith("Error") || pdfText.startsWith("File not found")) {
+            com.edulink.gui.util.EduAlert.show(com.edulink.gui.util.EduAlert.AlertType.ERROR, "Extraction Failed", "Could not extract text from this PDF. It might be empty, a scanned image, or missing.");
+            return;
+        }
+        String systemPrompt = "You are a teacher. Generate a 5-question multiple-choice quiz based on the provided document. "
+            + "You MUST format your EXACT response strictly as follows for each question:\n\n"
+            + "Q: [Question Text]\n"
+            + "A) [Option A Text]\n"
+            + "B) [Option B Text]\n"
+            + "C) [Option C Text]\n"
+            + "D) [Option D Text]\n"
+            + "ANSWER: [A, B, C, or D]\n\n"
+            + "Separate each question with exactly '---' on a new line. Do not include any intro or outro text.";
+        showInteractiveQuizDialog("Quiz: " + r.getTitle(), systemPrompt, pdfText);
+    }
+
+    private void showInteractiveQuizDialog(String title, String systemPrompt, String content) {
+        javafx.stage.Stage dialog = new javafx.stage.Stage();
+        dialog.setTitle(title);
+        
+        VBox root = new VBox(15);
+        root.setPadding(new javafx.geometry.Insets(20));
+        root.setStyle("-fx-background-color: #1a1a2e;");
+        
+        Label loadingLabel = new Label("Generating quiz... Please wait.");
+        loadingLabel.setStyle("-fx-text-fill: white; -fx-font-size: 16px;");
+        
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: #1a1a2e;");
+        
+        VBox quizContainer = new VBox(20);
+        quizContainer.setStyle("-fx-background-color: #1a1a2e;");
+        scrollPane.setContent(loadingLabel);
+        
+        root.getChildren().add(scrollPane);
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        
+        dialog.setScene(new javafx.scene.Scene(root, 650, 550));
+        dialog.show();
+        
+        String finalContent = content.length() > 20000 ? content.substring(0, 20000) : content;
+        
+        new Thread(() -> {
+            com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
+            String response = groq.generateResponse(systemPrompt, finalContent);
+            
+            javafx.application.Platform.runLater(() -> {
+                quizContainer.getChildren().clear();
+                
+                String[] questions = response.split("---");
+                for (String qBlock : questions) {
+                    if (qBlock.trim().isEmpty()) continue;
+                    
+                    VBox qBox = new VBox(10);
+                    qBox.setStyle("-fx-background-color: #2a2a3e; -fx-padding: 15; -fx-background-radius: 8;");
+                    
+                    String qText = extractField(qBlock, "Q:", "A)");
+                    String optA = extractField(qBlock, "A)", "B)");
+                    String optB = extractField(qBlock, "B)", "C)");
+                    String optC = extractField(qBlock, "C)", "D)");
+                    String optD = extractField(qBlock, "D)", "ANSWER:");
+                    String answer = extractField(qBlock, "ANSWER:", null);
+                    
+                    if (qText.isEmpty() || answer.isEmpty()) {
+                        continue;
+                    }
+                    
+                    Label qLabel = new Label(qText.trim());
+                    qLabel.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-wrap-text: true; -fx-font-size: 14px;");
+                    
+                    ToggleGroup group = new ToggleGroup();
+                    RadioButton rbA = createOption("A) " + optA.trim(), group);
+                    RadioButton rbB = createOption("B) " + optB.trim(), group);
+                    RadioButton rbC = createOption("C) " + optC.trim(), group);
+                    RadioButton rbD = createOption("D) " + optD.trim(), group);
+                    
+                    Label resultLabel = new Label();
+                    resultLabel.setStyle("-fx-font-weight: bold; -fx-wrap-text: true;");
+                    resultLabel.setVisible(false);
+                    resultLabel.setManaged(false);
+                    
+                    javafx.beans.value.ChangeListener<Toggle> listener = (obs, oldV, newV) -> {
+                        if (newV != null) {
+                            rbA.setDisable(true);
+                            rbB.setDisable(true);
+                            rbC.setDisable(true);
+                            rbD.setDisable(true);
+                            
+                            RadioButton selected = (RadioButton) newV;
+                            boolean isCorrect = selected.getText().startsWith(answer.trim().substring(0, 1));
+                            
+                            if (isCorrect) {
+                                resultLabel.setText("✅ Correct!");
+                                resultLabel.setStyle("-fx-text-fill: #10b981; -fx-font-weight: bold; -fx-font-size: 14px;");
+                            } else {
+                                resultLabel.setText("❌ Incorrect. The correct answer is " + answer.trim());
+                                resultLabel.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold; -fx-font-size: 14px;");
+                            }
+                            resultLabel.setVisible(true);
+                            resultLabel.setManaged(true);
+                        }
+                    };
+                    group.selectedToggleProperty().addListener(listener);
+                    
+                    qBox.getChildren().addAll(qLabel, rbA, rbB, rbC, rbD, resultLabel);
+                    quizContainer.getChildren().add(qBox);
+                }
+                
+                if (quizContainer.getChildren().isEmpty()) {
+                    Label errLabel = new Label("Failed to parse quiz format. Raw response:\n" + response);
+                    errLabel.setStyle("-fx-text-fill: #ef4444; -fx-wrap-text: true;");
+                    quizContainer.getChildren().add(errLabel);
+                }
+                
+                scrollPane.setContent(quizContainer);
+            });
+        }).start();
+    }
+    
+    private RadioButton createOption(String text, ToggleGroup group) {
+        RadioButton rb = new RadioButton(text);
+        rb.setToggleGroup(group);
+        rb.setStyle("-fx-text-fill: #a0a0ab; -fx-wrap-text: true; -fx-font-size: 13px;");
+        return rb;
+    }
+    
+    private String extractField(String source, String startTag, String endTag) {
+        int startIndex = source.indexOf(startTag);
+        if (startIndex == -1) return "";
+        startIndex += startTag.length();
+        
+        int endIndex = endTag != null ? source.indexOf(endTag, startIndex) : source.length();
+        if (endIndex == -1) endIndex = source.length();
+        
+        return source.substring(startIndex, endIndex).trim();
+    }
+
+    private void showAiDialog(String title, String initialMsg, String systemPrompt, String content) {
+        javafx.stage.Stage dialog = new javafx.stage.Stage();
+        dialog.setTitle(title);
+        
+        VBox root = new VBox(10);
+        root.setPadding(new javafx.geometry.Insets(15));
+        root.setStyle("-fx-background-color: #1a1a2e;");
+        
+        TextArea textArea = new TextArea(initialMsg);
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setStyle("-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;");
+        textArea.setPrefSize(500, 400);
+        
+        root.getChildren().add(textArea);
+        dialog.setScene(new javafx.scene.Scene(root));
+        dialog.show();
+        
+        String finalContent = content.length() > 20000 ? content.substring(0, 20000) : content;
+        
+        new Thread(() -> {
+            com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
+            String response = groq.generateResponse(systemPrompt, finalContent);
+            javafx.application.Platform.runLater(() -> {
+                textArea.setText(response);
+            });
+        }).start();
+    }
+
+    @FXML
+    private void handleAskAi() {
+        javafx.stage.Stage dialog = new javafx.stage.Stage();
+        dialog.setTitle("AI Assistant - " + currentCourse.getTitle());
+        
+        VBox root = new VBox(10);
+        root.setPadding(new javafx.geometry.Insets(15));
+        root.setStyle("-fx-background-color: #1a1a2e;");
+        
+        TextArea chatArea = new TextArea();
+        chatArea.setEditable(false);
+        chatArea.setWrapText(true);
+        chatArea.setStyle("-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;");
+        chatArea.setPrefHeight(300);
+        chatArea.setPrefWidth(450);
+        chatArea.appendText("AI: Hello! I am here to answer questions strictly about the course '" + currentCourse.getTitle() + "'. What would you like to know?\n\n");
+        
+        TextField inputField = new TextField();
+        inputField.setPromptText("Ask a question...");
+        inputField.setStyle("-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6;");
+        
+        Button sendBtn = new Button("Send");
+        sendBtn.setStyle("-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 6; -fx-cursor: hand;");
+        
+        HBox inputBox = new HBox(10, inputField, sendBtn);
+        HBox.setHgrow(inputField, Priority.ALWAYS);
+        
+        root.getChildren().addAll(chatArea, inputBox);
+        
+        dialog.setScene(new javafx.scene.Scene(root));
+        dialog.show();
+        
+        new Thread(() -> {
+            String context = getCourseContext();
+            if (context.trim().isEmpty()) {
+                context = "[No readable PDF resources found for this course. Please rely on general knowledge regarding the course topic.]";
+            } else if (context.length() > 20000) {
+                context = context.substring(0, 20000);
+            }
+            final String finalContext = context;
+            
+            javafx.application.Platform.runLater(() -> {
+                sendBtn.setOnAction(e -> {
+                    String question = inputField.getText().trim();
+                    if (question.isEmpty()) return;
+                    
+                    chatArea.appendText("You: " + question + "\n");
+                    inputField.clear();
+                    sendBtn.setDisable(true);
+                    
+                    new Thread(() -> {
+                        com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
+                        String systemPrompt = "You are a helpful teaching assistant for the course '" + currentCourse.getTitle() + "'. "
+                                + "Your primary source of knowledge is the following course content. "
+                                + "If the user greets you, greet them back and ask how you can help with the course. "
+                                + "If the user asks a question completely unrelated to this course content (e.g. general knowledge or another subject), respond exactly with: "
+                                + "'This chatbot is limited to the " + currentCourse.getTitle() + " course resources. Please ask a question related to this course.'\n\n"
+                                + "COURSE CONTENT:\n" + finalContext;
+                        
+                        String response = groq.generateResponse(systemPrompt, question);
+                        
+                        javafx.application.Platform.runLater(() -> {
+                            chatArea.appendText("AI: " + response + "\n\n");
+                            sendBtn.setDisable(false);
+                        });
+                    }).start();
+                });
+            });
+        }).start();
     }
 }
