@@ -59,8 +59,9 @@ public class CourseDetailsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        suggestTypeCombo.setItems(FXCollections.observableArrayList("VIDEO", "PDF", "LINK", "TEXT"));
-        suggestTypeCombo.setValue("VIDEO");
+        suggestTypeCombo.setItems(FXCollections.observableArrayList("PDF"));
+        suggestTypeCombo.setValue("PDF");
+        suggestTypeCombo.setDisable(true);
 
         suggestTitleField.textProperty().addListener((obs, o, n) -> {
             suggestTitleError.setText("");
@@ -146,11 +147,8 @@ public class CourseDetailsController implements Initializable {
             row.setStyle("-fx-background-color: #1a1a2e; -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #ffffff11;");
 
             // Icon
-            Label icon = new Label("▶");
+            Label icon = new Label("📄");
             icon.setStyle("-fx-text-fill: #7c3aed; -fx-font-size: 16px;");
-            if ("PDF".equals(r.getType())) icon.setText("📄");
-            else if ("LINK".equals(r.getType())) icon.setText("🔗");
-            else if ("TEXT".equals(r.getType())) icon.setText("📝");
 
             VBox infoBox = new VBox(3);
             Label title = new Label(r.getTitle());
@@ -215,28 +213,32 @@ public class CourseDetailsController implements Initializable {
                 return;
             }
             
-            // Integrated Viewer (PDF, Video, YouTube, Link)
+            // Resolve relative path if needed
+            File file = new File(path);
+            if (!file.exists() && !file.isAbsolute() && !path.startsWith("http")) {
+                File relFile = new File(System.getProperty("user.dir"), path);
+                if (relFile.exists()) {
+                    file = relFile;
+                }
+            }
+
             try {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/courses/ResourceViewer.fxml"));
-                Parent root = loader.load();
-                ResourceViewerController controller = loader.getController();
-                
-                // Pass title, path, AND type for smart rendering
-                controller.loadResource(r.getTitle(), path, r.getType());
-                
-                javafx.stage.Stage stage = new javafx.stage.Stage();
-                stage.setTitle("EduLink Viewer - " + r.getTitle());
-                stage.setScene(new javafx.scene.Scene(root));
-                stage.initOwner(rootPane.getScene().getWindow());
-                stage.show();
+                if (file.exists()) {
+                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                        new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", file.getAbsolutePath()).start();
+                    } else if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().open(file);
+                    }
+                } else if (path.startsWith("http")) {
+                    if (Desktop.isDesktopSupported()) {
+                        Desktop.getDesktop().browse(new URI(path));
+                    }
+                } else {
+                    EduAlert.show(EduAlert.AlertType.ERROR, "File Not Found", "Could not locate the PDF file at:\n" + path);
+                }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                // Fallback to legacy
-                if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                    new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", path).start();
-                } else if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(new File(path));
-                }
+                EduAlert.show(EduAlert.AlertType.ERROR, "Viewer Error", ex.getMessage());
             }
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -340,7 +342,7 @@ public class CourseDetailsController implements Initializable {
         suggestTitleField.clear();
         suggestUrlField.clear();
         suggestDescField.clear();
-        suggestTypeCombo.setValue("VIDEO");
+        suggestTypeCombo.setValue("PDF");
         suggestTitleError.setText("");
         suggestSaveBtn.setDisable(true);
         suggestContextLabel.setText("For course: " + (currentCourse != null ? currentCourse.getTitle() : ""));
