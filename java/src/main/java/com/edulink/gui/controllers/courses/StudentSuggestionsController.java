@@ -30,7 +30,7 @@ public class StudentSuggestionsController implements Initializable {
     @FXML private TextField xpField;
     @FXML private Button saveBtn;
 
-    private ContentProposalService proposalService = new ContentProposalService();
+
     private List<ContentProposal> allProposals;
     private ContentProposal currentEditingProposal;
 

@@ -18,7 +18,7 @@ public class ManageSuggestionsController implements Initializable {
     @FXML private ComboBox<String> typeFilter;
     @FXML private ComboBox<String> statusFilter;
 
-    private ContentProposalService service = new ContentProposalService();
+
     private List<ContentProposal> allProposals;
 
     @Override
