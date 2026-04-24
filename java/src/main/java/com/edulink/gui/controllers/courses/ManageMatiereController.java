@@ -48,6 +48,7 @@ public class ManageMatiereController implements Initializable {
         statusCombo.setItems(FXCollections.observableArrayList("ACTIVE", "INACTIVE"));
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData(newV));
+        filterCombo.valueProperty().addListener((obs, oldV, newV) -> filterData(searchField.getText()));
         nameField.textProperty().addListener((obs, old, newV) -> validateForm());
 
         loadData();
@@ -73,10 +74,22 @@ public class ManageMatiereController implements Initializable {
 
     private void filterData(String query) {
         cardContainer.getChildren().clear();
-        for (Matiere m : matiereList) {
-            if (query == null || query.isEmpty() || (m.getName() != null && m.getName().toLowerCase().contains(query.toLowerCase()))) {
-                cardContainer.getChildren().add(createCard(m));
-            }
+        String lowerQuery = query == null ? "" : query.toLowerCase();
+        
+        java.util.List<Matiere> filtered = matiereList.stream()
+            .filter(m -> lowerQuery.isEmpty() || (m.getName() != null && m.getName().toLowerCase().contains(lowerQuery)))
+            .collect(java.util.stream.Collectors.toList());
+
+        // Apply Sorting
+        String sortType = filterCombo.getValue();
+        if ("Alphabetical (A-Z)".equals(sortType)) {
+            filtered.sort((a, b) -> (a.getName() == null ? "" : a.getName()).compareToIgnoreCase(b.getName() == null ? "" : b.getName()));
+        } else if ("Newest First".equals(sortType)) {
+            filtered.sort((a, b) -> (b.getCreatedAt() == null ? LocalDateTime.MIN : b.getCreatedAt()).compareTo(a.getCreatedAt() == null ? LocalDateTime.MIN : a.getCreatedAt()));
+        }
+
+        for (Matiere m : filtered) {
+            cardContainer.getChildren().add(createCard(m));
         }
     }
 
@@ -136,6 +149,7 @@ public class ManageMatiereController implements Initializable {
         actionRow.getChildren().addAll(manageBtn, editBtn, delBtn);
         infoBox.getChildren().addAll(titleRow, actionRow);
         card.getChildren().addAll(imageBox, infoBox);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

@@ -75,7 +75,7 @@ public class AdminWalletManagementController implements Initializable {
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
         nameCol.setCellValueFactory(new PropertyValueFactory<>("fullName"));
         emailCol.setCellValueFactory(new PropertyValueFactory<>("email"));
-        balanceCol.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("%.2f TND", cellData.getValue().getWalletBalance())));
+        balanceCol.setCellValueFactory(cellData -> new SimpleStringProperty(String.format("%.2f XP", cellData.getValue().getWalletBalance())));
         
         filteredData = new FilteredList<>(userList, p -> true);
         walletTable.setItems(filteredData);
@@ -88,7 +88,7 @@ public class AdminWalletManagementController implements Initializable {
         double totalFunds = users.stream().mapToDouble(User::getWalletBalance).sum();
         long activeWallets = users.stream().filter(u -> u.getWalletBalance() > 0).count();
         
-        totalPlatformFundsLabel.setText(String.format("%.2f TND", totalFunds));
+        totalPlatformFundsLabel.setText(String.format("%.2f XP", totalFunds));
         totalActiveWalletsLabel.setText(String.valueOf(activeWallets));
         
         clearSelection();
@@ -103,7 +103,7 @@ public class AdminWalletManagementController implements Initializable {
         
         actionUserNameLabel.setText(user.getFullName());
         actionUserEmailLabel.setText(user.getEmail());
-        actionUserBalanceLabel.setText(String.format("%.2f TND", user.getWalletBalance()));
+        actionUserBalanceLabel.setText(String.format("%.2f XP", user.getWalletBalance()));
         
         actionAmountField.clear();
         formStatusLabel.setText("");
@@ -134,17 +134,17 @@ public class AdminWalletManagementController implements Initializable {
             
             // Add a permanent transaction log for the user
             String action = amount > 0 ? "added" : "deducted";
-            userService.addTransactionLog(selectedUser.getId(), "Admin " + action + " " + Math.abs(amount) + " TND from your secure wallet.");
+            userService.addTransactionLog(selectedUser.getId(), "Admin " + action + " " + Math.abs(amount) + " XP from your secure wallet.");
             
             formStatusLabel.setStyle("-fx-text-fill: #10b981;");
             if (amount > 0) {
-                formStatusLabel.setText("Successfully funded " + amount + " TND.");
+                formStatusLabel.setText("Successfully funded " + amount + " XP.");
             } else {
-                formStatusLabel.setText("Successfully deducted " + Math.abs(amount) + " TND.");
+                formStatusLabel.setText("Successfully deducted " + Math.abs(amount) + " XP.");
             }
             // Update local state temporarily for UI snappiness
             selectedUser.setWalletBalance(selectedUser.getWalletBalance() + amount);
-            actionUserBalanceLabel.setText(String.format("%.2f TND", selectedUser.getWalletBalance()));
+            actionUserBalanceLabel.setText(String.format("%.2f XP", selectedUser.getWalletBalance()));
             
             // Refresh table visually
             walletTable.refresh();
@@ -155,7 +155,7 @@ public class AdminWalletManagementController implements Initializable {
             
             // Re-calculate totals
             double totalFunds = userList.stream().mapToDouble(User::getWalletBalance).sum();
-            totalPlatformFundsLabel.setText(String.format("%.2f TND", totalFunds));
+            totalPlatformFundsLabel.setText(String.format("%.2f XP", totalFunds));
             long activeWallets = userList.stream().filter(u -> u.getWalletBalance() > 0).count();
             totalActiveWalletsLabel.setText(String.valueOf(activeWallets));
             

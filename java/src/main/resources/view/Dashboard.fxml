@@ -49,17 +49,22 @@
 
                     <!-- Challenges Module -->
                     <VBox fx:id="challengeModule" styleClass="module-container">
-                        <Button styleClass="module-button" text="🏆  Challenges" 
+                        <Button styleClass="module-button" text="🏆  Challenges"
                                 onAction="#toggleChallengeMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="challengeSubMenu" styleClass="sub-menu" visible="false" managed="false">
-                            <Button styleClass="sub-nav-button" text="• AI Challenges" onAction="#showPlaceholder"/>
-                            <Button styleClass="sub-nav-button" text="• Weekly Contest" onAction="#showPlaceholder"/>
+                            <!-- Étudiant -->
+                            <Button styleClass="sub-nav-button" text="• Active Challenges"  onAction="#showChallengeList"/>
+                            <Button styleClass="sub-nav-button" text="• Mes Challenges"     onAction="#showMyChallenges"/>
+                            <!-- Admin -->
+                            <Button fx:id="adminChallengesBtn"          styleClass="sub-nav-button" text="• Manage Challenges"    onAction="#showManageChallenges"    visible="false" managed="false"/>
+                            <Button fx:id="adminReviewSubmissionsBtn"   styleClass="sub-nav-button" text="• Review Submissions"   onAction="#showReviewSubmissions"   visible="false" managed="false"/>
+                            <Button fx:id="adminChallengeStatsBtn"      styleClass="sub-nav-button" text="• Statistiques"         onAction="#showChallengeStats"      visible="false" managed="false"/>
                         </VBox>
                     </VBox>
 
                     <!-- Events Module -->
                     <VBox fx:id="eventModule" styleClass="module-container">
-                        <Button styleClass="module-button" text="📅  Events" 
+                        <Button styleClass="module-button" text="📅  Events"
                                 onAction="#toggleEventMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="eventSubMenu" styleClass="sub-menu" visible="false" managed="false">
                             <Button styleClass="sub-nav-button" text="• All Events" onAction="#showEvent"/>
@@ -112,10 +117,13 @@
             <Separator styleClass="sidebar-separator"/>
             
             <!-- Bottom Actions -->
-            <VBox>
+            <VBox spacing="10">
                 <padding>
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
+                <Button styleClass="module-button" text="🌗 Toggle Theme" 
+                        onAction="#handleToggleTheme" maxWidth="1.7976931348623157E308"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
                 <Button styleClass="logout-button" text="↩  Exit to Workspace" 
                         onAction="#handleExit" maxWidth="1.7976931348623157E308"/>
             </VBox>

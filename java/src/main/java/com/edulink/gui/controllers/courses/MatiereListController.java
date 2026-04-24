@@ -25,6 +25,7 @@ public class MatiereListController implements Initializable {
 
     @FXML private StackPane rootPane;
     @FXML private FlowPane matiereContainer;
+    @FXML private ComboBox<String> filterCombo;
     @FXML private TextField searchField;
 
     // Suggest overlay
@@ -39,19 +40,14 @@ public class MatiereListController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        allMatieres = matiereService.getAll();
-        displayMatieres(allMatieres);
+        filterCombo.setItems(javafx.collections.FXCollections.observableArrayList("Alphabetical (A-Z)", "Newest First"));
+        filterCombo.setValue("Alphabetical (A-Z)");
 
-        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal == null || newVal.trim().isEmpty()) {
-                displayMatieres(allMatieres);
-            } else {
-                List<Matiere> filtered = allMatieres.stream()
-                        .filter(m -> m.getName() != null && m.getName().toLowerCase().contains(newVal.toLowerCase()))
-                        .toList();
-                displayMatieres(filtered);
-            }
-        });
+        allMatieres = matiereService.getAll();
+        applyFilters();
+
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        filterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         // Suggestion form validation
         suggestNameField.textProperty().addListener((obs, old, nv) -> {
@@ -66,6 +62,22 @@ public class MatiereListController implements Initializable {
                 suggestSaveBtn.setDisable(false);
             }
         });
+    }
+
+    private void applyFilters() {
+        String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
+        java.util.List<Matiere> filtered = new java.util.ArrayList<>(allMatieres.stream()
+                .filter(m -> m.getName() != null && m.getName().toLowerCase().contains(query))
+                .toList());
+
+        String sortType = filterCombo.getValue();
+        if ("Alphabetical (A-Z)".equals(sortType)) {
+            filtered.sort((a, b) -> (a.getName() == null ? "" : a.getName()).compareToIgnoreCase(b.getName() == null ? "" : b.getName()));
+        } else if ("Newest First".equals(sortType)) {
+            filtered.sort((a, b) -> (b.getCreatedAt() == null ? LocalDateTime.MIN : b.getCreatedAt()).compareTo(a.getCreatedAt() == null ? LocalDateTime.MIN : a.getCreatedAt()));
+        }
+
+        displayMatieres(filtered);
     }
 
     private void displayMatieres(List<Matiere> list) {
@@ -112,6 +124,7 @@ public class MatiereListController implements Initializable {
 
         infoBox.getChildren().addAll(title, viewBtn);
         card.getChildren().addAll(imageBox, infoBox);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 

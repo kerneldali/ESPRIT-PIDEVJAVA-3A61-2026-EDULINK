@@ -70,6 +70,8 @@ public class NotebookController implements Initializable {
                 openNotebook(n);
         });
 
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
+
         return card;
     }
 

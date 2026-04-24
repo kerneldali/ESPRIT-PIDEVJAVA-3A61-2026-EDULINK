@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="main-container"
+      xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.edulink.gui.controllers.challenge.ChallengeListController">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <VBox spacing="4">
+            <Label text="🏆  Active Challenges"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            <Label text="Rejoins un challenge, marque-le comme réussi et gagne des XP !"
+                   style="-fx-text-fill: #7B7FA0; -fx-font-size: 13px;"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <!-- Légende des états -->
+        <HBox spacing="15" alignment="CENTER">
+            <HBox spacing="6" alignment="CENTER">
+                <Label text="●" style="-fx-text-fill: #3b82f6; -fx-font-size: 10px;"/>
+                <Label text="Disponible" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+            </HBox>
+            <HBox spacing="6" alignment="CENTER">
+                <Label text="●" style="-fx-text-fill: #7c3aed; -fx-font-size: 10px;"/>
+                <Label text="Rejoint" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+            </HBox>
+            <HBox spacing="6" alignment="CENTER">
+                <Label text="●" style="-fx-text-fill: #00d289; -fx-font-size: 10px;"/>
+                <Label text="Complété" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+            </HBox>
+        </HBox>
+    </HBox>
+
+    <!-- Barre de filtre + tri -->
+    <HBox spacing="10" alignment="CENTER_LEFT"
+          style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
+        <TextField fx:id="searchField" promptText="🔍 Rechercher un challenge..."
+                   prefWidth="300" HBox.hgrow="ALWAYS"
+                   style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+        <ComboBox fx:id="difficultyFilterCombo" promptText="Difficulté"
+                  style="-fx-background-color: #2a2a3e;"/>
+        <ComboBox fx:id="sortCombo" promptText="Trier par"
+                  prefWidth="160"
+                  style="-fx-background-color: #2a2a3e;"/>
+    </HBox>
+
+    <!-- Cards -->
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                style="-fx-background-color: transparent; -fx-background: transparent;">
+        <VBox fx:id="cardContainer" spacing="12">
+            <padding><Insets top="5" right="5" bottom="5" left="5"/></padding>
+        </VBox>
+    </ScrollPane>
+
+</VBox>

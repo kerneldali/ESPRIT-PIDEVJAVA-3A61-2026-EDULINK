@@ -54,6 +54,19 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration default="true" type="JetRunConfigurationType">
+      <module name="ESPRIT-PIDEVJAVA-3A61-2026-EDULINK" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
+      <module name="ESPRIT-PIDEVJAVA-3A61-2026-EDULINK" />
+      <option name="filePath" />
+      <method v="2" />
+    </configuration>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -71,6 +84,7 @@
       <updated>1776265858421</updated>
       <workItem from="1776265859730" duration="1553000" />
       <workItem from="1775899206341" duration="577000" />
+      <workItem from="1776389188548" duration="20000" />
     </task>
     <servers />
   </component>

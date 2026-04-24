@@ -10,35 +10,8 @@ import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
-<<<<<<< Updated upstream
-=======
 import com.edulink.gui.util.SessionManager;
 
->>>>>>> Stashed changes
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.Separator;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 public class EventController implements Initializable {
 
@@ -107,7 +80,7 @@ public class EventController implements Initializable {
         onlineComboFilter.valueProperty().addListener((obs, oldV, newV) -> filterData());
         sortCombo.valueProperty().addListener((obs, oldV, newV) -> filterData());
 
-        // Form logic
+        // Activer/désactiver les champs selon le type
         onlineCheck.selectedProperty().addListener((obs, oldV, newV) -> {
             meetLinkField.setDisable(!newV);
             locationField.setDisable(newV);
@@ -220,37 +193,16 @@ public class EventController implements Initializable {
                 : "📍 " + (e.getLocation() != null && !e.getLocation().isEmpty() ? e.getLocation() : "TBD"));
         locLbl.getStyleClass().add("event-date");
 
-        // Capacity
         Label capLbl = new Label("👥 Places restantes: " + e.getMaxCapacity());
         capLbl.getStyleClass().add("capacity-text");
 
-        // Actions (Reserve)
+        // Bouton Réserver
         Button reserveBtn = new Button("🔥 Réserver");
         reserveBtn.setMaxWidth(Double.MAX_VALUE);
         reserveBtn.getStyleClass().add("btn-reserve");
 
-        if (e.getOrganizerId() == CURRENT_USER_ID) {
-            reserveBtn.setDisable(true);
-            reserveBtn.setText("Votre Événement");
-            reserveBtn.setStyle("-fx-opacity: 0.5; -fx-cursor: default;");
-        }
-
-        reserveBtn.setOnAction(evt -> {
-            evt.consume(); // Prevent triggering card click
-            Reservation res = new Reservation();
-            res.setUserId(CURRENT_USER_ID);
-            res.setEventId(e.getId());
-            res.setReservedAt(LocalDateTime.now());
-<<<<<<< Updated upstream
-            boolean success = reservationService.addReservation(res);
-
-            Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-            alert.setTitle("Réservation d'événement");
-            alert.setHeaderText(null);
-=======
             String userEmail = SessionManager.getCurrentUser().getEmail();
             boolean success = reservationService.addReservation(res, userEmail);
->>>>>>> Stashed changes
             if (success) {
                 alert.setContentText("Réservation confirmée pour : " + e.getTitle());
             } else {
@@ -269,6 +221,50 @@ public class EventController implements Initializable {
             evt.consume();
             showForm(e);
         });
+  
+        boolean isOrganizer = (currentUserId != -1 && e.getOrganizerId() == currentUserId);
+        boolean alreadyReserved = (currentUserId != -1
+                && reservationService.isAlreadyReserved(currentUserId, e.getId()));
+
+        if (isOrganizer) {
+            reserveBtn.setDisable(true);
+            reserveBtn.setText("Votre Événement");
+            reserveBtn.setStyle("-fx-opacity: 0.5; -fx-cursor: default;");
+        } else if (alreadyReserved) {
+            reserveBtn.setDisable(true);
+            reserveBtn.setText("✅ Déjà réservé");
+            reserveBtn.setStyle("-fx-opacity: 0.7; -fx-cursor: default;");
+        }
+
+        reserveBtn.setOnAction(evt -> {
+            evt.consume();
+            if (currentUserId == -1) {
+                EduAlert.show(EduAlert.AlertType.WARNING, "Non connecté",
+                        "Tu dois être connecté pour réserver un événement.");
+                return;
+            }
+            Reservation res = new Reservation();
+            res.setUserId(currentUserId);
+            res.setEventId(e.getId());
+            res.setReservedAt(LocalDateTime.now());
+            boolean success = reservationService.addReservation(res);
+            if (success) {
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
+                        "Tu es inscrit à : " + e.getTitle());
+                loadData();
+            } else {
+                EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
+                        "Impossible de réserver. Tu es peut-être déjà inscrit.");
+            }
+        });
+
+        // Boutons Edit / Delete (visibles uniquement pour l'organisateur ou admin)
+        HBox manageBox = new HBox(10);
+        manageBox.setAlignment(Pos.CENTER);
+
+        Button editBtn = new Button("✏ Edit");
+        editBtn.getStyleClass().add("btn-edit");
+        editBtn.setOnAction(evt -> { evt.consume(); showForm(e); });
 
         Button delBtn = new Button("🗑 Delete");
         delBtn.getStyleClass().add("btn-delete");
@@ -390,20 +386,8 @@ public class EventController implements Initializable {
 
         reserveBtn.setOnAction(evt -> {
             popupStage.close();
-            Reservation res = new Reservation();
-            res.setUserId(CURRENT_USER_ID);
-            res.setEventId(e.getId());
-            res.setReservedAt(LocalDateTime.now());
-<<<<<<< Updated upstream
-            boolean success = reservationService.addReservation(res);
-
-            Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-            alert.setTitle("Réservation");
-            alert.setHeaderText(null);
-=======
             String userEmail = SessionManager.getCurrentUser().getEmail();
             boolean success = reservationService.addReservation(res, userEmail);
->>>>>>> Stashed changes
             if (success) {
                 alert.setContentText("Réservation confirmée pour : " + e.getTitle());
             } else {
@@ -414,19 +398,34 @@ public class EventController implements Initializable {
 
         footerSection.getChildren().addAll(closeBtn, reserveBtn);
 
+            if (currentUserId == -1) {
+                EduAlert.show(EduAlert.AlertType.WARNING, "Non connecté",
+                        "Tu dois être connecté pour réserver.");
+                return;
+            }
+            Reservation res = new Reservation();
+            res.setUserId(currentUserId);
+            res.setEventId(e.getId());
+            res.setReservedAt(LocalDateTime.now());
+            boolean success = reservationService.addReservation(res);
+            if (success) {
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
+                        "Tu es inscrit à : " + e.getTitle());
+                loadData();
+            } else {
+                EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
+                        "Impossible de réserver. Tu es peut-être déjà inscrit.");
+            }
+        });
+
+        footerSection.getChildren().addAll(closeBtn, reserveBtn);
         popupContainer.getChildren().addAll(headerSection, bodySection, footerSection);
 
         Scene scene = new Scene(popupContainer);
         scene.setFill(Color.TRANSPARENT);
-
-        if (rootPane != null && rootPane.getScene() != null && rootPane.getScene().getStylesheets() != null) {
-            scene.getStylesheets().addAll(rootPane.getScene().getStylesheets());
-        } else {
-            try {
-                scene.getStylesheets().add(getClass().getResource("/view/event/event.css").toExternalForm());
-            } catch (Exception ex) {
-            }
-        }
+        try {
+            scene.getStylesheets().add(getClass().getResource("/view/event/event.css").toExternalForm());
+        } catch (Exception ex) { ex.printStackTrace(); }
 
         popupStage.setScene(scene);
         if (rootPane != null && rootPane.getScene() != null && rootPane.getScene().getWindow() != null) {

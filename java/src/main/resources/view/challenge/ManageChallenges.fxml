@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.SpinnerValueFactory?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane xmlns="http://javafx.com/javafx/17"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.edulink.gui.controllers.challenge.ManageChallengesController">
+
+    <!-- ========== CONTENU PRINCIPAL ========== -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="🏆  Manage Challenges"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="+ New Challenge" onAction="#handleNewChallenge"
+                    style="-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold;
+                           -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+
+        <!-- Barre de filtre + tri -->
+        <HBox spacing="10" alignment="CENTER_LEFT"
+              style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
+            <TextField fx:id="searchField" promptText="🔍 Search challenges..."
+                       prefWidth="220" HBox.hgrow="ALWAYS"
+                       style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="difficultyFilterCombo" promptText="Difficulty"
+                      style="-fx-background-color: #2a2a3e;"/>
+            <ComboBox fx:id="statusFilterCombo" promptText="Status"
+                      style="-fx-background-color: #2a2a3e;"/>
+            <ComboBox fx:id="sortCombo" promptText="Trier par"
+                      prefWidth="160"
+                      style="-fx-background-color: #2a2a3e;"/>
+        </HBox>
+
+        <!-- Table -->
+        <VBox style="-fx-background-color: #1a1a2e; -fx-padding: 15; -fx-background-radius: 8;
+                     -fx-border-color: #ffffff11; -fx-border-radius: 8;" VBox.vgrow="ALWAYS">
+
+            <Label text="All Challenges"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 0 0 10 0;"/>
+
+            <!-- En-têtes colonnes -->
+            <HBox spacing="12"
+                  style="-fx-padding: 8 15; -fx-border-color: transparent transparent #ffffff11 transparent;">
+                <Label text="Title"       prefWidth="220" style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+                <Label text="Difficulty"  prefWidth="90"  style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+                <Label text="XP"          prefWidth="80"  style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+                <Label text="Status"      prefWidth="70"  style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+                <Label text="Deadline"    prefWidth="140" style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="Actions"                     style="-fx-text-fill: #a0a0ab; -fx-font-weight: bold;"/>
+            </HBox>
+
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                <VBox fx:id="cardContainer" spacing="5"/>
+            </ScrollPane>
+        </VBox>
+    </VBox>
+
+    <!-- ========== FORMULAIRE OVERLAY ========== -->
+    <VBox fx:id="formOverlay" alignment="CENTER" visible="false"
+          style="-fx-background-color: #000000bb;">
+
+        <VBox spacing="15" maxWidth="460"
+              style="-fx-background-color: #16162a; -fx-padding: 30; -fx-background-radius: 12;
+                     -fx-border-radius: 12; -fx-border-color: #7c3aed44; -fx-border-width: 1;">
+
+            <Label fx:id="formTitle" text="New Challenge"
+                   style="-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 20px;"/>
+
+            <!-- Title -->
+            <VBox spacing="4">
+                <Label text="Challenge Title *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextField fx:id="titleField" promptText="Enter challenge title"
+                           style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                                  -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="titleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+
+            <!-- Description -->
+            <VBox spacing="4">
+                <Label text="Description *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="descField" promptText="Describe the challenge..." prefRowCount="3"
+                          style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;
+                                 -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="descError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+            </VBox>
+
+            <!-- Difficulty + Status -->
+            <HBox spacing="15">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Difficulty" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="difficultyCombo" maxWidth="Infinity"
+                              style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Status" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <ComboBox fx:id="statusCombo" maxWidth="Infinity"
+                              style="-fx-background-color: #2a2a3e;"/>
+                </VBox>
+            </HBox>
+
+            <!-- XP + Deadline -->
+            <HBox spacing="15">
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="XP Reward" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <TextField fx:id="xpField" promptText="e.g. 100"
+                               style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                                      -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                    <Label fx:id="xpError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+                </VBox>
+                <VBox spacing="4" HBox.hgrow="ALWAYS">
+                    <Label text="Deadline (optional)"
+                           style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                    <DatePicker fx:id="deadlinePicker" maxWidth="Infinity"
+                                promptText="Pick a date"
+                                style="-fx-background-color: #2a2a3e;"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Label text="Time:" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                        <Spinner fx:id="hourSpinner" prefWidth="62"
+                                 style="-fx-background-color: #2a2a3e;"/>
+                        <Label text=":" style="-fx-text-fill: white; -fx-font-weight: bold;"/>
+                        <Spinner fx:id="minuteSpinner" prefWidth="62"
+                                 style="-fx-background-color: #2a2a3e;"/>
+                    </HBox>
+                    <Label fx:id="deadlineError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
+                </VBox>
+            </HBox>
+
+            <!-- Boutons -->
+            <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">
+                <Button text="Cancel" onAction="#handleCloseForm"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab; -fx-cursor: hand;"/>
+                <Button fx:id="saveBtn" text="Save Challenge" onAction="#handleSave"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 10 25; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+    <!-- ========== TASK OVERLAY ========== -->
+    <VBox fx:id="taskOverlay" alignment="CENTER" visible="false"
+          style="-fx-background-color: #000000bb;">
+
+        <VBox spacing="14" maxWidth="560"
+              style="-fx-background-color: #16162a; -fx-padding: 28; -fx-background-radius: 12;
+                     -fx-border-radius: 12; -fx-border-color: #7c3aed55; -fx-border-width: 1;">
+
+            <!-- Titre + Fermer -->
+            <HBox alignment="CENTER_LEFT">
+                <Label fx:id="taskOverlayTitle" text="📋  Tâches"
+                       style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 17px;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="✕" onAction="#handleCloseTaskOverlay"
+                        style="-fx-background-color: transparent; -fx-text-fill: #a0a0ab;
+                               -fx-font-size: 15px; -fx-cursor: hand;"/>
+            </HBox>
+
+            <Separator style="-fx-background-color: #ffffff11;"/>
+
+            <!-- Liste des tâches existantes -->
+            <ScrollPane fitToWidth="true" prefHeight="220"
+                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                <VBox fx:id="taskListContainer" spacing="8">
+                    <padding><Insets top="2" right="2" bottom="2" left="2"/></padding>
+                </VBox>
+            </ScrollPane>
+
+            <Separator style="-fx-background-color: #ffffff11;"/>
+
+            <!-- Formulaire ajout rapide -->
+            <Label text="Ajouter une tâche"
+                   style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <TextField fx:id="newTaskTitleField" promptText="Titre de la tâche *"
+                           HBox.hgrow="ALWAYS"
+                           style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                                  -fx-padding: 8 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <TextField fx:id="newTaskDescField" promptText="Description (optionnel)"
+                           prefWidth="180"
+                           style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                                  -fx-padding: 8 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+            </HBox>
+
+            <HBox spacing="14" alignment="CENTER_LEFT">
+                <CheckBox fx:id="newTaskRequiredCheck" text="Obligatoire"
+                          selected="true"
+                          style="-fx-text-fill: white;"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Button text="+ Ajouter la tâche" onAction="#handleAddTask"
+                        style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold;
+                               -fx-padding: 9 20; -fx-background-radius: 6; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </VBox>
+
+</StackPane>
