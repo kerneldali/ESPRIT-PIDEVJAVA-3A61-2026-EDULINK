@@ -17,31 +17,30 @@ import java.util.ResourceBundle;
 
 public class ReservationController implements Initializable {
 
-    @FXML private StackPane rootPane;
-    @FXML private FlowPane cardContainer;
-    @FXML private TextField searchField;
-    @FXML private ComboBox<String> filterCombo;
-    @FXML private ComboBox<String> sortCombo;
+    @FXML
+    private StackPane rootPane;
+    @FXML
+    private FlowPane cardContainer;
+    @FXML
+    private TextField searchField;
+    @FXML
+    private ComboBox<String> filterCombo;
+    @FXML
+    private ComboBox<String> sortCombo;
 
-    private final ReservationService reservationService = new ReservationService();
-    private final EventService eventService             = new EventService();
-    private final ObservableList<Reservation> reservationList = FXCollections.observableArrayList();
+    private ReservationService reservationService = new ReservationService();
+    private EventService eventService = new EventService();
+    private ObservableList<Reservation> reservationList = FXCollections.observableArrayList();
 
-    private int currentUserId = -1;
+    private final int CURRENT_USER_ID = 1; // Simulated connected user
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Récupération de l'utilisateur connecté via SessionManager
-        if (SessionManager.getCurrentUser() != null) {
-            currentUserId = SessionManager.getCurrentUser().getId();
-        }
-
         filterCombo.setItems(FXCollections.observableArrayList("All"));
         filterCombo.setValue("All");
 
-        sortCombo.setItems(FXCollections.observableArrayList(
-                "Événement A → Z", "Événement Z → A", "Réservé (récent)", "Réservé (ancien)"));
-        sortCombo.setValue("Réservé (récent)");
+        sortCombo.setItems(FXCollections.observableArrayList("Newest First", "Oldest First", "Event Name A-Z"));
+        sortCombo.setValue("Newest First");
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData());
         filterCombo.valueProperty().addListener((obs, oldV, newV) -> filterData());
@@ -51,58 +50,47 @@ public class ReservationController implements Initializable {
     }
 
     private void loadData() {
-        if (currentUserId != -1) {
-            reservationList.setAll(reservationService.getReservationsByUserId(currentUserId));
-        } else {
-            reservationList.clear();
-        }
+        reservationList.setAll(reservationService.getReservationsByUserId(CURRENT_USER_ID));
         filterData();
     }
 
-    @FXML private void handleApplyFilter() { filterData(); }
+    @FXML
+    private void handleApplyFilter() {
+        filterData();
+    }
 
     private void filterData() {
         cardContainer.getChildren().clear();
+        String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
 
-        if (currentUserId == -1) {
-            Label lbl = new Label("Tu dois être connecté pour voir tes réservations.");
-            lbl.setStyle("-fx-text-fill: #a0a0ab; -fx-font-size: 14px;");
-            cardContainer.getChildren().add(lbl);
-            return;
+        ObservableList<ReservationWrapper> wrappers = FXCollections.observableArrayList();
+
+        for (Reservation r : reservationList) {
+            Event e = eventService.getEventById(r.getEventId());
+            if (e != null) {
+                boolean matchesSearch = e.getTitle() != null && e.getTitle().toLowerCase().contains(query);
+                if (matchesSearch) {
+                    wrappers.add(new ReservationWrapper(r, e));
+                }
+            }
         }
 
-        String query     = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
-        String sort      = sortCombo.getValue();
-
-        record RW(Reservation r, Event e) {}
-        java.util.List<RW> wrappers = reservationList.stream()
-                .map(r -> new RW(r, eventService.getEventById(r.getEventId())))
-                .filter(rw -> rw.e() != null)
-                .filter(rw -> rw.e().getTitle() != null
-                           && rw.e().getTitle().toLowerCase().contains(query))
-                .collect(java.util.stream.Collectors.toList());
-
-        java.util.Comparator<RW> cmp = switch (sort == null ? "" : sort) {
-            case "Événement Z → A"  -> java.util.Comparator.comparing(rw -> rw.e().getTitle(),
-                                        String.CASE_INSENSITIVE_ORDER.reversed());
-            case "Réservé (ancien)" -> java.util.Comparator.comparing(rw -> rw.r().getReservedAt());
-            case "Événement A → Z"  -> java.util.Comparator.comparing(rw -> rw.e().getTitle(),
-                                        String.CASE_INSENSITIVE_ORDER);
-            default                 -> java.util.Comparator.comparing(rw -> rw.r().getReservedAt(),
-                                        java.util.Comparator.reverseOrder());
-        };
-        wrappers.sort(cmp);
-
-        for (RW rw : wrappers) {
-            cardContainer.getChildren().add(createCard(rw.r(), rw.e()));
+        // Sorting
+        String sortValue = sortCombo.getValue();
+        if ("Newest First".equals(sortValue)) {
+            wrappers.sort((w1, w2) -> w2.reservation.getReservedAt().compareTo(w1.reservation.getReservedAt()));
+        } else if ("Oldest First".equals(sortValue)) {
+            wrappers.sort((w1, w2) -> w1.reservation.getReservedAt().compareTo(w2.reservation.getReservedAt()));
+        } else if ("Event Name A-Z".equals(sortValue)) {
+            wrappers.sort((w1, w2) -> {
+                String t1 = w1.event.getTitle() != null ? w1.event.getTitle() : "";
+                String t2 = w2.event.getTitle() != null ? w2.event.getTitle() : "";
+                return t1.compareToIgnoreCase(t2);
+            });
         }
 
-        if (cardContainer.getChildren().isEmpty()) {
-            Label lbl = reservationList.isEmpty()
-                    ? new Label("Tu n'as encore réservé aucun événement.")
-                    : new Label("Aucun résultat pour \"" + searchField.getText() + "\"");
-            lbl.setStyle("-fx-text-fill: #a0a0ab; -fx-font-size: 14px;");
-            cardContainer.getChildren().add(lbl);
+        for (ReservationWrapper w : wrappers) {
+            cardContainer.getChildren().add(createCard(w.reservation, w.event));
         }
     }
 
@@ -112,7 +100,7 @@ public class ReservationController implements Initializable {
         card.setPrefWidth(300);
         card.setMaxWidth(300);
 
-        // Header: Titre + Badge RESERVED
+        // Header: Title and Badge
         HBox header = new HBox(10);
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         Label title = new Label(e.getTitle() != null ? e.getTitle() : "Untitled Event");
@@ -124,10 +112,11 @@ public class ReservationController implements Initializable {
         HBox.setHgrow(spacer1, Priority.ALWAYS);
 
         Label badge = new Label("RESERVED");
-        badge.getStyleClass().add("badge-online");
+        badge.getStyleClass().add("badge-online"); // Repurposing green badge style
 
         header.getChildren().addAll(title, spacer1, badge);
 
+        // Date and Location
         Label dateLbl = new Label("📅 " + (e.getDateStart() != null ? e.getDateStart().toLocalDate() : "TBD"));
         dateLbl.getStyleClass().add("event-date");
 
@@ -136,11 +125,11 @@ public class ReservationController implements Initializable {
                 : "📍 " + (e.getLocation() != null && !e.getLocation().isEmpty() ? e.getLocation() : "TBD"));
         locLbl.getStyleClass().add("event-date");
 
-        Label resLbl = new Label("🕒 Réservé le: "
-                + r.getReservedAt().toString().replace("T", " ").substring(0, 16));
+        // Reservation info
+        Label resLbl = new Label("🕒 Réservé le: " + r.getReservedAt().toString().replace("T", " ").substring(0, 16));
         resLbl.getStyleClass().add("capacity-text");
 
-        // Bouton Annuler réservation
+        // Action (Cancel)
         Button cancelBtn = new Button("❌ Annuler réservation");
         cancelBtn.setMaxWidth(Double.MAX_VALUE);
         cancelBtn.getStyleClass().add("btn-delete");
@@ -149,11 +138,15 @@ public class ReservationController implements Initializable {
             evt.consume();
             if (EduAlert.confirm("Annuler Réservation",
                     "Voulez-vous vraiment annuler votre réservation pour '" + e.getTitle() + "' ?")) {
-                if (reservationService.deleteReservation(r.getId())) {
+                boolean success = reservationService.deleteReservation(r.getId());
+                if (success) {
                     loadData();
                 } else {
-                    EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
-                            "Impossible d'annuler la réservation.");
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Erreur");
+                    alert.setHeaderText(null);
+                    alert.setContentText("Impossible d'annuler la réservation.");
+                    alert.showAndWait();
                 }
             }
         });
@@ -162,7 +155,16 @@ public class ReservationController implements Initializable {
         VBox.setVgrow(spacer2, Priority.ALWAYS);
 
         card.getChildren().addAll(header, new Separator(), dateLbl, locLbl, resLbl, spacer2, cancelBtn);
-        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
+    }
+
+    private static class ReservationWrapper {
+        Reservation reservation;
+        Event event;
+
+        public ReservationWrapper(Reservation r, Event e) {
+            this.reservation = r;
+            this.event = e;
+        }
     }
 }
