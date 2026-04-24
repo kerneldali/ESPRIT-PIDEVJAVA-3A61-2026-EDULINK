@@ -34,16 +34,10 @@
                 <Label fx:id="titleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
             </VBox>
             
-            <HBox spacing="15">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                    <ComboBox fx:id="typeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
-                </VBox>
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Status" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                    <ComboBox fx:id="statusCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
-                </VBox>
-            </HBox>
+            <VBox spacing="5">
+                <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <ComboBox fx:id="typeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+            </VBox>
             
             <VBox spacing="5">
                 <Label text="URL / File Path *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>

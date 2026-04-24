@@ -3,7 +3,7 @@ package com.edulink.gui.controllers.courses;
 import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.models.courses.Course;
 import com.edulink.gui.models.courses.Matiere;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.services.courses.CourseService;
 import com.edulink.gui.services.courses.EnrollmentService;
 import com.edulink.gui.util.EduAlert;

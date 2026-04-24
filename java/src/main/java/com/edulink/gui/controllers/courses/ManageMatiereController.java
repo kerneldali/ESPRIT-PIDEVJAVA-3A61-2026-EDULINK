@@ -31,10 +31,10 @@ public class ManageMatiereController implements Initializable {
     @FXML private VBox formOverlay;
     @FXML private Label formTitle;
     @FXML private TextField nameField;
-    @FXML private ComboBox<String> statusCombo;
-    @FXML private TextField imagePathField;
+    @FXML private TextArea descField;
     @FXML private Button saveBtn;
     @FXML private Label nameError;
+    @FXML private Label descError;
 
     private MatiereService matiereService = new MatiereService();
     private ObservableList<Matiere> matiereList = FXCollections.observableArrayList();
@@ -45,11 +45,12 @@ public class ManageMatiereController implements Initializable {
         filterCombo.setItems(FXCollections.observableArrayList("Alphabetical (A-Z)", "Newest First"));
         filterCombo.setValue("Alphabetical (A-Z)");
 
-        statusCombo.setItems(FXCollections.observableArrayList("ACCEPTED", "PENDING", "REJECTED"));
+
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData(newV));
         filterCombo.valueProperty().addListener((obs, oldV, newV) -> filterData(searchField.getText()));
         nameField.textProperty().addListener((obs, old, newV) -> validateForm());
+        descField.textProperty().addListener((obs, old, newV) -> validateForm());
 
         loadData();
     }
@@ -63,6 +64,12 @@ public class ManageMatiereController implements Initializable {
         } else if (nameField.getText().trim().length() < 2) {
             nameError.setText("Name must be at least 2 characters");
             valid = false;
+        }
+        if (descField.getText() == null || descField.getText().trim().isEmpty()) {
+            descError.setText("Description is required");
+            valid = false;
+        } else {
+            descError.setText("");
         }
         saveBtn.setDisable(!valid);
     }
@@ -146,7 +153,27 @@ public class ManageMatiereController implements Initializable {
             }
         });
 
-        actionRow.getChildren().addAll(manageBtn, editBtn, delBtn);
+        Button genImgBtn = new Button("🖼 Generate Image");
+        genImgBtn.setStyle("-fx-background-color: #3b82f633; -fx-text-fill: #3b82f6; -fx-background-radius: 5; -fx-cursor: hand;");
+        genImgBtn.setOnAction(e -> {
+            genImgBtn.setText("Generating...");
+            genImgBtn.setDisable(true);
+            new Thread(() -> {
+                String img = generateMatiereImage(m.getName(), m.getDescription() != null ? m.getDescription() : m.getName());
+                javafx.application.Platform.runLater(() -> {
+                    if (img != null) {
+                        m.setImageUrl(img);
+                        matiereService.edit(m);
+                        loadData();
+                    } else {
+                        genImgBtn.setText("Failed");
+                        genImgBtn.setDisable(false);
+                    }
+                });
+            }).start();
+        });
+
+        actionRow.getChildren().addAll(manageBtn, editBtn, genImgBtn, delBtn);
         infoBox.getChildren().addAll(titleRow, actionRow);
         card.getChildren().addAll(imageBox, infoBox);
         com.edulink.gui.util.ThemeManager.applyTheme(card);
@@ -163,13 +190,11 @@ public class ManageMatiereController implements Initializable {
         if (m != null) {
             formTitle.setText("Edit Category");
             nameField.setText(m.getName());
-            statusCombo.setValue(m.getStatus());
-            imagePathField.setText(m.getImageUrl() != null ? m.getImageUrl() : "");
+            descField.setText(m.getDescription() != null ? m.getDescription() : "");
         } else {
             formTitle.setText("New Category");
             nameField.clear();
-            statusCombo.setValue("ACCEPTED");
-            imagePathField.clear();
+            descField.clear();
         }
         formOverlay.setVisible(true);
         formOverlay.toFront();
@@ -181,53 +206,90 @@ public class ManageMatiereController implements Initializable {
         formOverlay.setVisible(false);
     }
 
-    @FXML
-    private void handleBrowseImage() {
-        FileChooser fc = new FileChooser();
-        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.png", "*.jpg", "*.jpeg"));
-        File file = fc.showOpenDialog(rootPane.getScene().getWindow());
-        if (file != null) {
-            imagePathField.setText(file.getAbsolutePath());
-        }
-    }
+
 
     @FXML
     private void handleSaveMatiere() {
         Matiere result = currentEditableMatiere != null ? currentEditableMatiere : new Matiere();
         result.setName(nameField.getText().trim());
-        result.setStatus(statusCombo.getValue());
-        result.setImageUrl(imagePathField.getText());
-        if (currentEditableMatiere == null) {
+        result.setDescription(descField.getText().trim());
+        
+        result.setStatus("ACCEPTED");
+        
+        boolean isNew = currentEditableMatiere == null;
+        if (isNew) {
             result.setCreatorId(1);
             result.setCreatedAt(LocalDateTime.now());
         }
 
-        try {
-            if (currentEditableMatiere == null) matiereService.add2(result);
-            else matiereService.edit(result);
-            handleCloseForm();
-            loadData();
-        } catch (Exception e) {
-            try {
-                java.sql.Connection cnx = com.edulink.gui.util.MyConnection.getInstance().getCnx();
-                java.sql.PreparedStatement pst;
-                if (currentEditableMatiere == null) {
-                    pst = cnx.prepareStatement("INSERT INTO matiere (name, status) VALUES (?, ?)");
-                    pst.setString(1, result.getName());
-                    pst.setString(2, result.getStatus());
-                } else {
-                    pst = cnx.prepareStatement("UPDATE matiere SET name=?, status=? WHERE id=?");
-                    pst.setString(1, result.getName());
-                    pst.setString(2, result.getStatus());
-                    pst.setInt(3, result.getId());
+        saveBtn.setText("Generating Image...");
+        saveBtn.setDisable(true);
+        
+        new Thread(() -> {
+            String existingImg = currentEditableMatiere != null ? currentEditableMatiere.getImageUrl() : null;
+            if (existingImg == null || existingImg.isEmpty()) {
+                String newImg = generateMatiereImage(result.getName(), result.getDescription());
+                result.setImageUrl(newImg != null ? newImg : "src/main/resources/images/default_category.jpg"); // Fallback placeholder
+            }
+
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    if (isNew) matiereService.add2(result);
+                    else matiereService.edit(result);
+                } catch (Exception e) {
+                    try {
+                        java.sql.Connection cnx = com.edulink.gui.util.MyConnection.getInstance().getCnx();
+                        java.sql.PreparedStatement pst;
+                        if (isNew) {
+                            pst = cnx.prepareStatement("INSERT INTO matiere (name, description, status) VALUES (?, ?, ?)");
+                            pst.setString(1, result.getName());
+                            pst.setString(2, result.getDescription());
+                            pst.setString(3, result.getStatus());
+                        } else {
+                            pst = cnx.prepareStatement("UPDATE matiere SET name=?, description=?, status=? WHERE id=?");
+                            pst.setString(1, result.getName());
+                            pst.setString(2, result.getDescription());
+                            pst.setString(3, result.getStatus());
+                            pst.setInt(4, result.getId());
+                        }
+                        pst.executeUpdate();
+                    } catch (Exception e2) {
+                        EduAlert.show(EduAlert.AlertType.ERROR, "Database Error", e2.getMessage());
+                    }
                 }
-                pst.executeUpdate();
                 handleCloseForm();
                 loadData();
-            } catch (Exception e2) {
-                handleCloseForm();
-                EduAlert.show(EduAlert.AlertType.ERROR, "Database Error", e.getMessage());
+                saveBtn.setText("Save Category");
+                saveBtn.setDisable(false);
+            });
+        }).start();
+    }
+
+    private String generateMatiereImage(String title, String description) {
+        try {
+            String prompt = "Create a modern educational illustration representing: " + title + ". Context: " + description + ". Clean style, professional, inspiring, course platform thumbnail.";
+            String encodedPrompt = java.net.URLEncoder.encode(prompt, java.nio.charset.StandardCharsets.UTF_8);
+            String urlStr = "https://image.pollinations.ai/prompt/" + encodedPrompt;
+            
+            java.net.URL url = new java.net.URL(urlStr);
+            java.io.InputStream in = url.openStream();
+            
+            java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/images/categories");
+            if (!destDir.exists() && new java.io.File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
+                destDir = new java.io.File(System.getProperty("user.dir"), "java/src/main/resources/images/categories");
+            } else if (!destDir.exists()) {
+                destDir = new java.io.File("src/main/resources/images/categories");
             }
+            if (!destDir.exists()) destDir.mkdirs();
+            
+            String filename = "cat_" + System.currentTimeMillis() + ".jpg";
+            java.io.File destFile = new java.io.File(destDir, filename);
+            
+            java.nio.file.Files.copy(in, destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return "src/main/resources/images/categories/" + filename;
+        } catch (Exception e) {
+            System.err.println("Failed to generate image: " + e.getMessage());
+            return null;
         }
     }
 

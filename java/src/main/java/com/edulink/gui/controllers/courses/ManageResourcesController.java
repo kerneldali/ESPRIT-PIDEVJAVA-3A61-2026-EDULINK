@@ -30,7 +30,7 @@ public class ManageResourcesController implements Initializable {
     @FXML private TextField titleField;
     @FXML private ComboBox<String> typeCombo;
     @FXML private TextField urlField;
-    @FXML private ComboBox<String> statusCombo;
+
     @FXML private Button browseBtn;
     @FXML private Button saveBtn;
     @FXML private Label titleError;
@@ -43,7 +43,6 @@ public class ManageResourcesController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         typeCombo.setItems(FXCollections.observableArrayList("PDF"));
-        statusCombo.setItems(FXCollections.observableArrayList("ACCEPTED", "PENDING", "REJECTED"));
 
         typeCombo.setValue("PDF");
         typeCombo.setDisable(true); // Since it's only PDF now
@@ -158,13 +157,11 @@ public class ManageResourcesController implements Initializable {
             titleField.setText(r.getTitle());
             typeCombo.setValue("PDF"); // Enforce PDF
             urlField.setText(r.getUrl());
-            statusCombo.setValue(r.getStatus());
         } else {
             formTitle.setText("New Resource");
             titleField.clear();
             typeCombo.setValue("PDF");
             urlField.clear();
-            statusCombo.setValue("ACCEPTED");
         }
         formOverlay.setVisible(true);
         formOverlay.toFront();
@@ -184,7 +181,7 @@ public class ManageResourcesController implements Initializable {
         
         String savedPath = saveFileToProject(urlField.getText().trim());
         result.setUrl(savedPath);
-        result.setStatus(statusCombo.getValue());
+        result.setStatus("ACCEPTED");
         if (currentEditableResource == null && filteredCourse != null) {
             result.setCoursId(filteredCourse.getId());
             result.setAuthorId(1);

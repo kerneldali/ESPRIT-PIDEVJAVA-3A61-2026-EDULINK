@@ -1,7 +1,7 @@
 package com.edulink.gui.controllers.courses;
 
 import com.edulink.gui.models.courses.ContentProposal;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.util.EduAlert;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -55,7 +55,11 @@ public class StudentSuggestionsController implements Initializable {
         allProposals = new java.util.ArrayList<>();
         int finalStudentId = studentId;
 
-        for (com.edulink.gui.models.courses.Matiere m : new com.edulink.gui.services.courses.MatiereService().getAll()) {
+        java.util.List<com.edulink.gui.models.courses.Matiere> matieres = new com.edulink.gui.services.courses.MatiereService().getAll();
+        java.util.List<com.edulink.gui.models.courses.Course> courses = new com.edulink.gui.services.courses.CourseService().getAll();
+        java.util.List<com.edulink.gui.models.courses.Resource> resources = new com.edulink.gui.services.courses.ResourceService().getAll();
+
+        for (com.edulink.gui.models.courses.Matiere m : matieres) {
             if (m.getCreatorId() == finalStudentId) {
                 ContentProposal p = new ContentProposal();
                 p.setId(m.getId());
@@ -67,7 +71,10 @@ public class StudentSuggestionsController implements Initializable {
                 allProposals.add(p);
             }
         }
-        for (com.edulink.gui.models.courses.Course c : new com.edulink.gui.services.courses.CourseService().getAll()) {
+        for (com.edulink.gui.models.courses.Course c : courses) {
+            // Prevent orphaned courses
+            if (matieres.stream().noneMatch(m -> m.getId() == c.getMatiereId())) continue;
+            
             if (c.getAuthorId() == finalStudentId) {
                 ContentProposal p = new ContentProposal();
                 p.setId(c.getId());
@@ -80,7 +87,10 @@ public class StudentSuggestionsController implements Initializable {
                 allProposals.add(p);
             }
         }
-        for (com.edulink.gui.models.courses.Resource r : new com.edulink.gui.services.courses.ResourceService().getAll()) {
+        for (com.edulink.gui.models.courses.Resource r : resources) {
+            // Prevent orphaned resources
+            if (courses.stream().noneMatch(c -> c.getId() == r.getCoursId())) continue;
+
             if (r.getAuthorId() == finalStudentId) {
                 ContentProposal p = new ContentProposal();
                 p.setId(r.getId());

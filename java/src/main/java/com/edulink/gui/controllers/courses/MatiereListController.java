@@ -2,7 +2,7 @@ package com.edulink.gui.controllers.courses;
 
 import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.models.courses.Matiere;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.services.courses.MatiereService;
 import javafx.fxml.FXML;
@@ -51,18 +51,30 @@ public class MatiereListController implements Initializable {
         filterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         // Suggestion form validation
-        suggestNameField.textProperty().addListener((obs, old, nv) -> {
-            suggestNameError.setText("");
-            if (nv == null || nv.trim().isEmpty()) {
-                suggestNameError.setText("Name is required");
-                suggestSaveBtn.setDisable(true);
-            } else if (nv.trim().length() < 2) {
-                suggestNameError.setText("At least 2 characters");
-                suggestSaveBtn.setDisable(true);
-            } else {
-                suggestSaveBtn.setDisable(false);
-            }
-        });
+        suggestNameField.textProperty().addListener((obs, old, nv) -> validateSuggestForm());
+        suggestDescField.textProperty().addListener((obs, old, nv) -> validateSuggestForm());
+    }
+
+    private void validateSuggestForm() {
+        suggestNameError.setText("");
+        boolean valid = true;
+        
+        String name = suggestNameField.getText();
+        if (name == null || name.trim().isEmpty()) {
+            suggestNameError.setText("Name is required");
+            valid = false;
+        } else if (name.trim().length() < 2) {
+            suggestNameError.setText("At least 2 characters");
+            valid = false;
+        }
+        
+        String desc = suggestDescField.getText();
+        if (desc == null || desc.trim().isEmpty()) {
+            if (valid) suggestNameError.setText("Description is required"); // Reusing error label for simplicity
+            valid = false;
+        }
+        
+        suggestSaveBtn.setDisable(!valid);
     }
 
     private void applyFilters() {
@@ -164,6 +176,7 @@ public class MatiereListController implements Initializable {
     private void handleSubmitSuggest() {
         Matiere p = new Matiere();
         p.setName(suggestNameField.getText().trim());
+        p.setDescription(suggestDescField.getText().trim());
         
         boolean isAdmin = false;
         if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {

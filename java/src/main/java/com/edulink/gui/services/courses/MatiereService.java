@@ -14,18 +14,28 @@ public class MatiereService implements IService<Matiere> {
 
     public MatiereService() {
         cnx = MyConnection.getInstance().getCnx();
+        ensureTableExists();
+    }
+
+    private void ensureTableExists() {
+        try {
+            cnx.createStatement().executeUpdate("ALTER TABLE matiere ADD COLUMN description TEXT AFTER name");
+        } catch (SQLException e) {
+            // Column might already exist, ignore
+        }
     }
 
     @Override
     public void add(Matiere matiere) {
         try {
             PreparedStatement pst = cnx.prepareStatement(
-                    "INSERT INTO matiere (creator_id, name, status, image_url, created_at) VALUES (?, ?, ?, ?, ?)");
+                    "INSERT INTO matiere (creator_id, name, description, status, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?)");
             pst.setInt(1, matiere.getCreatorId());
             pst.setString(2, matiere.getName());
-            pst.setString(3, matiere.getStatus());
-            pst.setString(4, matiere.getImageUrl());
-            pst.setTimestamp(5, Timestamp.valueOf(matiere.getCreatedAt()));
+            pst.setString(3, matiere.getDescription());
+            pst.setString(4, matiere.getStatus());
+            pst.setString(5, matiere.getImageUrl());
+            pst.setTimestamp(6, Timestamp.valueOf(matiere.getCreatedAt()));
             pst.executeUpdate();
             System.out.println("✅ Matiere added!");
         } catch (SQLException e) {
@@ -38,12 +48,13 @@ public class MatiereService implements IService<Matiere> {
     public void add2(Matiere matiere) {
         try {
             PreparedStatement pst = cnx.prepareStatement(
-                    "INSERT INTO matiere (creator_id, name, status, image_url, created_at) VALUES (?, ?, ?, ?, ?)");
+                    "INSERT INTO matiere (creator_id, name, description, status, image_url, created_at) VALUES (?, ?, ?, ?, ?, ?)");
             pst.setInt(1, matiere.getCreatorId());
             pst.setString(2, matiere.getName());
-            pst.setString(3, matiere.getStatus());
-            pst.setString(4, matiere.getImageUrl());
-            pst.setTimestamp(5, Timestamp.valueOf(matiere.getCreatedAt()));
+            pst.setString(3, matiere.getDescription());
+            pst.setString(4, matiere.getStatus());
+            pst.setString(5, matiere.getImageUrl());
+            pst.setTimestamp(6, Timestamp.valueOf(matiere.getCreatedAt()));
             int rows = pst.executeUpdate();
             System.out.println("✅ Matiere added! Rows: " + rows);
         } catch (SQLException e) {
@@ -55,9 +66,10 @@ public class MatiereService implements IService<Matiere> {
     private void addMinimal(Matiere matiere) {
         try {
             PreparedStatement pst = cnx.prepareStatement(
-                    "INSERT INTO matiere (name, status) VALUES (?, ?)");
+                    "INSERT INTO matiere (name, description, status) VALUES (?, ?, ?)");
             pst.setString(1, matiere.getName());
-            pst.setString(2, matiere.getStatus());
+            pst.setString(2, matiere.getDescription());
+            pst.setString(3, matiere.getStatus());
             int rows = pst.executeUpdate();
             System.out.println("✅ Matiere added (minimal)! Rows: " + rows);
         } catch (SQLException e2) {
@@ -70,11 +82,12 @@ public class MatiereService implements IService<Matiere> {
     public void edit(Matiere matiere) {
         try {
             PreparedStatement pst = cnx.prepareStatement(
-                    "UPDATE matiere SET name=?, status=?, image_url=? WHERE id=?");
+                    "UPDATE matiere SET name=?, description=?, status=?, image_url=? WHERE id=?");
             pst.setString(1, matiere.getName());
-            pst.setString(2, matiere.getStatus());
-            pst.setString(3, matiere.getImageUrl());
-            pst.setInt(4, matiere.getId());
+            pst.setString(2, matiere.getDescription());
+            pst.setString(3, matiere.getStatus());
+            pst.setString(4, matiere.getImageUrl());
+            pst.setInt(5, matiere.getId());
             pst.executeUpdate();
             System.out.println("✅ Matiere updated!");
         } catch (SQLException e) {
@@ -124,6 +137,7 @@ public class MatiereService implements IService<Matiere> {
                 m.setId(rs.getInt("id"));
                 try { m.setCreatorId(rs.getInt("creator_id")); } catch (SQLException e) { m.setCreatorId(1); }
                 m.setName(rs.getString("name"));
+                try { m.setDescription(rs.getString("description")); } catch (SQLException e) { m.setDescription(""); }
                 m.setStatus(rs.getString("status"));
                 try { m.setImageUrl(rs.getString("image_url")); } catch (SQLException e) { m.setImageUrl(null); }
                 try {

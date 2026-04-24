@@ -4,7 +4,7 @@ import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.models.courses.Course;
 import com.edulink.gui.models.courses.Enrollment;
 import com.edulink.gui.models.courses.Resource;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.services.courses.EnrollmentService;
 import com.edulink.gui.services.courses.ResourceService;
 import com.edulink.gui.util.EduAlert;
@@ -48,7 +48,7 @@ public class CourseDetailsController implements Initializable {
     @FXML private TextField suggestTitleField;
     @FXML private ComboBox<String> suggestTypeCombo;
     @FXML private TextField suggestUrlField;
-    @FXML private TextArea suggestDescField;
+    @FXML private Button browseSuggestBtn;
     @FXML private Button suggestSaveBtn;
     @FXML private Label suggestTitleError;
 
@@ -70,6 +70,13 @@ public class CourseDetailsController implements Initializable {
                 suggestTitleError.setText("At least 2 characters");
                 suggestSaveBtn.setDisable(true);
             }
+        });
+
+        browseSuggestBtn.setOnAction(e -> {
+            javafx.stage.FileChooser fc = new javafx.stage.FileChooser();
+            fc.getExtensionFilters().add(new javafx.stage.FileChooser.ExtensionFilter("PDF Documents", "*.pdf"));
+            java.io.File file = fc.showOpenDialog(rootPane.getScene().getWindow());
+            if (file != null) suggestUrlField.setText(file.getAbsolutePath());
         });
     }
 
@@ -350,7 +357,6 @@ public class CourseDetailsController implements Initializable {
     private void handleSuggestResource() {
         suggestTitleField.clear();
         suggestUrlField.clear();
-        suggestDescField.clear();
         suggestTypeCombo.setValue("PDF");
         suggestTitleError.setText("");
         suggestSaveBtn.setDisable(true);
@@ -369,8 +375,10 @@ public class CourseDetailsController implements Initializable {
         Resource p = new Resource();
         p.setCoursId(currentCourse.getId());
         p.setTitle(suggestTitleField.getText().trim());
-        p.setType(suggestTypeCombo.getValue());
-        p.setUrl(suggestUrlField.getText() != null ? suggestUrlField.getText().trim() : "");
+        p.setType("PDF");
+        
+        String savedPath = saveFileToProject(suggestUrlField.getText() != null ? suggestUrlField.getText().trim() : "");
+        p.setUrl(savedPath);
         
         boolean isAdmin = false;
         if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
@@ -399,6 +407,45 @@ public class CourseDetailsController implements Initializable {
             EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
                     "Your resource suggestion has been sent to admin for review.");
         }
+    }
+
+    private String saveFileToProject(String sourcePath) {
+        if (sourcePath == null || sourcePath.trim().isEmpty()) return sourcePath;
+        java.io.File sourceFile = new java.io.File(sourcePath);
+        if (!sourceFile.exists() || !sourceFile.isAbsolute()) return sourcePath;
+        
+        java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/pdfs");
+        if (!destDir.exists() && new java.io.File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
+            destDir = new java.io.File(System.getProperty("user.dir"), "java/src/main/resources/pdfs");
+        } else if (!destDir.exists()) {
+            destDir = new java.io.File("src/main/resources/pdfs");
+        }
+        
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+        
+        java.io.File destFile = new java.io.File(destDir, sourceFile.getName());
+        int counter = 1;
+        while (destFile.exists() && !destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
+            String name = sourceFile.getName();
+            int dotIndex = name.lastIndexOf(".");
+            String base = dotIndex > 0 ? name.substring(0, dotIndex) : name;
+            String ext = dotIndex > 0 ? name.substring(dotIndex) : "";
+            destFile = new java.io.File(destDir, base + "_" + counter + ext);
+            counter++;
+        }
+        
+        if (!destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
+            try {
+                java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return "src/main/resources/pdfs/" + destFile.getName();
+            } catch (Exception e) {
+                System.err.println("Failed to copy file: " + e.getMessage());
+                return sourcePath;
+            }
+        }
+        return "src/main/resources/pdfs/" + destFile.getName();
     }
 
     private String getCourseContext() {
@@ -602,13 +649,19 @@ public class CourseDetailsController implements Initializable {
         root.setPadding(new javafx.geometry.Insets(15));
         root.setStyle("-fx-background-color: #1a1a2e;");
         
-        TextArea chatArea = new TextArea();
-        chatArea.setEditable(false);
-        chatArea.setWrapText(true);
-        chatArea.setStyle("-fx-control-inner-background: #2a2a3e; -fx-text-fill: white;");
-        chatArea.setPrefHeight(300);
-        chatArea.setPrefWidth(450);
-        chatArea.appendText("AI: Hello! I am here to answer questions strictly about the course '" + currentCourse.getTitle() + "'. What would you like to know?\n\n");
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(350);
+        scrollPane.setPrefWidth(500);
+        scrollPane.setStyle("-fx-background: #1a1a2e; -fx-border-color: #2a2a3e; -fx-border-radius: 5;");
+        
+        VBox chatContainer = new VBox(15);
+        chatContainer.setPadding(new javafx.geometry.Insets(10));
+        chatContainer.setStyle("-fx-background-color: transparent;");
+        scrollPane.setContent(chatContainer);
+        
+        // Initial AI message
+        addChatMessage(chatContainer, "AI", "Hello! I am here to answer questions strictly about the course '" + currentCourse.getTitle() + "'. What would you like to know?", true);
         
         TextField inputField = new TextField();
         inputField.setPromptText("Ask a question...");
@@ -620,7 +673,7 @@ public class CourseDetailsController implements Initializable {
         HBox inputBox = new HBox(10, inputField, sendBtn);
         HBox.setHgrow(inputField, Priority.ALWAYS);
         
-        root.getChildren().addAll(chatArea, inputBox);
+        root.getChildren().addAll(scrollPane, inputBox);
         
         dialog.setScene(new javafx.scene.Scene(root));
         dialog.show();
@@ -639,9 +692,12 @@ public class CourseDetailsController implements Initializable {
                     String question = inputField.getText().trim();
                     if (question.isEmpty()) return;
                     
-                    chatArea.appendText("You: " + question + "\n");
+                    addChatMessage(chatContainer, "You", question, false);
                     inputField.clear();
                     sendBtn.setDisable(true);
+                    
+                    // Auto-scroll to bottom
+                    javafx.application.Platform.runLater(() -> scrollPane.setVvalue(1.0));
                     
                     new Thread(() -> {
                         com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
@@ -655,12 +711,37 @@ public class CourseDetailsController implements Initializable {
                         String response = groq.generateResponse(systemPrompt, question);
                         
                         javafx.application.Platform.runLater(() -> {
-                            chatArea.appendText("AI: " + response + "\n\n");
+                            addChatMessage(chatContainer, "AI", response, true);
                             sendBtn.setDisable(false);
+                            // Auto-scroll to bottom
+                            javafx.application.Platform.runLater(() -> scrollPane.setVvalue(1.0));
                         });
                     }).start();
                 });
             });
         }).start();
+    }
+
+    private void addChatMessage(VBox container, String sender, String message, boolean isAi) {
+        HBox messageBox = new HBox(10);
+        messageBox.setAlignment(isAi ? javafx.geometry.Pos.TOP_LEFT : javafx.geometry.Pos.TOP_RIGHT);
+        
+        Label iconLabel = new Label(isAi ? "🤖" : "👤");
+        iconLabel.setStyle("-fx-font-size: 24px;");
+        
+        Label messageLabel = new Label(message);
+        messageLabel.setWrapText(true);
+        messageLabel.setMaxWidth(350);
+        messageLabel.setPadding(new javafx.geometry.Insets(10));
+        
+        if (isAi) {
+            messageLabel.setStyle("-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-background-radius: 0 12 12 12;");
+            messageBox.getChildren().addAll(iconLabel, messageLabel);
+        } else {
+            messageLabel.setStyle("-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-background-radius: 12 0 12 12;");
+            messageBox.getChildren().addAll(messageLabel, iconLabel);
+        }
+        
+        container.getChildren().add(messageBox);
     }
 }
