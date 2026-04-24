@@ -271,7 +271,7 @@ public class ManageMatiereController implements Initializable {
             String encodedPrompt = java.net.URLEncoder.encode(prompt, java.nio.charset.StandardCharsets.UTF_8);
             String urlStr = "https://image.pollinations.ai/prompt/" + encodedPrompt;
             
-            java.net.URL url = new java.net.URL(urlStr);
+            java.net.URL url = java.net.URI.create(urlStr).toURL();
             java.io.InputStream in = url.openStream();
             
             java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/images/categories");
