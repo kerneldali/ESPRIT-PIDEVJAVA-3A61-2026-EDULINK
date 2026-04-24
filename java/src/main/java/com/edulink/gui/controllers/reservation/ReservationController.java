@@ -5,6 +5,7 @@ import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
+import com.edulink.gui.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

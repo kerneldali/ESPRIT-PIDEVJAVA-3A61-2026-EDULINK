@@ -30,6 +30,12 @@ public class DashboardController implements Initializable {
     private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
     @FXML
     private Button adminCatalogBtn, adminSuggestionsBtn;
+    @FXML
+    private Button adminChallengesBtn;
+    @FXML
+    private Button adminReviewSubmissionsBtn;
+    @FXML
+    private Button adminChallengeStatsBtn;
 
     private boolean isAdmin = false;
 
@@ -66,7 +72,19 @@ public class DashboardController implements Initializable {
                 adminSuggestionsBtn.setVisible(true);
                 adminSuggestionsBtn.setManaged(true);
             }
-
+            if (adminChallengesBtn != null) {
+                adminChallengesBtn.setVisible(true);
+                adminChallengesBtn.setManaged(true);
+            }
+            if (adminReviewSubmissionsBtn != null) {
+                adminReviewSubmissionsBtn.setVisible(true);
+                adminReviewSubmissionsBtn.setManaged(true);
+            }
+            if (adminChallengeStatsBtn != null) {
+                adminChallengeStatsBtn.setVisible(true);
+                adminChallengeStatsBtn.setManaged(true);
+            }
+            
             if (studentCatalogBtn != null) {
                 studentCatalogBtn.setVisible(false);
                 studentCatalogBtn.setManaged(false);
@@ -189,6 +207,14 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    public void handleToggleTheme() {
+        com.edulink.gui.util.ThemeManager.toggleTheme();
+        if (contentArea.getScene() != null && contentArea.getScene().getRoot() != null) {
+            com.edulink.gui.util.ThemeManager.applyTheme(contentArea.getScene().getRoot());
+        }
+    }
+
+    @FXML
     public void showHelpRequests() {
         loadView("/view/assistance/HelpRequestList.fxml");
     }
@@ -268,6 +294,7 @@ public class DashboardController implements Initializable {
                 }
             }
 
+            com.edulink.gui.util.ThemeManager.applyTheme(view);
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             System.err.println("Error loading view: " + fxmlFile);

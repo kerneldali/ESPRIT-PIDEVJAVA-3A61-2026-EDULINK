@@ -179,6 +179,7 @@ public class HelpRequestListController implements Initializable {
         actions.getChildren().addAll(editBtn, delBtn);
 
         card.getChildren().addAll(header, title, desc, details, spacer, actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
@@ -217,12 +218,7 @@ public class HelpRequestListController implements Initializable {
         cardsContainer.getChildren().add(card);
     }
 
-    private void showErrorCard(String t, String d) {
-        // ... (simplified error view)
-        Label l = new Label(t + ": " + d);
-        l.getStyleClass().add("card-title");
-        cardsContainer.getChildren().add(l);
-    }
+
 
     private StackPane findContentArea() {
         javafx.scene.Node n = cardsContainer;

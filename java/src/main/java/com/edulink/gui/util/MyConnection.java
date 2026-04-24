@@ -20,7 +20,7 @@ public class MyConnection {
     public static String getLastError() { return lastError; }
 
     private MyConnection() {
-        String simplifiedUrl = "jdbc:mysql://127.0.0.1:3306/edulinkpi?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        String simplifiedUrl = "jdbc:mysql://127.0.0.1:3307/edulinkpi?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
         System.out.println("🔄 Attempting to connect to: " + simplifiedUrl);
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -41,8 +41,9 @@ public class MyConnection {
     }
 
     // 3. Static Getter with verification (if exists, use it; otherwise create new)
+    // If the previous attempt failed (cnx == null), retry automatically.
     public static MyConnection getInstance() {
-        if (instance == null) {
+        if (instance == null || instance.cnx == null) {
             instance = new MyConnection();
         }
         return instance;

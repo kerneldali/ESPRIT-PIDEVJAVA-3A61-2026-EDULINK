@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="20" styleClass="main-container"
+      xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.edulink.gui.controllers.challenge.ChallengeStatsController"
+      style="-fx-background-color: #0d0d16;">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <!-- Header -->
+    <HBox alignment="CENTER_LEFT" spacing="15">
+        <VBox spacing="4">
+            <Label text="📊  Statistiques Challenges"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            <Label text="Vue d'ensemble des performances et de l'engagement des étudiants."
+                   style="-fx-text-fill: #7B7FA0; -fx-font-size: 13px;"/>
+        </VBox>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button text="🔄  Actualiser" onAction="#handleRefresh"
+                style="-fx-background-color: #2a2a3e; -fx-text-fill: white;
+                       -fx-padding: 8 18; -fx-background-radius: 8; -fx-cursor: hand;
+                       -fx-border-color: #ffffff18; -fx-border-radius: 8;"/>
+    </HBox>
+
+    <!-- 4 Stat Cards -->
+    <HBox spacing="16">
+        <!-- Challenges -->
+        <VBox alignment="CENTER" spacing="6" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-padding: 20; -fx-background-radius: 10;
+                     -fx-border-color: #7c3aed44; -fx-border-radius: 10; -fx-border-width: 1.5;">
+            <Label text="🏆" style="-fx-font-size: 28px;"/>
+            <Label fx:id="totalChallengesLbl" text="—"
+                   style="-fx-text-fill: #7c3aed; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Challenges" style="-fx-text-fill: #a0a0ab; -fx-font-size: 13px;"/>
+        </VBox>
+        <!-- Participations -->
+        <VBox alignment="CENTER" spacing="6" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-padding: 20; -fx-background-radius: 10;
+                     -fx-border-color: #3b82f644; -fx-border-radius: 10; -fx-border-width: 1.5;">
+            <Label text="👥" style="-fx-font-size: 28px;"/>
+            <Label fx:id="totalParticipationsLbl" text="—"
+                   style="-fx-text-fill: #3b82f6; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Participations" style="-fx-text-fill: #a0a0ab; -fx-font-size: 13px;"/>
+        </VBox>
+        <!-- XP -->
+        <VBox alignment="CENTER" spacing="6" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-padding: 20; -fx-background-radius: 10;
+                     -fx-border-color: #00d28944; -fx-border-radius: 10; -fx-border-width: 1.5;">
+            <Label text="⚡" style="-fx-font-size: 28px;"/>
+            <Label fx:id="totalXpLbl" text="—"
+                   style="-fx-text-fill: #00d289; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+            <Label text="XP distribués" style="-fx-text-fill: #a0a0ab; -fx-font-size: 13px;"/>
+        </VBox>
+        <!-- Completion Rate -->
+        <VBox alignment="CENTER" spacing="6" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-padding: 20; -fx-background-radius: 10;
+                     -fx-border-color: #f59e0b44; -fx-border-radius: 10; -fx-border-width: 1.5;">
+            <Label text="✅" style="-fx-font-size: 28px;"/>
+            <Label fx:id="completionRateLbl" text="—"
+                   style="-fx-text-fill: #f59e0b; -fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Taux de complétion" style="-fx-text-fill: #a0a0ab; -fx-font-size: 13px;"/>
+        </VBox>
+    </HBox>
+
+    <!-- Tables side by side -->
+    <HBox spacing="16" VBox.vgrow="ALWAYS">
+
+        <!-- Top Students -->
+        <VBox spacing="0" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-background-radius: 10;
+                     -fx-border-color: #ffffff11; -fx-border-radius: 10; -fx-border-width: 1;">
+            <Label text="🏅  Top 5 Étudiants"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;
+                          -fx-padding: 16 16 12 16;"/>
+            <Separator style="-fx-background-color: #ffffff11;"/>
+            <VBox fx:id="topStudentsContainer" spacing="2" style="-fx-padding: 8;"/>
+        </VBox>
+
+        <!-- Per Challenge -->
+        <VBox spacing="0" HBox.hgrow="ALWAYS"
+              style="-fx-background-color: #1a1a2e; -fx-background-radius: 10;
+                     -fx-border-color: #ffffff11; -fx-border-radius: 10; -fx-border-width: 1;">
+            <Label text="📈  Taux par Challenge"
+                   style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;
+                          -fx-padding: 16 16 12 16;"/>
+            <Separator style="-fx-background-color: #ffffff11;"/>
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS"
+                        style="-fx-background-color: transparent; -fx-background: transparent;">
+                <VBox fx:id="perChallengeContainer" spacing="0" style="-fx-padding: 8;"/>
+            </ScrollPane>
+        </VBox>
+    </HBox>
+
+</VBox>
