@@ -1,26 +1,44 @@
 package com.edulink.gui.controllers.event;
 
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ResourceBundle;
+
 import com.edulink.gui.models.event.Event;
 import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
+<<<<<<< Updated upstream
+=======
+import com.edulink.gui.util.SessionManager;
+
+>>>>>>> Stashed changes
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ResourceBundle;
 
 public class EventController implements Initializable {
 
@@ -223,11 +241,16 @@ public class EventController implements Initializable {
             res.setUserId(CURRENT_USER_ID);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
+<<<<<<< Updated upstream
             boolean success = reservationService.addReservation(res);
 
             Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
             alert.setTitle("Réservation d'événement");
             alert.setHeaderText(null);
+=======
+            String userEmail = SessionManager.getCurrentUser().getEmail();
+            boolean success = reservationService.addReservation(res, userEmail);
+>>>>>>> Stashed changes
             if (success) {
                 alert.setContentText("Réservation confirmée pour : " + e.getTitle());
             } else {
@@ -371,11 +394,16 @@ public class EventController implements Initializable {
             res.setUserId(CURRENT_USER_ID);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
+<<<<<<< Updated upstream
             boolean success = reservationService.addReservation(res);
 
             Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
             alert.setTitle("Réservation");
             alert.setHeaderText(null);
+=======
+            String userEmail = SessionManager.getCurrentUser().getEmail();
+            boolean success = reservationService.addReservation(res, userEmail);
+>>>>>>> Stashed changes
             if (success) {
                 alert.setContentText("Réservation confirmée pour : " + e.getTitle());
             } else {
