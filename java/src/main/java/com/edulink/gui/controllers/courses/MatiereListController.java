@@ -27,6 +27,7 @@ public class MatiereListController implements Initializable {
     @FXML private FlowPane matiereContainer;
     @FXML private ComboBox<String> filterCombo;
     @FXML private TextField searchField;
+    @FXML private TextField recommendField;
 
     // Suggest overlay
     @FXML private VBox formOverlay;
@@ -175,5 +176,29 @@ public class MatiereListController implements Initializable {
         handleCloseSuggest();
         EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
                 "Your category suggestion has been sent to admin for review.");
+    }
+
+    @FXML
+    private void handleRecommend() {
+        String query = recommendField.getText();
+        if (query == null || query.trim().isEmpty()) {
+            applyFilters();
+            return;
+        }
+        
+        // Clear search field so it doesn't conflict visually
+        searchField.setText("");
+
+        List<com.edulink.gui.util.TfIdfRecommender.MatchResult> results = 
+            com.edulink.gui.util.TfIdfRecommender.recommend(query.trim(), allMatieres);
+
+        List<Matiere> recommended = new java.util.ArrayList<>();
+        for (int i = 0; i < Math.min(5, results.size()); i++) {
+            if (results.get(i).score > 0 || recommended.isEmpty()) {
+                recommended.add(results.get(i).matiere);
+            }
+        }
+        
+        displayMatieres(recommended);
     }
 }
