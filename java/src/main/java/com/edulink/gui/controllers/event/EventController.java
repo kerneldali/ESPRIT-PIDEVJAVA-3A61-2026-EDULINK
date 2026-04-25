@@ -1,92 +1,82 @@
 package com.edulink.gui.controllers.event;
 
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ResourceBundle;
-
 import com.edulink.gui.models.event.Event;
 import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.util.SessionManager;
-
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ResourceBundle;
 
 public class EventController implements Initializable {
 
-    @FXML
-    private StackPane rootPane;
-    @FXML
-    private FlowPane cardContainer;
-    @FXML
-    private TextField searchField;
-    @FXML
-    private ComboBox<String> onlineComboFilter;
-    @FXML
-    private ComboBox<String> sortCombo;
+    @FXML private StackPane rootPane;
+    @FXML private FlowPane cardContainer;
+    @FXML private TextField searchField;
+    @FXML private ComboBox<String> onlineComboFilter;
+    @FXML private ComboBox<String> sortCombo;
 
-    // Form overlay nodes
-    @FXML
-    private VBox formOverlay;
-    @FXML
-    private Label formTitle;
-    @FXML
-    private TextField titleField;
-    @FXML
-    private TextArea descField;
-    @FXML
-    private DatePicker dateStartField;
-    @FXML
-    private DatePicker dateEndField;
-    @FXML
-    private CheckBox onlineCheck;
-    @FXML
-    private TextField meetLinkField;
-    @FXML
-    private TextField locationField;
-    @FXML
-    private TextField maxCapacityField;
-    @FXML
-    private TextField imageField;
+    @FXML private VBox formOverlay;
+    @FXML private Label formTitle;
+    @FXML private TextField titleField;
+    @FXML private TextArea descField;
+    @FXML private DatePicker dateStartField;
+    @FXML private DatePicker dateEndField;
+    @FXML private CheckBox onlineCheck;
+    @FXML private TextField meetLinkField;
+    @FXML private TextField locationField;
+    @FXML private TextField maxCapacityField;
+    @FXML private TextField imageField;
 
-    @FXML
-    private Button saveBtn;
-    @FXML
-    private Label titleError;
-    @FXML
-    private Label descError;
-    @FXML
-    private Label datesError;
-    @FXML
-    private Label capacityError;
+    @FXML private Button saveBtn;
+    @FXML private Label titleError;
+    @FXML private Label descError;
+    @FXML private Label datesError;
+    @FXML private Label capacityError;
 
-    private EventService eventService = new EventService();
-    private ReservationService reservationService = new ReservationService();
-    private ObservableList<Event> eventList = FXCollections.observableArrayList();
+    private final EventService eventService = new EventService();
+    private final ReservationService reservationService = new ReservationService();
+    private final ObservableList<Event> eventList = FXCollections.observableArrayList();
     private Event currentEditableEvent = null;
-
-    private final int CURRENT_USER_ID = 1; // Simulated connected user
+    private int currentUserId = -1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if (SessionManager.getCurrentUser() != null) {
+            currentUserId = SessionManager.getCurrentUser().getId();
+        }
+
         onlineComboFilter.setItems(FXCollections.observableArrayList("All", "Online", "Offline"));
         onlineComboFilter.setValue("All");
 
-        sortCombo.setItems(FXCollections.observableArrayList("Newest First", "Oldest First", "Name A-Z"));
-        sortCombo.setValue("Newest First");
+        sortCombo.setItems(FXCollections.observableArrayList(
+                "Titre A → Z", "Titre Z → A", "Date (récent)", "Date (ancien)"));
+        sortCombo.setValue("Titre A → Z");
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData());
         onlineComboFilter.valueProperty().addListener((obs, oldV, newV) -> filterData());
         sortCombo.valueProperty().addListener((obs, oldV, newV) -> filterData());
 
-        // Activer/désactiver les champs selon le type
         onlineCheck.selectedProperty().addListener((obs, oldV, newV) -> {
             meetLinkField.setDisable(!newV);
             locationField.setDisable(newV);
         });
 
-        // Form validation listeners
         titleField.textProperty().addListener((obs, old, newV) -> validateForm());
         descField.textProperty().addListener((obs, old, newV) -> validateForm());
         maxCapacityField.textProperty().addListener((obs, old, newV) -> validateForm());
@@ -149,16 +139,31 @@ public class EventController implements Initializable {
         cardContainer.getChildren().clear();
         String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         String onlineFilter = onlineComboFilter.getValue();
+        String sort = sortCombo.getValue();
 
-        for (Event e : eventList) {
-            boolean matchesSearch = e.getTitle() == null || e.getTitle().toLowerCase().contains(query);
-            boolean matchesOnline = "All".equals(onlineFilter) ||
-                    ("Online".equals(onlineFilter) && e.isOnline()) ||
-                    ("Offline".equals(onlineFilter) && !e.isOnline());
+        java.util.List<Event> filtered = eventList.stream()
+                .filter(e -> e.getTitle() == null || e.getTitle().toLowerCase().contains(query))
+                .filter(e -> "All".equals(onlineFilter)
+                        || ("Online".equals(onlineFilter) && e.isOnline())
+                        || ("Offline".equals(onlineFilter) && !e.isOnline()))
+                .collect(java.util.stream.Collectors.toList());
 
-            if (matchesSearch && matchesOnline) {
-                cardContainer.getChildren().add(createCard(e));
-            }
+        java.util.Comparator<Event> cmp = switch (sort == null ? "" : sort) {
+            case "Titre Z → A" -> java.util.Comparator.comparing(Event::getTitle,
+                    String.CASE_INSENSITIVE_ORDER.reversed());
+            case "Date (récent)" -> java.util.Comparator.comparing(
+                    e -> e.getDateStart() == null ? LocalDateTime.MIN : e.getDateStart(),
+                    java.util.Comparator.reverseOrder());
+            case "Date (ancien)" -> java.util.Comparator.comparing(
+                    e -> e.getDateStart() == null ? LocalDateTime.MAX : e.getDateStart());
+            default -> java.util.Comparator.comparing(
+                    e -> e.getTitle() == null ? "" : e.getTitle(),
+                    String.CASE_INSENSITIVE_ORDER);
+        };
+        filtered.sort(cmp);
+
+        for (Event e : filtered) {
+            cardContainer.getChildren().add(createCard(e));
         }
     }
 
@@ -168,9 +173,8 @@ public class EventController implements Initializable {
         card.setPrefWidth(300);
         card.setMaxWidth(300);
 
-        // Header: Title and Badge
         HBox header = new HBox(10);
-        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        header.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label(e.getTitle() != null ? e.getTitle() : "Untitled Event");
         title.getStyleClass().add("event-title");
         title.setWrapText(true);
@@ -181,10 +185,8 @@ public class EventController implements Initializable {
 
         Label badge = new Label(e.isOnline() ? "ONLINE" : "OFFLINE");
         badge.getStyleClass().add(e.isOnline() ? "badge-online" : "badge-offline");
-
         header.getChildren().addAll(title, spacer1, badge);
 
-        // Date and Location
         Label dateLbl = new Label("📅 " + (e.getDateStart() != null ? e.getDateStart().toLocalDate() : "TBD"));
         dateLbl.getStyleClass().add("event-date");
 
@@ -196,32 +198,10 @@ public class EventController implements Initializable {
         Label capLbl = new Label("👥 Places restantes: " + e.getMaxCapacity());
         capLbl.getStyleClass().add("capacity-text");
 
-        // Bouton Réserver
         Button reserveBtn = new Button("🔥 Réserver");
         reserveBtn.setMaxWidth(Double.MAX_VALUE);
         reserveBtn.getStyleClass().add("btn-reserve");
 
-            String userEmail = SessionManager.getCurrentUser().getEmail();
-            boolean success = reservationService.addReservation(res, userEmail);
-            if (success) {
-                alert.setContentText("Réservation confirmée pour : " + e.getTitle());
-            } else {
-                alert.setContentText("Impossible de réserver. Vous avez peut-être déjà réservé cet événement.");
-            }
-            alert.showAndWait();
-        });
-
-        // Manage Actions (Edit / Delete)
-        HBox manageBox = new HBox(10);
-        manageBox.setAlignment(javafx.geometry.Pos.CENTER);
-
-        Button editBtn = new Button("✏ Edit");
-        editBtn.getStyleClass().add("btn-edit");
-        editBtn.setOnAction(evt -> {
-            evt.consume();
-            showForm(e);
-        });
-  
         boolean isOrganizer = (currentUserId != -1 && e.getOrganizerId() == currentUserId);
         boolean alreadyReserved = (currentUserId != -1
                 && reservationService.isAlreadyReserved(currentUserId, e.getId()));
@@ -247,7 +227,10 @@ public class EventController implements Initializable {
             res.setUserId(currentUserId);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
-            boolean success = reservationService.addReservation(res);
+            // ✅ On passe l'email pour envoyer le mail de confirmation
+            String userEmail = SessionManager.getCurrentUser() != null
+                    ? SessionManager.getCurrentUser().getEmail() : null;
+            boolean success = reservationService.addReservation(res, userEmail);
             if (success) {
                 EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
                         "Tu es inscrit à : " + e.getTitle());
@@ -258,7 +241,6 @@ public class EventController implements Initializable {
             }
         });
 
-        // Boutons Edit / Delete (visibles uniquement pour l'organisateur ou admin)
         HBox manageBox = new HBox(10);
         manageBox.setAlignment(Pos.CENTER);
 
@@ -270,7 +252,8 @@ public class EventController implements Initializable {
         delBtn.getStyleClass().add("btn-delete");
         delBtn.setOnAction(evt -> {
             evt.consume();
-            if (EduAlert.confirm("Delete Event", "Are you sure you want to delete '" + e.getTitle() + "'?")) {
+            if (EduAlert.confirm("Delete Event",
+                    "Are you sure you want to delete '" + e.getTitle() + "'?")) {
                 eventService.deleteEvent(e.getId());
                 loadData();
             }
@@ -278,15 +261,12 @@ public class EventController implements Initializable {
 
         manageBox.getChildren().addAll(editBtn, delBtn);
 
-        // Fill remaining space to push buttons to the bottom
         Region spacer2 = new Region();
         VBox.setVgrow(spacer2, Priority.ALWAYS);
 
         card.getChildren().addAll(header, new Separator(), dateLbl, locLbl, capLbl, spacer2, reserveBtn, manageBox);
-
-        // Setup card click listener for popup
         card.setOnMouseClicked(evt -> showEventDetailsPopup(e));
-
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }
 
@@ -300,7 +280,6 @@ public class EventController implements Initializable {
         popupContainer.setMaxWidth(600);
         popupContainer.setPrefWidth(600);
 
-        // Header Section
         VBox headerSection = new VBox(10);
         headerSection.getStyleClass().add("popup-header-section");
         headerSection.setAlignment(Pos.CENTER_LEFT);
@@ -314,24 +293,22 @@ public class EventController implements Initializable {
         Region spacer1 = new Region();
         HBox.setHgrow(spacer1, Priority.ALWAYS);
 
-        Label capacityBadge = new Label(
-                "👥 " + (e.getMaxCapacity() > 0 ? e.getMaxCapacity() + " places restantes" : "Illimité"));
+        Label capacityBadge = new Label("👥 " +
+                (e.getMaxCapacity() > 0 ? e.getMaxCapacity() + " places restantes" : "Illimité"));
         capacityBadge.getStyleClass().add("popup-capacity-badge");
 
         topRow.getChildren().addAll(badge, spacer1, capacityBadge);
 
-        Label title = new Label(e.getTitle() != null ? e.getTitle() : "Titre de l'événement");
-        title.getStyleClass().add("popup-title-large");
-        title.setWrapText(true);
-        title.setMaxWidth(500);
+        Label titleLbl = new Label(e.getTitle() != null ? e.getTitle() : "Titre de l'événement");
+        titleLbl.getStyleClass().add("popup-title-large");
+        titleLbl.setWrapText(true);
+        titleLbl.setMaxWidth(500);
 
-        headerSection.getChildren().addAll(topRow, title);
+        headerSection.getChildren().addAll(topRow, titleLbl);
 
-        // Body Section
         HBox bodySection = new HBox(25);
         bodySection.getStyleClass().add("popup-body-section");
 
-        // Left Column: Details
         VBox detailsCol = new VBox(20);
         detailsCol.setPrefWidth(220);
         detailsCol.setMinWidth(220);
@@ -349,25 +326,22 @@ public class EventController implements Initializable {
 
         detailsCol.getChildren().addAll(infoTitle, dateBox, locBox, orgBox);
 
-        // Right Column: Description
         VBox descCol = new VBox(15);
         HBox.setHgrow(descCol, Priority.ALWAYS);
 
         Label descTitle = new Label("À propos de l'événement");
         descTitle.getStyleClass().add("popup-section-title");
 
-        Label descVal = new Label(e.getDescription() != null && !e.getDescription().isEmpty() ? e.getDescription()
-                : "Aucune description fournie.");
+        Label descVal = new Label(e.getDescription() != null && !e.getDescription().isEmpty()
+                ? e.getDescription() : "Aucune description fournie.");
         descVal.getStyleClass().add("popup-desc-text");
         descVal.setWrapText(true);
 
         descCol.getChildren().addAll(descTitle, descVal);
 
-        Separator verticalSeparator = new Separator(javafx.geometry.Orientation.VERTICAL);
+        Separator vertSep = new Separator(javafx.geometry.Orientation.VERTICAL);
+        bodySection.getChildren().addAll(detailsCol, vertSep, descCol);
 
-        bodySection.getChildren().addAll(detailsCol, verticalSeparator, descCol);
-
-        // Footer / Actions
         HBox footerSection = new HBox(15);
         footerSection.getStyleClass().add("popup-footer-section");
         footerSection.setAlignment(Pos.CENTER_RIGHT);
@@ -379,25 +353,20 @@ public class EventController implements Initializable {
         Button reserveBtn = new Button("🔥 Réserver maintenant");
         reserveBtn.getStyleClass().add("btn-reserve-modern");
 
-        if (e.getOrganizerId() == CURRENT_USER_ID) {
+        boolean isOrganizer = (currentUserId != -1 && e.getOrganizerId() == currentUserId);
+        boolean alreadyReserved = (currentUserId != -1
+                && reservationService.isAlreadyReserved(currentUserId, e.getId()));
+
+        if (isOrganizer) {
             reserveBtn.setDisable(true);
             reserveBtn.setText("Votre Événement");
+        } else if (alreadyReserved) {
+            reserveBtn.setDisable(true);
+            reserveBtn.setText("✅ Déjà réservé");
         }
 
         reserveBtn.setOnAction(evt -> {
             popupStage.close();
-            String userEmail = SessionManager.getCurrentUser().getEmail();
-            boolean success = reservationService.addReservation(res, userEmail);
-            if (success) {
-                alert.setContentText("Réservation confirmée pour : " + e.getTitle());
-            } else {
-                alert.setContentText("Impossible de réserver. Vous avez peut-être déjà réservé cet événement.");
-            }
-            alert.showAndWait();
-        });
-
-        footerSection.getChildren().addAll(closeBtn, reserveBtn);
-
             if (currentUserId == -1) {
                 EduAlert.show(EduAlert.AlertType.WARNING, "Non connecté",
                         "Tu dois être connecté pour réserver.");
@@ -407,7 +376,10 @@ public class EventController implements Initializable {
             res.setUserId(currentUserId);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
-            boolean success = reservationService.addReservation(res);
+            // ✅ On passe l'email pour envoyer le mail de confirmation
+            String userEmail = SessionManager.getCurrentUser() != null
+                    ? SessionManager.getCurrentUser().getEmail() : null;
+            boolean success = reservationService.addReservation(res, userEmail);
             if (success) {
                 EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
                         "Tu es inscrit à : " + e.getTitle());
@@ -442,26 +414,17 @@ public class EventController implements Initializable {
         valBox.setAlignment(Pos.CENTER_LEFT);
         Label iconLbl = new Label(icon);
         iconLbl.getStyleClass().add("popup-info-icon");
-
         Label valLbl = new Label(value);
         valLbl.getStyleClass().add("popup-info-value");
         valLbl.setWrapText(true);
         HBox.setHgrow(valLbl, Priority.ALWAYS);
-
         valBox.getChildren().addAll(iconLbl, valLbl);
 
         return new VBox(4, lbl, valBox);
     }
 
-    @FXML
-    private void handleNewEvent() {
-        showForm(null);
-    }
-
-    @FXML
-    private void handleApplyFilter() {
-        filterData();
-    }
+    @FXML private void handleNewEvent() { showForm(null); }
+    @FXML private void handleApplyFilter() { filterData(); }
 
     private void showForm(Event e) {
         currentEditableEvent = e;
@@ -469,17 +432,8 @@ public class EventController implements Initializable {
             formTitle.setText("Edit Event");
             titleField.setText(e.getTitle());
             descField.setText(e.getDescription());
-
-            if (e.getDateStart() != null)
-                dateStartField.setValue(e.getDateStart().toLocalDate());
-            else
-                dateStartField.setValue(null);
-
-            if (e.getDateEnd() != null)
-                dateEndField.setValue(e.getDateEnd().toLocalDate());
-            else
-                dateEndField.setValue(null);
-
+            dateStartField.setValue(e.getDateStart() != null ? e.getDateStart().toLocalDate() : null);
+            dateEndField.setValue(e.getDateEnd() != null ? e.getDateEnd().toLocalDate() : null);
             onlineCheck.setSelected(e.isOnline());
             meetLinkField.setText(e.getMeetLink() != null ? e.getMeetLink() : "");
             locationField.setText(e.getLocation() != null ? e.getLocation() : "");
@@ -487,58 +441,43 @@ public class EventController implements Initializable {
             imageField.setText(e.getImage() != null ? e.getImage() : "");
         } else {
             formTitle.setText("New Event");
-            titleField.clear();
-            descField.clear();
-            dateStartField.setValue(null);
-            dateEndField.setValue(null);
+            titleField.clear(); descField.clear();
+            dateStartField.setValue(null); dateEndField.setValue(null);
             onlineCheck.setSelected(false);
-            meetLinkField.clear();
-            locationField.clear();
-            maxCapacityField.setText("0");
-            imageField.clear();
+            meetLinkField.clear(); locationField.clear();
+            maxCapacityField.setText("0"); imageField.clear();
         }
         formOverlay.setVisible(true);
         formOverlay.toFront();
         validateForm();
     }
 
-    @FXML
-    private void handleCloseForm() {
-        formOverlay.setVisible(false);
-    }
+    @FXML private void handleCloseForm() { formOverlay.setVisible(false); }
 
     @FXML
     private void handleSaveEvent() {
         Event result = currentEditableEvent != null ? currentEditableEvent : new Event();
         result.setTitle(titleField.getText().trim());
         result.setDescription(descField.getText().trim());
-
-        // Handling default time since DatePicker only provides Date
-        if (dateStartField.getValue() != null) {
+        if (dateStartField.getValue() != null)
             result.setDateStart(LocalDateTime.of(dateStartField.getValue(), LocalTime.of(9, 0)));
-        }
-        if (dateEndField.getValue() != null) {
+        if (dateEndField.getValue() != null)
             result.setDateEnd(LocalDateTime.of(dateEndField.getValue(), LocalTime.of(18, 0)));
-        }
-
         result.setOnline(onlineCheck.isSelected());
         result.setMeetLink(meetLinkField.getText().trim());
         result.setLocation(locationField.getText().trim());
         result.setImage(imageField.getText().trim());
-
-        try {
-            result.setMaxCapacity(Integer.parseInt(maxCapacityField.getText().trim()));
-        } catch (NumberFormatException e) {
-            result.setMaxCapacity(0);
-        }
+        try { result.setMaxCapacity(Integer.parseInt(maxCapacityField.getText().trim())); }
+        catch (NumberFormatException ex) { result.setMaxCapacity(0); }
 
         if (currentEditableEvent == null) {
-            result.setOrganizerId(1); // Default to current user / admin
+            result.setOrganizerId(currentUserId != -1 ? currentUserId : 0);
             eventService.addEvent(result);
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Succès", "Événement créé !");
         } else {
             eventService.updateEvent(result);
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Succès", "Événement mis à jour !");
         }
-
         handleCloseForm();
         loadData();
     }
