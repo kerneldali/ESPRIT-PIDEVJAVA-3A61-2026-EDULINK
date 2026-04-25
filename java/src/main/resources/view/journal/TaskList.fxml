@@ -15,6 +15,7 @@
         <Region HBox.hgrow="ALWAYS"/>
         <Button text="🔃 Sort: Incomplete First" onAction="#handleSortTasks" styleClass="secondary-button" />
         <TextField fx:id="newTaskField" promptText="Enter a new task..." prefWidth="300" onAction="#handleAddTask" />
+        <Button text="🎙️ Voice" onAction="#handleVoiceInput" styleClass="secondary-button" />
         <Button text="➕ Add" onAction="#handleAddTask" styleClass="primary-button" />
     </HBox>
 

@@ -1,18 +1,19 @@
 package com.edulink.gui.controllers;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import com.edulink.gui.Main;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import com.edulink.gui.Main;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
 
@@ -24,6 +25,17 @@ public class DashboardController implements Initializable {
     private VBox helpSubMenu, challengeSubMenu, eventSubMenu, courseSubMenu, notesSubMenu, userSubMenu;
     @FXML
     private Button adminOnlyTickets, adminUserStats, adminWallets, adminJournalStats;
+
+    @FXML
+    private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
+    @FXML
+    private Button adminCatalogBtn, adminSuggestionsBtn;
+    @FXML
+    private Button adminChallengesBtn;
+    @FXML
+    private Button adminReviewSubmissionsBtn;
+    @FXML
+    private Button adminChallengeStatsBtn;
 
     private boolean isAdmin = false;
 
@@ -52,9 +64,67 @@ public class DashboardController implements Initializable {
                 adminJournalStats.setVisible(true);
                 adminJournalStats.setManaged(true);
             }
+            if (adminCatalogBtn != null) {
+                adminCatalogBtn.setVisible(true);
+                adminCatalogBtn.setManaged(true);
+            }
+            if (adminSuggestionsBtn != null) {
+                adminSuggestionsBtn.setVisible(true);
+                adminSuggestionsBtn.setManaged(true);
+            }
+            if (adminChallengesBtn != null) {
+                adminChallengesBtn.setVisible(true);
+                adminChallengesBtn.setManaged(true);
+            }
+            if (adminReviewSubmissionsBtn != null) {
+                adminReviewSubmissionsBtn.setVisible(true);
+                adminReviewSubmissionsBtn.setManaged(true);
+            }
+            if (adminChallengeStatsBtn != null) {
+                adminChallengeStatsBtn.setVisible(true);
+                adminChallengeStatsBtn.setManaged(true);
+            }
+
+            if (studentCatalogBtn != null) {
+                studentCatalogBtn.setVisible(false);
+                studentCatalogBtn.setManaged(false);
+            }
+            if (studentLearningBtn != null) {
+                studentLearningBtn.setVisible(false);
+                studentLearningBtn.setManaged(false);
+            }
+            if (studentSuggestionsBtn != null) {
+                studentSuggestionsBtn.setVisible(false);
+                studentSuggestionsBtn.setManaged(false);
+            }
         } else {
             contextLabel.setText("Student Frontoffice");
         }
+    }
+
+    @FXML
+    public void showCatalog() {
+        loadView("/view/courses/MatiereList.fxml");
+    }
+
+    @FXML
+    public void showMyLearning() {
+        loadView("/view/courses/MyLearning.fxml");
+    }
+
+    @FXML
+    public void showStudentSuggestions() {
+        loadView("/view/courses/StudentSuggestions.fxml");
+    }
+
+    @FXML
+    public void showManageCatalog() {
+        loadView("/view/courses/ManageMatiere.fxml");
+    }
+
+    @FXML
+    public void showManageSuggestions() {
+        loadView("/view/courses/ManageSuggestions.fxml");
     }
 
     @FXML
@@ -137,6 +207,14 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    public void handleToggleTheme() {
+        com.edulink.gui.util.ThemeManager.toggleTheme();
+        if (contentArea.getScene() != null && contentArea.getScene().getRoot() != null) {
+            com.edulink.gui.util.ThemeManager.applyTheme(contentArea.getScene().getRoot());
+        }
+    }
+
+    @FXML
     public void showHelpRequests() {
         loadView("/view/assistance/HelpRequestList.fxml");
     }
@@ -182,6 +260,41 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    public void showEvent() {
+        loadView("/view/event/event.fxml");
+    }
+
+    @FXML
+    public void showReservation() {
+        loadView("/view/reservation/reservation.fxml");
+    }
+
+    @FXML
+    public void showChallengeList() {
+        loadView("/view/challenge/ChallengeList.fxml");
+    }
+
+    @FXML
+    public void showMyChallenges() {
+        loadView("/view/challenge/MyChallenges.fxml");
+    }
+
+    @FXML
+    public void showManageChallenges() {
+        loadView("/view/challenge/ManageChallenges.fxml");
+    }
+
+    @FXML
+    public void showReviewSubmissions() {
+        loadView("/view/challenge/ReviewSubmissions.fxml");
+    }
+
+    @FXML
+    public void showChallengeStats() {
+        loadView("/view/challenge/ChallengeStats.fxml");
+    }
+
+    @FXML
     public void showPlaceholder() {
         Label placeholder = new Label("🚧 This module is currently under construction.");
         placeholder.setStyle("-fx-font-size: 20px; -fx-text-fill: #a0a0ab; -fx-font-weight: bold;");
@@ -206,6 +319,7 @@ public class DashboardController implements Initializable {
                 }
             }
 
+            com.edulink.gui.util.ThemeManager.applyTheme(view);
             contentArea.getChildren().setAll(view);
         } catch (IOException e) {
             System.err.println("Error loading view: " + fxmlFile);

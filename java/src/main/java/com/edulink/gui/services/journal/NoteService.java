@@ -19,7 +19,7 @@ public class NoteService implements IService<Note> {
 
     @Override
     public void add(Note n) {
-        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags) VALUES (?,?,?,?,?)";
+        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags, reminder_at, sentiment, is_shared) VALUES (?,?,?,?,?,?,?,?)";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setInt(1, n.getNotebookId());
             if (n.getCategoryId() > 0)
@@ -29,6 +29,9 @@ public class NoteService implements IService<Note> {
             pstm.setString(3, n.getTitle());
             pstm.setString(4, n.getContent());
             pstm.setString(5, n.getTags());
+            pstm.setTimestamp(6, n.getReminderAt());
+            pstm.setString(7, n.getSentiment());
+            pstm.setBoolean(8, n.isShared());
             pstm.executeUpdate();
             System.out.println("✅ Note added successfully: " + n.getTitle());
         } catch (SQLException e) {
@@ -38,8 +41,31 @@ public class NoteService implements IService<Note> {
     }
 
     @Override
+    public void add2(Note n) {
+        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags, reminder_at, sentiment, is_shared) VALUES (?,?,?,?,?,?,?,?)";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, n.getNotebookId());
+            if (n.getCategoryId() > 0)
+                pstm.setInt(2, n.getCategoryId());
+            else
+                pstm.setNull(2, java.sql.Types.INTEGER);
+            pstm.setString(3, n.getTitle());
+            pstm.setString(4, n.getContent());
+            pstm.setString(5, n.getTags());
+            pstm.setTimestamp(6, n.getReminderAt());
+            pstm.setString(7, n.getSentiment());
+            pstm.setBoolean(8, n.isShared());
+            pstm.executeUpdate();
+            System.out.println("✅ Note added (add2): " + n.getTitle());
+        } catch (SQLException e) {
+            System.err.println("❌ Error adding note2: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public void edit(Note n) {
-        String qry = "UPDATE note SET title=?, content=?, tags=?, category_id=? WHERE id=?";
+        String qry = "UPDATE note SET title=?, content=?, tags=?, category_id=?, reminder_at=?, sentiment=?, is_shared=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setString(1, n.getTitle());
             pstm.setString(2, n.getContent());
@@ -48,7 +74,10 @@ public class NoteService implements IService<Note> {
                 pstm.setInt(4, n.getCategoryId());
             else
                 pstm.setNull(4, java.sql.Types.INTEGER);
-            pstm.setInt(5, n.getId());
+            pstm.setTimestamp(5, n.getReminderAt());
+            pstm.setString(6, n.getSentiment());
+            pstm.setBoolean(7, n.isShared());
+            pstm.setInt(8, n.getId());
             pstm.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -81,7 +110,8 @@ public class NoteService implements IService<Note> {
             while (rs.next()) {
                 list.add(new Note(rs.getInt("id"), rs.getInt("notebook_id"), rs.getInt("category_id"),
                         rs.getString("title"),
-                        rs.getString("content"), rs.getString("tags"), rs.getTimestamp("created_at")));
+                        rs.getString("content"), rs.getString("tags"), rs.getTimestamp("created_at"),
+                        rs.getTimestamp("reminder_at"), rs.getString("sentiment"), rs.getBoolean("is_shared")));
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -14,6 +14,7 @@ import java.net.URL;
 public class Main extends Application {
 
     private static Stage primaryStage;
+    private com.edulink.gui.services.journal.ReminderScheduler reminderScheduler = new com.edulink.gui.services.journal.ReminderScheduler();
 
     @Override
     public void start(Stage stage) {
@@ -28,9 +29,9 @@ public class Main extends Application {
 
             FXMLLoader fxmlLoader = new FXMLLoader(fxmlUrl);
             Parent root = fxmlLoader.load();
-            
+
             Scene scene = new Scene(root, 1100, 750); // Slightly larger for pro look
-            
+
             // Check if CSS exists
             URL cssUrl = Main.class.getResource("/styles/style.css");
             if (cssUrl != null) {
@@ -38,11 +39,14 @@ public class Main extends Application {
             } else {
                 System.err.println("Warning: /styles/style.css not found.");
             }
-            
+
             stage.setTitle("EduLink - Modern Learning Platform");
             stage.setScene(scene);
             stage.show();
-            
+
+            // Start the background reminder scheduler
+            reminderScheduler.start();
+
         } catch (Exception e) {
             System.err.println("CRITICAL ERROR during startup:");
             e.printStackTrace();
@@ -62,6 +66,13 @@ public class Main extends Application {
 
     public static Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    @Override
+    public void stop() {
+        if (reminderScheduler != null) {
+            reminderScheduler.stop();
+        }
     }
 
     public static void main(String[] args) {

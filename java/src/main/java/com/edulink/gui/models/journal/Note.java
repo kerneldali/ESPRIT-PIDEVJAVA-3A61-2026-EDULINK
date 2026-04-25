@@ -10,21 +10,39 @@ public class Note {
     private String content;
     private String tags;
     private Timestamp createdAt;
+    private Timestamp reminderAt;
+    private String sentiment;
+    private boolean shared;
 
     public Note() {
     }
 
-    public Note(int id, int notebookId, String title, String content, String tags, Timestamp createdAt) {
+    public Note(int id, int notebookId, String title, String content, String tags, Timestamp createdAt,
+            boolean shared) {
         this.id = id;
         this.notebookId = notebookId;
         this.title = title;
         this.content = content;
         this.tags = tags;
         this.createdAt = createdAt;
+        this.shared = shared;
+    }
+
+    public Note(int id, int notebookId, String title, String content, String tags, Timestamp createdAt,
+            Timestamp reminderAt, String sentiment, boolean shared) {
+        this.id = id;
+        this.notebookId = notebookId;
+        this.title = title;
+        this.content = content;
+        this.tags = tags;
+        this.createdAt = createdAt;
+        this.reminderAt = reminderAt;
+        this.sentiment = sentiment;
+        this.shared = shared;
     }
 
     public Note(int id, int notebookId, int categoryId, String title, String content, String tags,
-            Timestamp createdAt) {
+            Timestamp createdAt, boolean shared) {
         this.id = id;
         this.notebookId = notebookId;
         this.categoryId = categoryId;
@@ -32,6 +50,21 @@ public class Note {
         this.content = content;
         this.tags = tags;
         this.createdAt = createdAt;
+        this.shared = shared;
+    }
+
+    public Note(int id, int notebookId, int categoryId, String title, String content, String tags,
+            Timestamp createdAt, Timestamp reminderAt, String sentiment, boolean shared) {
+        this.id = id;
+        this.notebookId = notebookId;
+        this.categoryId = categoryId;
+        this.title = title;
+        this.content = content;
+        this.tags = tags;
+        this.createdAt = createdAt;
+        this.reminderAt = reminderAt;
+        this.sentiment = sentiment;
+        this.shared = shared;
     }
 
     public int getId() {
@@ -88,5 +121,29 @@ public class Note {
 
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Timestamp getReminderAt() {
+        return reminderAt;
+    }
+
+    public void setReminderAt(Timestamp reminderAt) {
+        this.reminderAt = reminderAt;
+    }
+
+    public String getSentiment() {
+        return sentiment;
+    }
+
+    public void setSentiment(String sentiment) {
+        this.sentiment = sentiment;
+    }
+
+    public boolean isShared() {
+        return shared;
+    }
+
+    public void setShared(boolean shared) {
+        this.shared = shared;
     }
 }

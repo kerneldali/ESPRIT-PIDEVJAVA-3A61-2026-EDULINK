@@ -6,6 +6,7 @@ import com.edulink.gui.util.SessionManager;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import java.util.Optional;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -20,6 +21,7 @@ public class TaskController implements Initializable {
     @FXML
     private TextField newTaskField;
     private PersonalTaskService taskService = new PersonalTaskService();
+    private com.edulink.gui.services.journal.SpeechToTextService sttService = new com.edulink.gui.services.journal.SpeechToTextService();
     private boolean isSortedByIncomplete = false;
 
     @Override
@@ -80,6 +82,7 @@ public class TaskController implements Initializable {
         });
 
         row.getChildren().addAll(cb, title, spacer, deleteBtn);
+        com.edulink.gui.util.ThemeManager.applyTheme(row);
         return row;
     }
 
@@ -96,9 +99,47 @@ public class TaskController implements Initializable {
         t.setUserId(SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1);
         t.setCompleted(false);
 
-        taskService.add(t);
+        // Show quick reminder dialog
+        TextInputDialog timeDialog = new TextInputDialog("12:00");
+        timeDialog.setTitle("Set Reminder");
+        timeDialog.setHeaderText("Set a reminder for today? (Leave blank for none)");
+        timeDialog.setContentText("Format (HH:mm):");
+
+        Optional<String> timeResult = timeDialog.showAndWait();
+        if (timeResult.isPresent() && !timeResult.get().trim().isEmpty()) {
+            try {
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.of(java.time.LocalDate.now(),
+                        java.time.LocalTime.parse(timeResult.get().trim()));
+                t.setReminderAt(java.sql.Timestamp.valueOf(ldt));
+            } catch (Exception e) {
+                showAlert("Error", "Invalid time format. Task added without reminder.");
+            }
+        }
+
+        taskService.add2(t);
         newTaskField.clear();
         loadData();
+    }
+
+    @FXML
+    public void handleVoiceInput() {
+        javafx.concurrent.Task<String> sttTask = sttService.listen();
+        sttTask.setOnSucceeded(e -> {
+            String result = sttTask.getValue();
+            if (result != null && result.startsWith("Error")) {
+                showAlert("STT Error", result);
+            } else if (result != null && result.startsWith("AI Error")) {
+                showAlert("AI Note", result.replace("AI Error: ", ""));
+            } else if (result != null && !result.isEmpty()) {
+                newTaskField.setText(result);
+                handleAddTask();
+            }
+        });
+        sttTask.setOnFailed(e -> {
+            Throwable ex = sttTask.getException();
+            showAlert("Connection Error", "Is the AI backend running? " + (ex != null ? ex.getMessage() : ""));
+        });
+        new Thread(sttTask).start();
     }
 
     private void showAlert(String title, String content) {

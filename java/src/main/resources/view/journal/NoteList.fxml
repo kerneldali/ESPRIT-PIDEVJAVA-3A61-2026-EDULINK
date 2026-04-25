@@ -14,16 +14,40 @@
         <Button text="⬅ Back" onAction="#handleBack" styleClass="secondary-button" />
         <Label fx:id="notebookTitleLabel" styleClass="page-title" text="Notebook: Loading..." />
         <Region HBox.hgrow="ALWAYS"/>
+        <Button text="📊 Weekly Summary" onAction="#handleWeeklySummary" styleClass="secondary-button" />
         <Button text="➕ New Note" onAction="#handleNewNote" styleClass="primary-button" />
     </HBox>
 
-    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="cards-scroll">
-        <VBox spacing="15">
-            <FlowPane fx:id="notesContainer" hgap="20" vgap="20" styleClass="cards-container">
-                <padding>
-                    <Insets top="10" right="10" bottom="10" left="10"/>
-                </padding>
-            </FlowPane>
+    <SplitPane VBox.vgrow="ALWAYS" dividerPositions="0.7" styleClass="main-split-pane">
+        <!-- Main Notes Area -->
+        <VBox spacing="15" styleClass="content-section">
+            <ScrollPane fitToWidth="true" styleClass="cards-scroll" VBox.vgrow="ALWAYS">
+                <VBox spacing="15">
+                    <FlowPane fx:id="notesContainer" hgap="20" vgap="20" styleClass="cards-container">
+                        <padding>
+                            <Insets top="10" right="10" bottom="10" left="10"/>
+                        </padding>
+                    </FlowPane>
+                </VBox>
+            </ScrollPane>
         </VBox>
-    </ScrollPane>
+
+        <!-- Aside Reminders Section -->
+        <VBox spacing="15" maxWidth="350" minWidth="280" styleClass="aside-section">
+            <padding>
+                <Insets top="15" right="15" bottom="15" left="15"/>
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="💡 Shared Reminders" styleClass="section-title-small" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button text="➕" onAction="#handleNewReminder" styleClass="icon-button-small" />
+            </HBox>
+            <Separator />
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" styleClass="aside-scroll">
+                <VBox fx:id="remindersContainer" spacing="12">
+                    <!-- Reminders will be loaded here -->
+                </VBox>
+            </ScrollPane>
+        </VBox>
+    </SplitPane>
 </VBox>
