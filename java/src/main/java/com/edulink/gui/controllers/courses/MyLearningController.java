@@ -66,7 +66,7 @@ public class MyLearningController implements Initializable {
 
         for (Enrollment e : enrollments) {
             System.out.println("📚 Enrollment: id=" + e.getId() + ", coursId=" + e.getCoursId() + ", progress=" + e.getProgress());
-            Course course = allCourses.stream().filter(c -> c.getId() == e.getCoursId()).findFirst().orElse(null);
+            Course course = allCourses.stream().filter(c -> c.getId() == e.getCoursId() && !"ARCHIVED".equalsIgnoreCase(c.getStatus())).findFirst().orElse(null);
             if (course != null) {
                 String matiereName = allMatieres.stream()
                         .filter(m -> m.getId() == course.getMatiereId())
