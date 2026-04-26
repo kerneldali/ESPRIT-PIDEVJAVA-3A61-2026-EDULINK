@@ -2,99 +2,161 @@ package com.edulink.gui.services.assistance;
 
 import com.edulink.gui.models.assistance.ChatMessage;
 import com.edulink.gui.services.GroqService;
+import com.edulink.gui.util.SessionManager;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Generates 3 context-aware suggested replies based on recent chat history.
- * Used to speed up the student-tutor conversation flow.
+ * Generates 3 context-aware, role-specific suggested replies based on recent chat history.
+ * - If current user is a TUTOR → suggests explanations, examples, guiding questions
+ * - If current user is a STUDENT → suggests follow-up questions, clarifications, confirmations
+ * Uses local educational model first, falls back to Groq with topic + role context.
  */
 public class SuggestedRepliesService {
 
     private final GroqService groq = new GroqService();
-
     private static final String LOCAL_SUGGEST_URL = "http://localhost:5004/predict";
 
     /**
-     * Returns up to 3 short suggested replies.
-     * Uses local Educational Challenge API first (ali), falls back to Groq.
+     * Returns up to 3 short role-aware suggested replies.
+     *
+     * @param recentMessages recent chat messages (used as context)
+     * @param sessionTopic   the help request category (e.g. "Mathematics")
      */
-    public List<String> suggest(List<ChatMessage> recentMessages) {
+    public List<String> suggest(List<ChatMessage> recentMessages, String sessionTopic) {
+        boolean isTutor = isTutor();
         if (recentMessages == null || recentMessages.isEmpty()) {
-            return defaultSuggestions();
+            return defaultSuggestions(isTutor);
         }
 
-        // 1. Try Local Educational Model (Predict learning tasks)
+        // 1. Try Local Educational Model
         try {
             String lastMsg = recentMessages.get(recentMessages.size() - 1).getContent();
-            String jsonBody = "{\"challenge_title\": \"Study Session\", \"challenge_goal\": \"" + lastMsg.replace("\"", "'") + "\"}";
-            String localResp = post(LOCAL_SUGGEST_URL, jsonBody);
-            
-            if (localResp != null && localResp.contains("\"generated_tasks\"")) {
-                // Crude parsing of JSON array
-                String tasksPart = localResp.substring(localResp.indexOf("[") + 1, localResp.indexOf("]"));
+            String body = "{\"challenge_title\": \"" + safeStr(sessionTopic) + "\","
+                        + "\"challenge_goal\": \"" + safeStr(lastMsg) + "\"}";
+            String resp = post(LOCAL_SUGGEST_URL, body, 1500);
+            if (resp != null && resp.contains("\"generated_tasks\"")) {
+                String tasksPart = resp.substring(resp.indexOf("[") + 1, resp.indexOf("]"));
                 List<String> tasks = Arrays.stream(tasksPart.split(","))
                     .map(s -> s.replace("\"", "").trim())
-                    .filter(s -> !s.isBlank())
+                    .filter(s -> !s.isBlank() && s.length() > 5)
                     .limit(3)
                     .collect(Collectors.toList());
-                
                 if (!tasks.isEmpty()) return tasks;
             }
         } catch (Exception e) {
-            System.err.println("[SuggestedRepliesService] Local API failed: " + e.getMessage());
+            System.err.println("[SuggestedReplies] Local API failed: " + e.getMessage());
         }
 
-        // 2. Fallback to Groq
+        // 2. Groq fallback with role + topic context
         try {
-            // Take the last 6 messages as context
-            int from = Math.max(0, recentMessages.size() - 6);
+            int from = Math.max(0, recentMessages.size() - 8);
             String context = recentMessages.subList(from, recentMessages.size()).stream()
                 .map(m -> (m.getSenderName() != null ? m.getSenderName() : "User") + ": " + m.getContent())
                 .collect(Collectors.joining("\n"));
 
+            String roleInstruction = isTutor
+                ? """
+                  You are helping a TUTOR in a tutoring session.
+                  Suggest 3 short replies the TUTOR could send — focus on:
+                  • Clear explanations or analogies
+                  • Guiding questions to check understanding
+                  • Encouraging the student to attempt the problem
+                  """
+                : """
+                  You are helping a STUDENT in a tutoring session.
+                  Suggest 3 short replies the STUDENT could send — focus on:
+                  • Questions to deepen understanding
+                  • Confirming they understood the explanation
+                  • Asking for an example or different approach
+                  """;
+
             String prompt = """
-                You are helping a student in a tutoring session. Based on the recent conversation:
-                
                 %s
                 
-                Suggest exactly 3 short, natural follow-up replies the student could send.
-                Format your response as exactly 3 lines:
-                1. [suggestion]
-                2. [suggestion]
-                3. [suggestion]
-                No extra text, no numbering other than 1/2/3.
-                """.formatted(context);
+                Subject: %s
+                
+                Recent conversation:
+                %s
+                
+                Give EXACTLY 3 natural, short replies (max 12 words each).
+                Format as exactly 3 numbered lines:
+                1. [reply]
+                2. [reply]
+                3. [reply]
+                No extra text or explanation.
+                """.formatted(
+                    roleInstruction.trim(),
+                    sessionTopic != null ? sessionTopic : "General",
+                    context
+                );
 
             String response = groq.ask(prompt);
-            if (response == null || response.isBlank()) return defaultSuggestions();
+            if (response == null || response.isBlank()) return defaultSuggestions(isTutor);
 
             List<String> suggestions = Arrays.stream(response.split("\n"))
-                .map(l -> l.replaceAll("^[0-9]+\\.\\s*", "").trim())
-                .filter(l -> !l.isBlank())
+                .map(l -> l.replaceAll("^[0-9]+[.)\\s]+", "").trim())
+                .filter(l -> !l.isBlank() && l.length() > 3 && l.length() < 120)
                 .limit(3)
                 .collect(Collectors.toList());
 
-            return suggestions.isEmpty() ? defaultSuggestions() : suggestions;
+            return suggestions.isEmpty() ? defaultSuggestions(isTutor) : suggestions;
 
         } catch (Exception e) {
-            System.err.println("[SuggestedRepliesService] Groq Error: " + e.getMessage());
-            return defaultSuggestions();
+            System.err.println("[SuggestedReplies] Groq error: " + e.getMessage());
+            return defaultSuggestions(isTutor);
         }
     }
 
-    private String post(String urlStr, String jsonBody) throws Exception {
+    /** Backward-compat overload (no topic) */
+    public List<String> suggest(List<ChatMessage> recentMessages) {
+        return suggest(recentMessages, null);
+    }
+
+    // ─── Defaults ─────────────────────────────────────────────────────────────
+
+    private List<String> defaultSuggestions(boolean isTutor) {
+        if (isTutor) {
+            return List.of(
+                "Let me explain this step by step.",
+                "Does that make sense so far?",
+                "Try it yourself — I'll check your work."
+            );
+        } else {
+            return List.of(
+                "Can you explain that a bit more?",
+                "I think I understand, let me try.",
+                "Could you give me an example?"
+            );
+        }
+    }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private boolean isTutor() {
+        var user = SessionManager.getCurrentUser();
+        if (user == null) return false;
+        String roles = user.getRoles();
+        return roles != null && (roles.contains("ROLE_FACULTY") || roles.contains("ROLE_ADMIN"));
+    }
+
+    private String safeStr(String s) {
+        if (s == null) return "";
+        return s.replace("\"", "'").replace("\n", " ");
+    }
+
+    private String post(String urlStr, String body, int timeoutMs) throws Exception {
         java.net.URL url = new java.net.URL(urlStr);
         java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
-        conn.setConnectTimeout(1500);
-        conn.setReadTimeout(1500);
+        conn.setConnectTimeout(timeoutMs);
+        conn.setReadTimeout(timeoutMs);
         conn.setDoOutput(true);
         try (java.io.OutputStream os = conn.getOutputStream()) {
-            os.write(jsonBody.getBytes("utf-8"));
+            os.write(body.getBytes("utf-8"));
         }
         if (conn.getResponseCode() != 200) return null;
         try (java.util.Scanner s = new java.util.Scanner(conn.getInputStream(), "utf-8")) {
@@ -102,12 +164,5 @@ public class SuggestedRepliesService {
             return s.hasNext() ? s.next() : "";
         }
     }
-
-    private List<String> defaultSuggestions() {
-        return List.of(
-            "Can you explain that a bit more?",
-            "I think I understand, let me try.",
-            "Could you give me an example?"
-        );
-    }
 }
+
