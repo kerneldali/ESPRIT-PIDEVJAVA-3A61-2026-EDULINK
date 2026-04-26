@@ -15,6 +15,7 @@ public class UserService implements IService<User> {
         cnx = MyConnection.getInstance().getCnx();
         ensureXpColumn();
         ensureTransactionLogTable();
+        ensureLastRemindedAtColumn();
     }
 
     private void ensureXpColumn() {
@@ -23,6 +24,15 @@ public class UserService implements IService<User> {
             st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
         } catch (Exception e) {
             // colonne déjà existante ou syntaxe non supportée
+        }
+    }
+
+    private void ensureLastRemindedAtColumn() {
+        if (cnx == null) return;
+        try (Statement st = cnx.createStatement()) {
+            st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS last_reminded_at DATETIME");
+        } catch (Exception e) {
+            // ignore
         }
     }
 
@@ -146,6 +156,17 @@ public class UserService implements IService<User> {
         }
     }
 
+    public void updateLastRemindedAt(int userId) {
+        if (cnx == null) return;
+        String qry = "UPDATE user SET last_reminded_at = NOW() WHERE id=?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, userId);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public List<String> getUserTransactions(int userId) {
         List<String> logs = new ArrayList<>();
         String qry = "SELECT message, created_at FROM transaction_log WHERE user_id = ? ORDER BY id ASC";
@@ -250,6 +271,15 @@ public class UserService implements IService<User> {
             u.setXp(rs.getInt("xp"));
         } catch (SQLException e) {
             u.setXp(0);
+        }
+        
+        try {
+            Timestamp ts = rs.getTimestamp("last_reminded_at");
+            if (ts != null) {
+                u.setLastRemindedAt(ts.toLocalDateTime());
+            }
+        } catch (SQLException e) {
+            // ignore
         }
         return u;
     }
