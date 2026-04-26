@@ -252,6 +252,11 @@ public class DashboardController implements Initializable {
     }
 
     @FXML
+    public void showWeb3Wallet() {
+        loadView("/view/Web3Wallet.fxml");
+    }
+
+    @FXML
     public void showAdminUserManagement() {
         loadView("/view/AdminUserManagement.fxml");
     }

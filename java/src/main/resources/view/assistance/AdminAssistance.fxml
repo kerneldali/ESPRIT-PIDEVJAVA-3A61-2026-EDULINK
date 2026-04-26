@@ -81,5 +81,32 @@
                 </VBox>
             </HBox>
         </Tab>
+        <Tab text="AI Insights &amp; Analytics">
+            <VBox spacing="20" style="-fx-padding: 20;">
+                <HBox spacing="15" alignment="CENTER">
+                    <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-border-color: #3b82f6;">
+                        <Label text="Global Sentiment" styleClass="card-info"/>
+                        <Label fx:id="avgSentimentLabel" text="Neutral" styleClass="card-title" style="-fx-text-fill: #3b82f6;"/>
+                    </VBox>
+                    <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-border-color: #ef4444;">
+                        <Label text="Toxic Content Blocked" styleClass="card-info"/>
+                        <Label fx:id="toxicBlockedLabel" text="0" styleClass="card-title" style="-fx-text-fill: #ef4444;"/>
+                    </VBox>
+                    <VBox styleClass="card, card-stats" alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-border-color: #10b981;">
+                        <Label text="Most Healthy Category" styleClass="card-info"/>
+                        <Label fx:id="healthyCategoryLabel" text="N/A" styleClass="card-title" style="-fx-text-fill: #10b981; -fx-font-size: 20px;"/>
+                    </VBox>
+                </HBox>
+                
+                <VBox spacing="15" styleClass="card" style="-fx-padding: 20;">
+                    <Label text="Deep Learning Reports" styleClass="card-title"/>
+                    <Label text="Generate an AI-driven executive summary of platform engagement and safety metrics." styleClass="card-description"/>
+                    <HBox spacing="10">
+                        <Button text="🧠 Generate AI Executive Report" onAction="#handleGenerateAiReport" styleClass="primary-button" style="-fx-background-color: #8b5cf6;"/>
+                        <Button text="📈 Refresh Analytics" onAction="#refreshAnalytics" styleClass="secondary-button"/>
+                    </HBox>
+                </VBox>
+            </VBox>
+        </Tab>
     </TabPane>
 </VBox>

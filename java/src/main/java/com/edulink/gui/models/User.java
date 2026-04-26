@@ -7,9 +7,11 @@ public class User {
     private String password;
     private String roles; // Store as raw JSON string for simplicity, or we could parse
     private double walletBalance;
-    private String faceDescriptor;
+    private String faceHash;
     private String resetOtp;
     private String resetOtpExpiresAt; // simplified datetime
+    private String ethWalletAddress;
+    private String ethPrivateKey;
     private int xp;
     private boolean isVerified;
     
@@ -49,14 +51,20 @@ public class User {
     public double getWalletBalance() { return walletBalance; }
     public void setWalletBalance(double walletBalance) { this.walletBalance = walletBalance; }
 
-    public String getFaceDescriptor() { return faceDescriptor; }
-    public void setFaceDescriptor(String faceDescriptor) { this.faceDescriptor = faceDescriptor; }
+    public String getFaceHash() { return faceHash; }
+    public void setFaceHash(String faceHash) { this.faceHash = faceHash; }
 
     public String getResetOtp() { return resetOtp; }
     public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
 
     public String getResetOtpExpiresAt() { return resetOtpExpiresAt; }
     public void setResetOtpExpiresAt(String resetOtpExpiresAt) { this.resetOtpExpiresAt = resetOtpExpiresAt; }
+
+    public String getEthWalletAddress() { return ethWalletAddress; }
+    public void setEthWalletAddress(String ethWalletAddress) { this.ethWalletAddress = ethWalletAddress; }
+
+    public String getEthPrivateKey() { return ethPrivateKey; }
+    public void setEthPrivateKey(String ethPrivateKey) { this.ethPrivateKey = ethPrivateKey; }
 
     public int getXp() { return xp; }
     public void setXp(int xp) { this.xp = xp; }

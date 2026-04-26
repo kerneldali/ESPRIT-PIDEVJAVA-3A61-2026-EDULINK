@@ -3,6 +3,8 @@ package com.edulink.gui.services.assistance;
 import com.edulink.gui.models.assistance.ChatMessage;
 import com.edulink.gui.models.assistance.HelpSession;
 import com.edulink.gui.services.mail.MailService;
+import com.edulink.gui.services.EduTokenService;
+import com.edulink.gui.services.UserService;
 import com.edulink.gui.util.MyConnection;
 import com.edulink.gui.util.SessionManager;
 
@@ -22,6 +24,8 @@ public class HelpSessionService {
 
     private final ToxicityService toxicityService       = new ToxicityService();
     private final SessionSummaryService summaryService  = new SessionSummaryService();
+    private final UserService userService = new UserService();
+    private final EduTokenService tokenService = new EduTokenService();
     private Connection cnx;
 
     // Anti-farming thresholds
@@ -46,14 +50,12 @@ public class HelpSessionService {
 
         // Rate-limit: same pair can't have more than MAX sessions today
         if (isDailyLimitReached(tutorId, studentId)) {
-            System.out.println("[HelpSession] Daily session limit reached for this pair.");
-            return null;
+            throw new RuntimeException("DAILY_LIMIT_REACHED: You have reached the maximum of " + MAX_SESSIONS_PER_PAIR_PER_DAY + " sessions today with this tutor/student.");
         }
 
         // Check student has enough balance (DB-side wallet)
         if (!hasEnoughBalance(studentId, bounty)) {
-            System.out.println("[HelpSession] Student does not have enough credits.");
-            return null;
+            throw new RuntimeException("INSUFFICIENT_FUNDS: The owner of this request (Student #" + studentId + ") does not have enough EDU to pay the bounty.");
         }
 
         HelpSession session = new HelpSession();
@@ -118,14 +120,40 @@ public class HelpSessionService {
             messages.size(), duration, result.qualityScore);
 
         if (passedEngagement && passedQuality) {
-            // Pay the tutor from escrow
+            // Pay the tutor from escrow (DB Wallet)
             adjustWallet(session.getTutorId(), session.getBountyEscrowed(), "BOUNTY_EARNED", sessionId);
             markBountyPaid(sessionId, result.qualityScore);
             System.out.println("[HelpSession] Bounty paid to tutor #" + session.getTutorId());
+            
+            // Execute the on-chain Web3 Transfer!
+            try {
+                com.edulink.gui.models.User student = userService.getAll().stream().filter(u -> u.getId() == session.getStudentId()).findFirst().orElse(null);
+                com.edulink.gui.models.User tutor = userService.getAll().stream().filter(u -> u.getId() == session.getTutorId()).findFirst().orElse(null);
+                
+                if (student != null && tutor != null && student.getEthWalletAddress() != null && tutor.getEthWalletAddress() != null) {
+                    String txHash = tokenService.distributeBounty(student.getEthWalletAddress(), tutor.getEthWalletAddress(), session.getBountyEscrowed(), sessionId);
+                    if (txHash != null) {
+                        System.out.println("[HelpSession] Web3 Bounty Distributed! TX Hash: " + txHash);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("[HelpSession] Failed to execute Web3 transfer: " + e.getMessage());
+            }
+            
         } else {
-            // Refund the student
+            // Build refusal message
+            StringBuilder refusal = new StringBuilder("❌ Bounty Refused: ");
+            if (messages.size() < MIN_MESSAGES) refusal.append("Too few messages (min " + MIN_MESSAGES + "). ");
+            if (duration < MIN_DURATION_MIN) refusal.append("Session too short (min " + MIN_DURATION_MIN + " mins). ");
+            if (!passedQuality) refusal.append("Low AI quality score (" + result.qualityScore + "/" + QUALITY_THRESHOLD + "). ");
+            
+            String finalSummary = refusal.toString() + "\n\n" + result.summary;
+            
             adjustWallet(session.getStudentId(), session.getBountyEscrowed(), "REFUND", sessionId);
-            System.out.println("[HelpSession] Refund issued — engagement or quality below threshold.");
+            finalizeSession(sessionId, finalSummary, result.qualityScore);
+            updateRequestStatus(session.getHelpRequestId(), "CLOSED");
+            sendSummaryEmails(session, finalSummary);
+            return finalSummary;
         }
 
         // Update session in DB (mark closed, save summary)

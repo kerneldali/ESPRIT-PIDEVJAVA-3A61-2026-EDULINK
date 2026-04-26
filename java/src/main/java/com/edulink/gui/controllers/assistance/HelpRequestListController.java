@@ -293,16 +293,23 @@ public class HelpRequestListController implements Initializable {
         confirm.setContentText("The bounty of " + req.getBounty() + " EDU will be released to you if the session passes the quality check.");
         confirm.showAndWait().ifPresent(res -> {
             if (res == ButtonType.OK) {
-                HelpSession session = sessionService.createSession(
-                    req.getId(), currentUserId,
-                    req.getStudentId() != null ? req.getStudentId() : 1,
-                    req.getBounty());
-                if (session == null) {
-                    showAlert("Cannot join", "Could not create session. Check your balance or daily limit.");
-                    return;
+                try {
+                    HelpSession session = sessionService.createSession(
+                        req.getId(), currentUserId,
+                        req.getStudentId() != null ? req.getStudentId() : 1,
+                        req.getBounty());
+                    if (session != null) {
+                        openChat(session);
+                        loadData(); // refresh list
+                    }
+                } catch (RuntimeException ex) {
+                    // Show the explicit refusal reason (Daily limit, Insufficient funds, etc.)
+                    Alert refusal = new Alert(Alert.AlertType.WARNING);
+                    refusal.setTitle("Session Refused");
+                    refusal.setHeaderText("Tutoring Policy Violation");
+                    refusal.setContentText(ex.getMessage());
+                    refusal.showAndWait();
                 }
-                openChat(session);
-                loadData(); // refresh list
             }
         });
     }

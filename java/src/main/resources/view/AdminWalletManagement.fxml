@@ -103,7 +103,10 @@
                     
                     <Label fx:id="formStatusLabel" text="" style="-fx-font-weight: 800; -fx-font-size: 14px;" wrapText="true" textAlignment="CENTER"/>
 
-                    <Button text="⚡ Process Financial Adjustment" onAction="#handleRefundOrAdd" style="-fx-background-color: linear-gradient(to right, #f59e0b, #d97706); -fx-text-fill: white; -fx-padding: 16; -fx-font-size: 15px; -fx-font-weight: 900; -fx-cursor: hand; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(217,119,6,0.4), 20, 0, 0, 8);" maxWidth="Infinity"/>
+                    <Button text="⚡ Process Financial Adjustment (DB)" onAction="#handleRefundOrAdd" style="-fx-background-color: linear-gradient(to right, #f59e0b, #d97706); -fx-text-fill: white; -fx-padding: 16; -fx-font-size: 15px; -fx-font-weight: 900; -fx-cursor: hand; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(217,119,6,0.4), 20, 0, 0, 8);" maxWidth="Infinity"/>
+                    
+                    <!-- Web3 Mint Button -->
+                    <Button text="💎 Mint EDU Tokens (Sepolia Testnet)" onAction="#handleMintTokens" style="-fx-background-color: linear-gradient(to right, #8b5cf6, #7c3aed); -fx-text-fill: white; -fx-padding: 16; -fx-font-size: 15px; -fx-font-weight: 900; -fx-cursor: hand; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(139,92,246,0.4), 20, 0, 0, 8);" maxWidth="Infinity"/>
                 </VBox>
 
                 <VBox fx:id="emptyPrompt" alignment="CENTER" spacing="15" VBox.vgrow="ALWAYS" opacity="0.6">

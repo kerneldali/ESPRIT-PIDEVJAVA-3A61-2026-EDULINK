@@ -3,6 +3,8 @@ package com.edulink.gui.services;
 import com.edulink.gui.util.Web3Config;
 import com.edulink.gui.util.MyConnection;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.ECKeyPair;
+import org.web3j.crypto.Keys;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
@@ -12,14 +14,25 @@ import org.web3j.protocol.core.methods.response.*;
 import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Convert;
 import org.web3j.utils.Numeric;
+import okhttp3.OkHttpClient;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import com.edulink.gui.util.SessionManager;
+import org.web3j.abi.datatypes.Type;
+import org.web3j.abi.datatypes.generated.Uint256;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.security.Security;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * Handles all Ethereum / Sepolia interactions for the EduToken economy.
@@ -30,6 +43,12 @@ import java.util.List;
  *   2. Fill in Web3Config.CONTRACT_ADDRESS and Web3Config.ADMIN_PRIVATE_KEY
  */
 public class EduTokenService {
+
+    static {
+        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
+            Security.addProvider(new BouncyCastleProvider());
+        }
+    }
 
     // ERC-20 function selectors (keccak256 of signature, first 4 bytes)
     private static final String SIG_BALANCE_OF         = "0x70a08231"; // balanceOf(address)
@@ -43,8 +62,86 @@ public class EduTokenService {
     private Connection dbCnx;
 
     public EduTokenService() {
-        this.web3   = Web3j.build(new HttpService(Web3Config.RPC_URL));
+        // Increase timeout to 30 seconds for slower public RPCs
+        OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .build();
+        this.web3   = Web3j.build(new HttpService(Web3Config.RPC_URL, client));
         this.dbCnx  = MyConnection.getInstance().getCnx();
+        System.out.println("[EduTokenService] Initialized for contract: " + Web3Config.CONTRACT_ADDRESS);
+        ensureColumnsExist();
+    }
+
+    private void ensureColumnsExist() {
+        if (dbCnx == null) {
+            this.dbCnx = MyConnection.getInstance().getCnx();
+            if (dbCnx == null) return;
+        }
+        try (Statement st = dbCnx.createStatement()) {
+            // Check if columns exist by selecting them
+            try {
+                st.executeQuery("SELECT eth_wallet_address, eth_private_key FROM user LIMIT 1").close();
+            } catch (SQLException e) {
+                // Columns likely missing, try adding them
+                try { st.execute("ALTER TABLE user ADD COLUMN eth_wallet_address VARCHAR(255)"); } catch (Exception ignored) {}
+                try { st.execute("ALTER TABLE user ADD COLUMN eth_private_key VARCHAR(255)"); } catch (Exception ignored) {}
+                System.out.println("[EduTokenService] Web3 columns added to user table.");
+            }
+            // Ensure any admin user has "unlimited" credits and the CORRECT fixed private key from Web3Config
+            String adminAddr = org.web3j.crypto.Credentials.create(Web3Config.ADMIN_PRIVATE_KEY).getAddress();
+            String updateAdmin = "UPDATE user SET wallet_balance = 999999, eth_private_key = ?, eth_wallet_address = ? " +
+                                "WHERE roles LIKE '%ROLE_ADMIN%'";
+            try (PreparedStatement pups = dbCnx.prepareStatement(updateAdmin)) {
+                pups.setString(1, Web3Config.ADMIN_PRIVATE_KEY);
+                pups.setString(2, adminAddr);
+                pups.executeUpdate();
+                System.out.println("[EduTokenService] Admin wallet synced with Web3Config: " + adminAddr);
+            }
+        } catch (Exception e) {
+            System.err.println("[EduTokenService] Column/Admin check failed: " + e.getMessage());
+        }
+    }
+
+    /** Generates a new Ethereum wallet and saves it to the user record in DB */
+    public String[] generateAndSaveWallet(int userId) {
+        try {
+            ECKeyPair keyPair = Keys.createEcKeyPair();
+            String privateKey = Numeric.toHexStringNoPrefix(keyPair.getPrivateKey());
+            String address    = "0x" + Keys.getAddress(keyPair);
+
+            if (dbCnx != null) {
+                String sql = "UPDATE user SET eth_wallet_address=?, eth_private_key=? WHERE id=?";
+                try (PreparedStatement ps = dbCnx.prepareStatement(sql)) {
+                    ps.setString(1, address);
+                    ps.setString(2, privateKey);
+                    ps.setInt(3, userId);
+                    ps.executeUpdate();
+                }
+
+                // ✨ NEW: Welcome bonus — Mint 1000 EDU tokens for the new user!
+                // This happens on-chain so it's "real" testnet value
+                new Thread(() -> {
+                    try {
+                        System.out.println("[EduTokenService] Minting 1000 EDU bonus for user " + userId);
+                        adminMint(address, 1000);
+                        // Also update DB balance so it's immediately visible
+                        try (PreparedStatement ups = dbCnx.prepareStatement("UPDATE user SET wallet_balance = wallet_balance + 1000 WHERE id = ?")) {
+                            ups.setInt(1, userId);
+                            ups.executeUpdate();
+                        }
+                    } catch (Exception e) {
+                        System.err.println("[EduTokenService] Welcome bonus failed: " + e.getMessage());
+                    }
+                }).start();
+            }
+            return new String[]{address, privateKey};
+        } catch (Exception e) {
+            System.err.println("[EduTokenService] Wallet generation failed!");
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /** Returns true if the RPC endpoint is reachable */
@@ -64,15 +161,58 @@ public class EduTokenService {
         try {
             String data = SIG_BALANCE_OF + padAddress(ethAddress);
             EthCall call = web3.ethCall(
-                Transaction.createEthCallTransaction(ethAddress, Web3Config.CONTRACT_ADDRESS, data),
+                Transaction.createEthCallTransaction(null, Web3Config.CONTRACT_ADDRESS, data),
                 DefaultBlockParameterName.LATEST
             ).send();
-            if (call.hasError()) return BigDecimal.ZERO;
-            BigInteger raw = Numeric.decodeQuantity(call.getValue());
-            return new BigDecimal(raw).movePointLeft(18).setScale(4, BigDecimal.ROUND_DOWN);
+            
+            if (call.hasError()) {
+                System.err.println("[EduTokenService] RPC Error: " + call.getError().getMessage());
+                return BigDecimal.ZERO;
+            }
+            String rawVal = call.getValue();
+            if (rawVal == null || rawVal.equals("0x")) {
+                System.err.println("[EduTokenService] Empty response for balance at " + ethAddress);
+                return BigDecimal.ZERO;
+            }
+            
+            List<TypeReference<?>> outputParameters = new ArrayList<>();
+            outputParameters.add(new TypeReference<Uint256>() {});
+            List<Type> results = FunctionReturnDecoder.decode(rawVal, (List) outputParameters);
+            
+            if (results.isEmpty()) {
+                System.err.println("[EduTokenService] Decoding failed for " + rawVal);
+                return BigDecimal.ZERO;
+            }
+            BigInteger raw = (BigInteger) results.get(0).getValue();
+            BigDecimal balance = new BigDecimal(raw).movePointLeft(18);
+            System.out.println("[EduTokenService] Address " + ethAddress + " balance: " + balance + " EDU");
+            
+            // Sync with DB
+            updateDbBalanceByAddress(ethAddress, balance.doubleValue());
+            
+            return balance.setScale(4, java.math.RoundingMode.DOWN);
         } catch (Exception e) {
             System.err.println("[EduTokenService] getBalance error: " + e.getMessage());
             return BigDecimal.ZERO;
+        }
+    }
+
+    private void updateDbBalanceByAddress(String address, double amount) {
+        if (dbCnx == null) return;
+        String sql = "UPDATE user SET wallet_balance = ? WHERE eth_wallet_address = ?";
+        try (PreparedStatement ps = dbCnx.prepareStatement(sql)) {
+            ps.setDouble(1, amount);
+            ps.setString(2, address);
+            ps.executeUpdate();
+
+            // Sync with current session if this is the logged-in user
+            com.edulink.gui.models.User currentUser = SessionManager.getCurrentUser();
+            if (currentUser != null && address.equalsIgnoreCase(currentUser.getEthWalletAddress())) {
+                currentUser.setWalletBalance(amount);
+                System.out.println("[EduTokenService] Session balance synchronized for " + currentUser.getEmail());
+            }
+        } catch (Exception e) {
+            System.err.println("[EduTokenService] DB Sync failed: " + e.getMessage());
         }
     }
 
@@ -80,11 +220,19 @@ public class EduTokenService {
         try {
             EthCall call = web3.ethCall(
                 Transaction.createEthCallTransaction(
-                    Web3Config.CONTRACT_ADDRESS, Web3Config.CONTRACT_ADDRESS, SIG_TOTAL_SUPPLY),
+                    null, Web3Config.CONTRACT_ADDRESS, SIG_TOTAL_SUPPLY),
                 DefaultBlockParameterName.LATEST
             ).send();
-            BigInteger raw = Numeric.decodeQuantity(call.getValue());
-            return new BigDecimal(raw).movePointLeft(18).setScale(2, BigDecimal.ROUND_DOWN);
+            
+            if (call.hasError() || call.getValue() == null || call.getValue().equals("0x")) return BigDecimal.ZERO;
+            
+            List<TypeReference<?>> outputParameters = new ArrayList<>();
+            outputParameters.add(new TypeReference<Uint256>() {});
+            List<Type> results = FunctionReturnDecoder.decode(call.getValue(), (List) outputParameters);
+                
+            if (results.isEmpty()) return BigDecimal.ZERO;
+            BigInteger raw = (BigInteger) results.get(0).getValue();
+            return new BigDecimal(raw).movePointLeft(18).setScale(2, java.math.RoundingMode.DOWN);
         } catch (Exception e) {
             return BigDecimal.ZERO;
         }
@@ -241,16 +389,21 @@ public class EduTokenService {
     private String sendTransaction(Credentials creds, String data,
                                     BigInteger value, long gasLimitLong) throws Exception {
         String from   = creds.getAddress();
-        BigInteger nonce    = getNonce(from);
-        BigInteger gasPrice = getGasPrice();
+        // Use PENDING to avoid nonce collisions when multiple transactions are sent in row
+        EthGetTransactionCount cnt = web3.ethGetTransactionCount(
+            from, DefaultBlockParameterName.PENDING).send();
+        BigInteger nonce = cnt.getTransactionCount();
+        
+        BigInteger gasPrice = web3.ethGasPrice().send().getGasPrice();
         BigInteger gasLimit = BigInteger.valueOf(gasLimitLong);
 
         RawTransaction tx = RawTransaction.createTransaction(
             nonce, gasPrice, gasLimit, Web3Config.CONTRACT_ADDRESS, value, data);
         byte[] signed = TransactionEncoder.signMessage(tx, Web3Config.CHAIN_ID, creds);
         EthSendTransaction sent = web3.ethSendRawTransaction(Numeric.toHexString(signed)).send();
+        
         if (sent.hasError()) {
-            System.err.println("[EduTokenService] sendTx error: " + sent.getError().getMessage());
+            System.err.println("[EduTokenService] sendTx error: " + sent.getError().getMessage() + " (Nonce was: " + nonce + ")");
             return null;
         }
         return sent.getTransactionHash();
@@ -275,7 +428,7 @@ public class EduTokenService {
     /** ABI-encode a BigInteger as 32-byte (64-char hex) */
     private String padUint256(BigInteger val) {
         String hex = val.toString(16);
-        return String.format("%064s", hex).replace(' ', '0');
+        return String.format("%64s", hex).replace(' ', '0');
     }
 
     private Integer resolveUserId(String ethAddress) {

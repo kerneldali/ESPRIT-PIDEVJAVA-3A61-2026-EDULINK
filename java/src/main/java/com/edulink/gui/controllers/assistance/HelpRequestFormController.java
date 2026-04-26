@@ -45,7 +45,7 @@ public class HelpRequestFormController implements Initializable {
         // Auto-classify when user finishes typing the description
         descField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
             if (wasFocused && !isNowFocused) {
-                triggerAutoClassify();
+                handleAiSuggest();
             }
         });
 
@@ -53,7 +53,8 @@ public class HelpRequestFormController implements Initializable {
     }
 
     /** Calls Groq in a background thread then updates category/difficulty fields */
-    private void triggerAutoClassify() {
+    @FXML
+    public void handleAiSuggest() {
         String title = titleField.getText();
         String desc  = descField.getText();
         if (title == null || title.isBlank() || desc == null || desc.isBlank()) return;
@@ -101,9 +102,9 @@ public class HelpRequestFormController implements Initializable {
 
         // 1. Title Validation (10-100 chars, Alphanumeric + Basic Punctuation)
         String title = titleField.getText() == null ? "" : titleField.getText().trim();
-        if (title.length() < 10 || title.length() > 100 || !title.matches("^[a-zA-Z0-9\\s\\-.,!?()]+$")) {
+        if (title.length() < 10 || title.length() > 100 || !title.matches("^[a-zA-Z0-9\\s\\-.,!?()+#@]+$")) {
             applyErrorStyle(titleField);
-            showError("Title must be 10-100 chars and contain only safe alphanumeric/punctuation.");
+            showError("Title must be 10-100 chars (safe alphanumeric, +, #, @ allowed).");
             isValid = false;
         }
 

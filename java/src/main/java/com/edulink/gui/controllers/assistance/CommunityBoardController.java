@@ -23,6 +23,8 @@ public class CommunityBoardController implements Initializable {
     @FXML private VBox threadFocusArea;
     @FXML private Label focusedThreadTitle;
     @FXML private Label focusedThreadAuthor;
+    @FXML private Label reactionCountLabel;
+    @FXML private Button reactionBtn;
     @FXML private HBox adminActionsPane;
     @FXML private Button pinThreadBtn;
     @FXML private Button lockThreadBtn;
@@ -36,6 +38,7 @@ public class CommunityBoardController implements Initializable {
     @FXML private TextArea newThreadContent;
 
     private ForumService service = new ForumService();
+    private com.edulink.gui.services.assistance.ToxicityService toxicityService = new com.edulink.gui.services.assistance.ToxicityService();
     private ObservableList<ForumThread> allThreads = FXCollections.observableArrayList();
     private ForumThread currentThread = null;
     private boolean isAdmin = false;
@@ -142,6 +145,8 @@ public class CommunityBoardController implements Initializable {
         focusedThreadAuthor.setText("Posted by: " + (thread.getAuthorName() != null ? thread.getAuthorName() : "Anonymous"));
         focusedThreadContent.setText(thread.getContent());
         
+        loadReactions();
+
         // Load replies
         ObservableList<ForumReply> replies = FXCollections.observableArrayList(service.getRepliesForThread(thread.getId()));
         repliesList.setItems(replies);
@@ -237,6 +242,11 @@ public class CommunityBoardController implements Initializable {
             showAlert("Input Error", "Reply is too long (max 500 characters).");
             return;
         }
+        
+        if (toxicityService.analyze(content).isToxic) {
+            showAlert("Content Blocked", "Your reply was flagged for inappropriate or toxic language. Please revise it.");
+            return;
+        }
 
         ForumReply r = new ForumReply();
         r.setThreadId(currentThread.getId());
@@ -283,6 +293,11 @@ public class CommunityBoardController implements Initializable {
             showAlert("Input Error", "Topic content must be at least 10 characters long.");
             return;
         }
+        
+        if (toxicityService.analyze(title).isToxic || toxicityService.analyze(content).isToxic) {
+            showAlert("Content Blocked", "Your post was flagged for inappropriate or toxic language. Please revise it.");
+            return;
+        }
 
         ForumThread t = new ForumThread();
         t.setTitle(title.trim());
@@ -294,6 +309,37 @@ public class CommunityBoardController implements Initializable {
         service.addThread(t);
         hideNewThreadForm();
         loadThreads();
+    }
+    
+    private void loadReactions() {
+        if (currentThread == null || reactionCountLabel == null || reactionBtn == null) return;
+        java.util.Map<String, Integer> reactions = service.getReactions(currentThread.getId());
+        int likes = reactions.getOrDefault("LIKE", 0);
+        reactionCountLabel.setText(likes + " Likes");
+        
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        String myReact = service.getUserReaction(currentThread.getId(), userId);
+        if ("LIKE".equals(myReact)) {
+            reactionBtn.setText("👍 Liked");
+            reactionBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 2 6;");
+        } else {
+            reactionBtn.setText("👍 Like");
+            reactionBtn.setStyle("-fx-text-fill: #3b82f6; -fx-padding: 2 6;");
+        }
+    }
+    
+    @FXML
+    public void handleReaction() {
+        if (currentThread == null) return;
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        String myReact = service.getUserReaction(currentThread.getId(), userId);
+        
+        if ("LIKE".equals(myReact)) {
+            service.removeReaction(currentThread.getId(), userId);
+        } else {
+            service.addReaction(currentThread.getId(), userId, "LIKE");
+        }
+        loadReactions();
     }
 
     private void showAlert(String title, String message) {

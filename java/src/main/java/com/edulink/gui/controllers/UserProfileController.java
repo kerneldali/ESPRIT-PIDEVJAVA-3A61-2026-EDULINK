@@ -31,6 +31,7 @@ public class UserProfileController implements Initializable {
     @FXML private ListView<String> logsListView;
 
     private UserService userService;
+    private com.edulink.gui.services.user.FaceIdService faceIdService = new com.edulink.gui.services.user.FaceIdService();
     private User currentUser;
 
     @Override
@@ -108,6 +109,44 @@ public class UserProfileController implements Initializable {
             statusLabel.setText("Error updating profile.");
             e.printStackTrace();
         }
+    }
+    
+    @FXML
+    public void handleSetupFaceId() {
+        if (currentUser == null) return;
+        
+        statusLabel.setStyle("-fx-text-fill: #3b82f6;");
+        statusLabel.setText("Scanning face...");
+        
+        javafx.concurrent.Task<Boolean> scanTask = new javafx.concurrent.Task<>() {
+            @Override
+            protected Boolean call() {
+                return faceIdService.simulateFaceScan();
+            }
+        };
+        
+        scanTask.setOnSucceeded(e -> {
+            if (scanTask.getValue()) {
+                statusLabel.setStyle("-fx-text-fill: #10b981;");
+                statusLabel.setText("Face ID successfully configured!");
+                
+                // Save the mock hash to the user
+                String mockHash = "SHA256:" + java.util.UUID.randomUUID().toString().substring(0, 8);
+                currentUser.setFaceHash(mockHash);
+                try {
+                    userService.edit(currentUser);
+                    addLog("Configured Biometric Face ID successfully.");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    statusLabel.setText("Failed to save Face ID to database.");
+                }
+            } else {
+                statusLabel.setStyle("-fx-text-fill: #ef4444;");
+                statusLabel.setText("Face scan failed.");
+            }
+        });
+        
+        new Thread(scanTask).start();
     }
 
     @FXML

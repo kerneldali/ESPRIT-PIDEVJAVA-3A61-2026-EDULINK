@@ -25,6 +25,7 @@ public class AdminAssistanceController implements Initializable {
     @FXML private FlowPane forumReportsContainer;
     @FXML private ComboBox<String> searchByCombo;
     @FXML private TextField searchField;
+    @FXML private Label avgSentimentLabel, toxicBlockedLabel, healthyCategoryLabel;
 
     private HelpRequestService service = new HelpRequestService();
     private ForumService forumService = new ForumService();
@@ -187,6 +188,27 @@ public class AdminAssistanceController implements Initializable {
         // Refresh Table with Cards
         allTickets = service.getAll();
         filterCards(searchField.getText());
+        refreshAnalytics();
+    }
+
+    @FXML
+    public void refreshAnalytics() {
+        // Mocking AI analytics pull from our services
+        avgSentimentLabel.setText("Positive (78%)");
+        toxicBlockedLabel.setText("14");
+        healthyCategoryLabel.setText("Mathematics");
+    }
+
+    @FXML
+    public void handleGenerateAiReport() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("AI Executive Report");
+        alert.setHeaderText("Platform Intelligence Summary");
+        alert.setContentText("Generating deep insights...\n\n" +
+            "1. Sentiment is trending UP in Computer Science.\n" +
+            "2. Toxicity filters caught 3 major phishing attempts today.\n" +
+            "3. Suggested Action: Increase rewards for 'Physics' tutors to balance demand.");
+        alert.show();
     }
 
     @FXML

@@ -47,7 +47,10 @@
                 </VBox>
                 
                 <Region VBox.vgrow="ALWAYS"/>
-                <Button text="Save Changes" onAction="#handleUpdateProfile" style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6); -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.3), 10, 0, 0, 5);" maxWidth="Infinity"/>
+                <HBox spacing="10">
+                    <Button text="📷 Setup Face ID" onAction="#handleSetupFaceId" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10;"/>
+                    <Button text="Save Changes" onAction="#handleUpdateProfile" style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6); -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10;" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
             </VBox>
 
             <!-- Fintech Wallet Card & Transfer -->

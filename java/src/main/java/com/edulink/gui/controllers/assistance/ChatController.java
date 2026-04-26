@@ -216,7 +216,7 @@ public class ChatController implements Initializable {
                 try {
                     javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/view/assistance/HelpRequestList.fxml"));
-                    s.getChildren().setAll(loader.load());
+                    s.getChildren().setAll((javafx.scene.Node) loader.load());
                 } catch (Exception e) { e.printStackTrace(); }
                 return;
             }
