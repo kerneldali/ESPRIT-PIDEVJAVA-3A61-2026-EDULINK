@@ -191,8 +191,8 @@ public class CourseStatsController implements Initializable {
                 props.put("mail.smtp.host", "smtp.gmail.com");
                 props.put("mail.smtp.port", "587");
                 
-                final String username = "edulink.platform.system@gmail.com"; 
-                final String password = "your_app_password_here"; 
+                final String username = "eya.makhlouf.isic@gmail.com"; 
+                final String password = "Maamoura123"; 
                 
                 javax.mail.Session session = javax.mail.Session.getInstance(props,
                   new javax.mail.Authenticator() {
