@@ -23,8 +23,12 @@ public class CommunityBoardController implements Initializable {
     @FXML private VBox threadFocusArea;
     @FXML private Label focusedThreadTitle;
     @FXML private Label focusedThreadAuthor;
-    @FXML private Label reactionCountLabel;
-    @FXML private Button reactionBtn;
+    @FXML private Button btnLike;
+    @FXML private Button btnLove;
+    @FXML private Button btnInsightful;
+    @FXML private Button btnFunny;
+    @FXML private Button btnSupport;
+    @FXML private HBox reactionBar;
     @FXML private HBox adminActionsPane;
     @FXML private Button pinThreadBtn;
     @FXML private Button lockThreadBtn;
@@ -311,36 +315,47 @@ public class CommunityBoardController implements Initializable {
         loadThreads();
     }
     
+    private static final String[] REACTION_TYPES = {"LIKE", "LOVE", "INSIGHTFUL", "FUNNY", "SUPPORT"};
+    private static final String[] REACTION_EMOJIS = {"👍", "❤️", "💡", "😂", "🤝"};
+
     private void loadReactions() {
-        if (currentThread == null || reactionCountLabel == null || reactionBtn == null) return;
+        if (currentThread == null || btnLike == null) return;
         java.util.Map<String, Integer> reactions = service.getReactions(currentThread.getId());
-        int likes = reactions.getOrDefault("LIKE", 0);
-        reactionCountLabel.setText(likes + " Likes");
-        
         int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
         String myReact = service.getUserReaction(currentThread.getId(), userId);
-        if ("LIKE".equals(myReact)) {
-            reactionBtn.setText("👍 Liked");
-            reactionBtn.setStyle("-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 2 6;");
-        } else {
-            reactionBtn.setText("👍 Like");
-            reactionBtn.setStyle("-fx-text-fill: #3b82f6; -fx-padding: 2 6;");
+
+        Button[] btns = {btnLike, btnLove, btnInsightful, btnFunny, btnSupport};
+        for (int i = 0; i < btns.length; i++) {
+            if (btns[i] == null) continue;
+            int count = reactions.getOrDefault(REACTION_TYPES[i], 0);
+            btns[i].setText(REACTION_EMOJIS[i] + " " + count);
+            boolean isActive = REACTION_TYPES[i].equals(myReact);
+            btns[i].setStyle(isActive
+                ? "-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 10;"
+                : "-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 10;");
         }
     }
-    
-    @FXML
-    public void handleReaction() {
+
+    private void doReaction(String type) {
         if (currentThread == null) return;
         int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
         String myReact = service.getUserReaction(currentThread.getId(), userId);
-        
-        if ("LIKE".equals(myReact)) {
+        if (type.equals(myReact)) {
             service.removeReaction(currentThread.getId(), userId);
         } else {
-            service.addReaction(currentThread.getId(), userId, "LIKE");
+            service.addReaction(currentThread.getId(), userId, type);
         }
         loadReactions();
     }
+
+    @FXML public void handleReactionLike()       { doReaction("LIKE"); }
+    @FXML public void handleReactionLove()       { doReaction("LOVE"); }
+    @FXML public void handleReactionInsightful() { doReaction("INSIGHTFUL"); }
+    @FXML public void handleReactionFunny()      { doReaction("FUNNY"); }
+    @FXML public void handleReactionSupport()    { doReaction("SUPPORT"); }
+
+    /** kept for backward compat if any old FXML references it */
+    @FXML public void handleReaction() { doReaction("LIKE"); }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

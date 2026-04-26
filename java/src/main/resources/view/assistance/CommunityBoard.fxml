@@ -30,12 +30,18 @@
                 <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
                 
                 <Label fx:id="focusedThreadTitle" styleClass="thread-focus-title" text="Select a topic to view"/>
-                <HBox spacing="15" alignment="CENTER_LEFT">
+                <HBox fx:id="focusedThreadAuthor_row" spacing="15" alignment="CENTER_LEFT">
                     <Label fx:id="focusedThreadAuthor" styleClass="thread-focus-author" text="Posted by: ..."/>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <Label fx:id="reactionCountLabel" text="0 Likes" style="-fx-text-fill: #64748b; -fx-font-weight: bold; -fx-padding: 2 6;"/>
-                    <Button fx:id="reactionBtn" text="👍 Like" onAction="#handleReaction" styleClass="secondary-button" style="-fx-text-fill: #3b82f6; -fx-padding: 2 6;"/>
                     <Button text="🚩 Report" onAction="#actionReportThread" styleClass="secondary-button" style="-fx-text-fill: #ef4444; -fx-padding: 2 6;"/>
+                </HBox>
+                <!-- Reaction Bar -->
+                <HBox fx:id="reactionBar" spacing="6" alignment="CENTER_LEFT" style="-fx-background-color: #1e293b; -fx-background-radius: 10; -fx-padding: 8 12;">
+                    <Button fx:id="btnLike"       text="👍 0" onAction="#handleReactionLike"       style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-border-radius: 6; -fx-padding: 4 10;" />
+                    <Button fx:id="btnLove"       text="❤️ 0" onAction="#handleReactionLove"       style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-border-radius: 6; -fx-padding: 4 10;" />
+                    <Button fx:id="btnInsightful" text="💡 0" onAction="#handleReactionInsightful" style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-border-radius: 6; -fx-padding: 4 10;" />
+                    <Button fx:id="btnFunny"      text="😂 0" onAction="#handleReactionFunny"      style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-border-radius: 6; -fx-padding: 4 10;" />
+                    <Button fx:id="btnSupport"    text="🤝 0" onAction="#handleReactionSupport"    style="-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-border-radius: 6; -fx-padding: 4 10;" />
                 </HBox>
                 <HBox fx:id="adminActionsPane" spacing="10" visible="false" managed="false">
                     <Button text="🗑 Delete Thread" onAction="#handleAdminDeleteThread" styleClass="delete-button"/>
