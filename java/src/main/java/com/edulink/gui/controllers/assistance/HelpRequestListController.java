@@ -215,6 +215,16 @@ public class HelpRequestListController implements Initializable {
         } catch (IOException e) { e.printStackTrace(); }
     }
 
+    @FXML
+    public void handleAddRequest() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/assistance/HelpRequestForm.fxml"));
+            Parent view = loader.load();
+            StackPane contentArea = findContentArea();
+            if (contentArea != null) contentArea.getChildren().setAll(view);
+        } catch (IOException e) { e.printStackTrace(); }
+    }
+
     private void handleDelete(HelpRequest req) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Delete " + req.getTitle() + "?", ButtonType.YES, ButtonType.NO);
         alert.showAndWait().ifPresent(response -> {

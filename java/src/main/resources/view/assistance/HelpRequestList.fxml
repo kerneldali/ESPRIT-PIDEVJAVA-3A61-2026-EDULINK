@@ -30,6 +30,8 @@
         <TextField fx:id="searchField" promptText="🔍 Search by title or description..." prefWidth="300" />
         <ComboBox fx:id="filterCombo" promptText="Filter" prefWidth="180" />
         <Button text="💾 Export CSV" onAction="#handleExportCSV" styleClass="secondary-button" />
+        <Button text="📄 Export PDF" onAction="#handleExportPDF" styleClass="secondary-button" />
+        <Button text="➕ New Request" onAction="#handleAddRequest" styleClass="primary-button" style="-fx-font-weight: bold;"/>
         <Button text="🔄 Refresh" onAction="#loadData" styleClass="primary-button" />
     </HBox>
 
