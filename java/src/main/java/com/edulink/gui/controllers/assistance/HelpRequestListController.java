@@ -257,25 +257,32 @@ public class HelpRequestListController implements Initializable {
 
     private void handleFindTutors(HelpRequest req) {
         SmartMatchingService matcher = new SmartMatchingService();
-        List<SmartMatchingService.TutorMatch> matches = matcher.findMatches(req.getCategory(), req.getDifficulty(), req.getDescription());
-        
-        if (matches.isEmpty()) {
-            showAlert("No Matches", "Could not find any suitable tutors at this moment.");
-            return;
-        }
-
-        StringBuilder sb = new StringBuilder("Top Tutors for your request:\n\n");
-        for (SmartMatchingService.TutorMatch m : matches) {
-            sb.append("• ").append(m.fullName).append(" (").append(m.sessionsCompleted).append(" sessions)\n");
-            sb.append("  Rating: ").append(String.format("%.1f", m.avgQuality)).append("/100\n");
-            sb.append("  AI Note: ").append(m.aiReason).append("\n\n");
-        }
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Recommended Tutors");
-        alert.setHeaderText("AI Matching Results");
-        alert.setContentText(sb.toString());
-        alert.showAndWait();
+        statusLabel.setText("🤖 AI Matching in progress...");
+        new Thread(() -> {
+            List<SmartMatchingService.TutorMatch> matches =
+                matcher.findMatches(req.getCategory(), req.getDifficulty(), req.getDescription());
+            javafx.application.Platform.runLater(() -> {
+                statusLabel.setText(matches.size() + " Request(s) matching your criteria");
+                if (matches.isEmpty()) {
+                    showAlert("No Matches", "Could not find any suitable tutors at this moment.");
+                    return;
+                }
+                StringBuilder sb = new StringBuilder("🏆 Top Tutors for your request:\n\n");
+                for (SmartMatchingService.TutorMatch m : matches) {
+                    sb.append("• ").append(m.fullName).append("\n");
+                    sb.append("  ").append(m.scoreBar()).append("\n");
+                    sb.append("  Sessions: ").append(m.sessionsCompleted)
+                      .append("  |  Category Match: ").append(m.categoryMatchCount).append("\n");
+                    sb.append("  💬 ").append(m.aiReason).append("\n\n");
+                }
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Recommended Tutors");
+                alert.setHeaderText("🤖 AI Matching Results — " + (req.getCategory() != null ? req.getCategory() : "General"));
+                alert.setContentText(sb.toString());
+                alert.getDialogPane().setPrefWidth(520);
+                alert.showAndWait();
+            });
+        }).start();
     }
 
     /** Non-owner tutor joins an open request */

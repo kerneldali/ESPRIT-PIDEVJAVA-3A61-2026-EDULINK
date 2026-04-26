@@ -6,7 +6,8 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.edulink.gui.controllers.assistance.ChatController"
-      spacing="0" style="-fx-background-color:#0f172a;">
+      spacing="0" prefHeight="700" VBox.vgrow="ALWAYS"
+      style="-fx-background-color:#0f172a;">
 
     <!-- Header -->
     <HBox style="-fx-background-color:#1e293b;-fx-padding:14 20;" spacing="16" alignment="CENTER_LEFT">
@@ -28,15 +29,15 @@
     <!-- Messages area -->
     <ScrollPane fx:id="messagesScroll" fitToWidth="true" VBox.vgrow="ALWAYS"
                 style="-fx-background:transparent;-fx-background-color:transparent;-fx-border-color:transparent;">
-        <VBox fx:id="messagesContainer" spacing="6">
-            <padding><Insets top="12" bottom="12"/></padding>
+        <VBox fx:id="messagesContainer" spacing="8">
+            <padding><Insets top="16" bottom="16" left="12" right="12"/></padding>
         </VBox>
     </ScrollPane>
 
     <!-- AI Suggestion Chips -->
-    <VBox style="-fx-background-color:#0f172a;-fx-padding:8 16 4 16;">
+    <VBox style="-fx-background-color:#111827;-fx-padding:8 16 6 16;">
         <Label text="💡 Quick Replies" style="-fx-text-fill:#475569;-fx-font-size:11;"/>
-        <HBox fx:id="suggestionsBar" spacing="8" style="-fx-padding:6 0 0 0;"/>
+        <HBox fx:id="suggestionsBar" spacing="8" style="-fx-padding:6 0 2 0;"/>
     </VBox>
 
     <!-- Input area -->
@@ -46,7 +47,7 @@
                    style="-fx-background-color:#0f172a;-fx-text-fill:white;-fx-prompt-text-fill:#475569;
                           -fx-border-color:#334155;-fx-border-radius:20;-fx-background-radius:20;-fx-padding:10 16;"/>
         <Button fx:id="sendBtn" text="➤ Send" onAction="#handleSend"
-                style="-fx-background-color:#6366f1;-fx-text-fill:white;-fx-background-radius:20;-fx-padding:10 20;-fx-cursor:hand;"/>
+                style="-fx-background-color:#6366f1;-fx-text-fill:white;-fx-background-radius:20;-fx-padding:10 20;-fx-cursor:hand;-fx-font-weight:bold;"/>
     </HBox>
 
     <!-- Status bar -->
