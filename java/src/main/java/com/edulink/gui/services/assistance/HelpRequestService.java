@@ -188,6 +188,40 @@ public class HelpRequestService implements IService<HelpRequest> {
         return stats;
     }
 
+    public HelpRequest getById(int id) {
+        if (cnx == null) return null;
+        String sql = "SELECT * FROM help_request WHERE id = ?";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapResultSetToHelpRequest(rs);
+        } catch (SQLException e) {
+            System.err.println("Error fetching HelpRequest by ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<HelpRequest> search(String keyword) {
+        List<HelpRequest> list = new ArrayList<>();
+        if (cnx == null) return list;
+        String sql = "SELECT * FROM help_request WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY id DESC";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql);
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSetToHelpRequest(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching HelpRequests: " + e.getMessage());
+        }
+        return list;
+    }
+
     private HelpRequest mapResultSetToHelpRequest(ResultSet rs) throws SQLException {
         HelpRequest req = new HelpRequest();
         req.setId(rs.getInt("id"));
@@ -200,6 +234,8 @@ public class HelpRequestService implements IService<HelpRequest> {
         req.setCategory(rs.getString("category"));
         req.setDifficulty(rs.getString("difficulty"));
         req.setCloseReason(rs.getString("close_reason"));
+        // Map student_id safely (column may not exist in older schemas)
+        try { req.setStudentId(rs.getInt("student_id")); } catch (SQLException ignored) {}
         return req;
     }
 }
