@@ -129,11 +129,6 @@ public class DashboardController implements Initializable {
     public void showManageCatalog() {
         loadView("/view/courses/ManageMatiere.fxml");
     }
-
-    @FXML public void showCatalog() { loadView("/view/courses/MatiereList.fxml"); }
-    @FXML public void showMyLearning() { loadView("/view/courses/MyLearning.fxml"); }
-    @FXML public void showStudentSuggestions() { loadView("/view/courses/StudentSuggestions.fxml"); }
-    @FXML public void showManageCatalog() { loadView("/view/courses/ManageMatiere.fxml"); }
     @FXML public void showManageSuggestions() { loadView("/view/courses/ManageSuggestions.fxml"); }
     @FXML public void showCourseStats() { loadView("/view/courses/CourseStats.fxml"); }
     @FXML public void showActivityStats() { loadView("/view/courses/AnalyzeActivity.fxml"); }
