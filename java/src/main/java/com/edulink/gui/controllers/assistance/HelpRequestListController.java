@@ -1,7 +1,12 @@
 package com.edulink.gui.controllers.assistance;
 
 import com.edulink.gui.models.assistance.HelpRequest;
+import com.edulink.gui.models.assistance.HelpSession;
 import com.edulink.gui.services.assistance.HelpRequestService;
+import com.edulink.gui.services.assistance.HelpSessionService;
+import com.edulink.gui.services.assistance.SmartMatchingService;
+import com.edulink.gui.util.SessionManager;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -24,6 +29,7 @@ public class HelpRequestListController implements Initializable {
     @FXML private ComboBox<String> filterCombo;
     
     private HelpRequestService service = new HelpRequestService();
+    private HelpSessionService sessionService = new HelpSessionService();
     private List<HelpRequest> allRequestsCache = new java.util.ArrayList<>();
 
     @Override
@@ -169,6 +175,7 @@ public class HelpRequestListController implements Initializable {
         // Actions
         HBox actions = new HBox(10);
         actions.setAlignment(Pos.CENTER_RIGHT);
+        
         Button editBtn = new Button("✏");
         editBtn.getStyleClass().add("edit-button");
         editBtn.setOnAction(e -> handleEdit(req));
@@ -176,6 +183,20 @@ public class HelpRequestListController implements Initializable {
         Button delBtn = new Button("🗑");
         delBtn.getStyleClass().add("delete-button");
         delBtn.setOnAction(e -> handleDelete(req));
+        
+        // Add session logic UI
+        if ("OPEN".equals(req.getStatus())) {
+            Button joinBtn = new Button("Join as Tutor");
+            joinBtn.setStyle("-fx-background-color:#10b981;-fx-text-fill:white;-fx-background-radius:20;");
+            joinBtn.setOnAction(e -> handleJoinAsTutor(req));
+            actions.getChildren().add(joinBtn);
+        } else if ("IN_PROGRESS".equals(req.getStatus())) {
+            Button viewBtn = new Button("View Session");
+            viewBtn.setStyle("-fx-background-color:#3b82f6;-fx-text-fill:white;-fx-background-radius:20;");
+            viewBtn.setOnAction(e -> handleViewSession(req));
+            actions.getChildren().add(viewBtn);
+        }
+
         actions.getChildren().addAll(editBtn, delBtn);
 
         card.getChildren().addAll(header, title, desc, details, spacer, actions);
@@ -189,11 +210,8 @@ public class HelpRequestListController implements Initializable {
             Parent view = loader.load();
             HelpRequestFormController controller = loader.getController();
             controller.setHelpRequest(req);
-            
             StackPane contentArea = findContentArea();
-            if (contentArea != null) {
-                contentArea.getChildren().setAll(view);
-            }
+            if (contentArea != null) contentArea.getChildren().setAll(view);
         } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -205,6 +223,56 @@ public class HelpRequestListController implements Initializable {
                 loadData();
             }
         });
+    }
+
+    /** Student opens a chat session that already exists for this request */
+    private void handleViewSession(HelpRequest req) {
+        HelpSession session = sessionService.getActiveSessionForRequest(req.getId());
+        if (session == null) {
+            showAlert("No active session", "There is no active session for this request.");
+            return;
+        }
+        openChat(session);
+    }
+
+    /** Non-owner tutor joins an open request */
+    private void handleJoinAsTutor(HelpRequest req) {
+        int currentUserId = SessionManager.getCurrentUser() != null
+            ? SessionManager.getCurrentUser().getId() : -1;
+        if (currentUserId <= 0) {
+            showAlert("Not logged in", "Please log in first.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Join as Tutor");
+        confirm.setHeaderText("Join \"" + req.getTitle() + "\"?");
+        confirm.setContentText("The bounty of " + req.getBounty() + " EDU will be released to you if the session passes the quality check.");
+        confirm.showAndWait().ifPresent(res -> {
+            if (res == ButtonType.OK) {
+                HelpSession session = sessionService.createSession(
+                    req.getId(), currentUserId,
+                    req.getStudentId() != null ? req.getStudentId() : 1,
+                    req.getBounty());
+                if (session == null) {
+                    showAlert("Cannot join", "Could not create session. Check your balance or daily limit.");
+                    return;
+                }
+                openChat(session);
+                loadData(); // refresh list
+            }
+        });
+    }
+
+    private void openChat(HelpSession session) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/assistance/Chat.fxml"));
+            Parent view = loader.load();
+            com.edulink.gui.controllers.assistance.ChatController ctrl = loader.getController();
+            ctrl.setSession(session);
+            StackPane contentArea = findContentArea();
+            if (contentArea != null) contentArea.getChildren().setAll(view);
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     private String safeStr(String s) { return (s == null) ? "" : s; }
