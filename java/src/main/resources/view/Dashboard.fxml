@@ -85,6 +85,8 @@
                             <!-- Admin -->
                             <Button fx:id="adminCatalogBtn" styleClass="sub-nav-button" text="• Manage Catalog" onAction="#showManageCatalog" visible="false" managed="false"/>
                             <Button fx:id="adminSuggestionsBtn" styleClass="sub-nav-button" text="• Manage Suggestions" onAction="#showManageSuggestions" visible="false" managed="false"/>
+                            <Button fx:id="adminCourseStatsBtn" styleClass="sub-nav-button" text="• Course Stats" onAction="#showCourseStats" visible="false" managed="false"/>
+                            <Button fx:id="adminActivityStatsBtn" styleClass="sub-nav-button" text="• Analyse Activity" onAction="#showActivityStats" visible="false" managed="false"/>
                         </VBox>
                     </VBox>
                     <!-- User Profile Module -->

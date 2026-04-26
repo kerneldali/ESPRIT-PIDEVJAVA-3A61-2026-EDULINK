@@ -29,7 +29,7 @@ public class DashboardController implements Initializable {
     @FXML
     private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
     @FXML
-    private Button adminCatalogBtn, adminSuggestionsBtn;
+    private Button adminCatalogBtn, adminSuggestionsBtn, adminCourseStatsBtn, adminActivityStatsBtn;
     @FXML
     private Button adminChallengesBtn;
     @FXML
@@ -71,6 +71,14 @@ public class DashboardController implements Initializable {
             if (adminSuggestionsBtn != null) {
                 adminSuggestionsBtn.setVisible(true);
                 adminSuggestionsBtn.setManaged(true);
+            }
+            if (adminCourseStatsBtn != null) {
+                adminCourseStatsBtn.setVisible(true);
+                adminCourseStatsBtn.setManaged(true);
+            }
+            if (adminActivityStatsBtn != null) {
+                adminActivityStatsBtn.setVisible(true);
+                adminActivityStatsBtn.setManaged(true);
             }
             if (adminChallengesBtn != null) {
                 adminChallengesBtn.setVisible(true);
@@ -122,10 +130,13 @@ public class DashboardController implements Initializable {
         loadView("/view/courses/ManageMatiere.fxml");
     }
 
-    @FXML
-    public void showManageSuggestions() {
-        loadView("/view/courses/ManageSuggestions.fxml");
-    }
+    @FXML public void showCatalog() { loadView("/view/courses/MatiereList.fxml"); }
+    @FXML public void showMyLearning() { loadView("/view/courses/MyLearning.fxml"); }
+    @FXML public void showStudentSuggestions() { loadView("/view/courses/StudentSuggestions.fxml"); }
+    @FXML public void showManageCatalog() { loadView("/view/courses/ManageMatiere.fxml"); }
+    @FXML public void showManageSuggestions() { loadView("/view/courses/ManageSuggestions.fxml"); }
+    @FXML public void showCourseStats() { loadView("/view/courses/CourseStats.fxml"); }
+    @FXML public void showActivityStats() { loadView("/view/courses/AnalyzeActivity.fxml"); }
 
     @FXML
     public void showAdminJournalStats() {

@@ -13,7 +13,6 @@
     <HBox spacing="10" alignment="CENTER_LEFT" styleClass="card" style="-fx-padding: 10;">
         <ComboBox fx:id="typeFilter" promptText="All Types" />
         <ComboBox fx:id="statusFilter" promptText="All Status" />
-        <Button text="Apply Actions" styleClass="primary-button" style="-fx-background-color: #7c3aed; -fx-text-fill: white;"/>
     </HBox>
     
     <!-- Items container -->

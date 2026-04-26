@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.courses.CourseStatsController">
+    <!-- Main Content -->
+    <VBox spacing="20" styleClass="main-container">
+        <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+        
+        <!-- Header -->
+        <HBox alignment="CENTER_LEFT" spacing="20">
+            <Label text="Course Global Statistics" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 22px;"/>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button text="Refresh Data" onAction="#loadData" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
+        </HBox>
+        
+        <!-- Filter Bar -->
+        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
+            <TextField fx:id="searchField" promptText="🔍 Search course..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
+            <ComboBox fx:id="statusComboFilter" promptText="All Statuses" style="-fx-background-color: #2a2a3e;"/>
+        </HBox>
+        
+        <!-- Table-style List -->
+        <VBox style="-fx-background-color: #1a1a2e; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #ffffff11; -fx-border-radius: 8;" VBox.vgrow="ALWAYS">
+            <Label text="Global Overview" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px; -fx-padding: 0 0 10 0;"/>
+            
+            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
+                <VBox fx:id="cardContainer" spacing="10" />
+            </ScrollPane>
+        </VBox>
+    </VBox>
+</StackPane>

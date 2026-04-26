@@ -23,7 +23,6 @@
             <TextField fx:id="searchField" promptText="🔍 Search courses in this category..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
             <ComboBox fx:id="levelComboFilter" promptText="All Levels" style="-fx-background-color: #2a2a3e;"/>
             <ComboBox fx:id="sortCombo" promptText="Newest First" style="-fx-background-color: #2a2a3e;"/>
-            <Button text="Apply" onAction="#handleApplyFilter" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"/>
         </HBox>
         
         <!-- Table-style List -->

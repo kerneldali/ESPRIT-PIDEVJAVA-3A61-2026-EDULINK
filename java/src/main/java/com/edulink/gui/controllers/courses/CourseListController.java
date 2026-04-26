@@ -3,7 +3,7 @@ package com.edulink.gui.controllers.courses;
 import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.models.courses.Course;
 import com.edulink.gui.models.courses.Matiere;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.services.courses.CourseService;
 import com.edulink.gui.services.courses.EnrollmentService;
 import com.edulink.gui.util.EduAlert;
@@ -72,6 +72,7 @@ public class CourseListController implements Initializable {
         String level = levelFilterCombo.getValue();
 
         java.util.List<Course> filtered = new java.util.ArrayList<>(allCourses.stream()
+                .filter(c -> "ACCEPTED".equalsIgnoreCase(c.getStatus()))
                 .filter(c -> c.getTitle() != null && c.getTitle().toLowerCase().contains(query))
                 .filter(c -> "All Levels".equals(level) || level.equals(c.getLevel()))
                 .toList());
@@ -247,23 +248,49 @@ public class CourseListController implements Initializable {
 
     @FXML
     private void handleSubmitSuggest() {
-        ContentProposal p = new ContentProposal();
-        p.setType("COURSE");
+        Course p = new Course();
         p.setTitle(suggestTitleField.getText().trim());
-        String desc = suggestDescField.getText() != null ? suggestDescField.getText().trim() : "";
-        desc += "\n[Level: " + suggestLevelCombo.getValue() + ", XP: " + (suggestXpField.getText() != null ? suggestXpField.getText().trim() : "0") + "]";
-        if (currentMatiere != null) desc += "\n[Category: " + currentMatiere.getName() + "]";
-        p.setDescription(desc);
-        p.setStatus("PENDING");
+        p.setDescription(suggestDescField.getText() != null ? suggestDescField.getText().trim() : "");
+        p.setLevel(suggestLevelCombo.getValue());
+        
+        try {
+            p.setXp(Integer.parseInt(suggestXpField.getText().trim()));
+        } catch (Exception e) {
+            p.setXp(0);
+        }
+        
+        if (currentMatiere != null) p.setMatiereId(currentMatiere.getId());
         p.setCreatedAt(LocalDateTime.now());
-        int sid = 1;
-        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null)
-            sid = com.edulink.gui.util.SessionManager.getCurrentUser().getId();
-        p.setSuggestedBy(sid);
+        
+        boolean isAdmin = false;
+        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
+            com.edulink.gui.models.User u = com.edulink.gui.util.SessionManager.getCurrentUser();
+            p.setAuthorId(u.getId());
+            if (u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY")) {
+                isAdmin = true;
+            }
+        } else {
+            p.setAuthorId(1);
+        }
+        
+        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
 
-        new ContentProposalService().add2(p);
+        courseService.add2(p);
+        
+        // Refresh immediately if it's automatically accepted
+        if (currentMatiere != null) {
+            allCourses = courseService.findByMatiere(currentMatiere.getId());
+            applyFilters();
+        }
+
         handleCloseSuggest();
-        EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
-                "Your course suggestion has been sent to admin for review.");
+        
+        if (isAdmin) {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Course Added",
+                    "The course has been automatically accepted and added.");
+        } else {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
+                    "Your course suggestion has been sent to admin for review.");
+        }
     }
 }

@@ -12,6 +12,13 @@ public class User {
     private String resetOtpExpiresAt; // simplified datetime
     private int xp;
     private boolean isVerified;
+    
+    // Engagement fields
+    private int engagementScore;
+    private String lastActivity;
+    private int coursesTaken;
+    private String engagementStatus;
+    private java.time.LocalDateTime lastRemindedAt;
 
     public User() {}
 
@@ -62,4 +69,20 @@ public class User {
         if (roles == null) return false;
         return roles.contains(roleName);
     }
+    
+    // Engagement Getters & Setters
+    public int getEngagementScore() { return engagementScore; }
+    public void setEngagementScore(int engagementScore) { this.engagementScore = engagementScore; }
+    
+    public String getLastActivity() { return lastActivity; }
+    public void setLastActivity(String lastActivity) { this.lastActivity = lastActivity; }
+    
+    public int getCoursesTaken() { return coursesTaken; }
+    public void setCoursesTaken(int coursesTaken) { this.coursesTaken = coursesTaken; }
+    
+    public String getEngagementStatus() { return engagementStatus; }
+    public void setEngagementStatus(String engagementStatus) { this.engagementStatus = engagementStatus; }
+    
+    public java.time.LocalDateTime getLastRemindedAt() { return lastRemindedAt; }
+    public void setLastRemindedAt(java.time.LocalDateTime lastRemindedAt) { this.lastRemindedAt = lastRemindedAt; }
 }

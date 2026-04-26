@@ -195,10 +195,7 @@ public class ManageCoursesController implements Initializable {
         showForm(null);
     }
 
-    @FXML
-    private void handleApplyFilter() {
-        filterData();
-    }
+
 
     private void showForm(Course c) {
         currentEditableCourse = c;
@@ -237,10 +234,10 @@ public class ManageCoursesController implements Initializable {
         } catch (NumberFormatException e) {
             result.setXp(0);
         }
+        result.setStatus("ACCEPTED");
         if (currentEditableCourse == null) {
             result.setMatiereId(filteredMatiere.getId());
             result.setAuthorId(1);
-            result.setStatus("PUBLISHED");
             result.setCreatedAt(LocalDateTime.now());
         }
 
