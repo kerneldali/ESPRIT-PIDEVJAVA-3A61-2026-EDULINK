@@ -3,6 +3,7 @@ package com.edulink.gui.controllers.assistance;
 import com.edulink.gui.models.assistance.ForumThread;
 import com.edulink.gui.models.assistance.ForumReply;
 import com.edulink.gui.services.assistance.ForumService;
+import com.edulink.gui.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -176,7 +177,8 @@ public class CommunityBoardController implements Initializable {
                 showAlert("Error", "Please provide a valid reason.");
                 return;
             }
-            service.reportPost(currentThread.getId(), 1, reason.trim()); // AuthorId = 1 mocked
+            int reporterId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+            service.reportPost(currentThread.getId(), reporterId, reason.trim());
             showAlert("Report Received", "Thank you. A moderator has been alerted and will review this topic shortly.");
         });
     }
@@ -239,8 +241,8 @@ public class CommunityBoardController implements Initializable {
         ForumReply r = new ForumReply();
         r.setThreadId(currentThread.getId());
         r.setContent(content.trim());
-        // Hardcoding author 1 as logged in user for now
-        r.setAuthorId(1); 
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        r.setAuthorId(userId); 
 
         service.addReply(r);
         newReplyField.clear();
@@ -286,7 +288,8 @@ public class CommunityBoardController implements Initializable {
         t.setTitle(title.trim());
         t.setContent(content.trim());
         t.setBoardId(1);
-        t.setAuthorId(1); 
+        int authorId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        t.setAuthorId(authorId); 
 
         service.addThread(t);
         hideNewThreadForm();
