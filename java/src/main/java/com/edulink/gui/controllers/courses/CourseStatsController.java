@@ -192,7 +192,7 @@ public class CourseStatsController implements Initializable {
                 props.put("mail.smtp.port", "587");
                 
                 final String username = "eya.makhlouf.isic@gmail.com"; 
-                final String password = "Maamoura123"; 
+                final String password = "baunvjikeeyfhqfy"; 
                 
                 javax.mail.Session session = javax.mail.Session.getInstance(props,
                   new javax.mail.Authenticator() {
