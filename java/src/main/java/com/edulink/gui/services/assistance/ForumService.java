@@ -140,17 +140,126 @@ public class ForumService {
         }
     }
 
-    public void reportPost(int postId, int authorId, String reason) {
-        // Logs a report back into your existing help_requests moderation screen!
-        String qry = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, student_id) " +
-                     "VALUES (?, ?, 'OPEN', 0, 1, NOW(), 'Moderator Report', ?)";
-        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
-            pstm.setString(1, "Forum Report on Topic #" + postId);
-            pstm.setString(2, reason);
-            pstm.setInt(3, authorId > 0 ? authorId : 1);
-            pstm.executeUpdate();
+    public void reportPost(int postId, int reporterId, String reason) {
+        String sql = "INSERT INTO post_report (post_id, reporter_id, reason, status) VALUES (?, ?, ?, 'PENDING')";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, postId);
+            ps.setInt(2, reporterId > 0 ? reporterId : 1);
+            ps.setString(3, reason);
+            ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-}
+
+    // ─── Reactions ────────────────────────────────────────────
+    /** Add or update a reaction. Allowed types: LIKE, LOVE, INSIGHTFUL, FUNNY, SUPPORT */
+    public void addReaction(int postId, int userId, String reactionType) {
+        String sql = "INSERT INTO post_reaction (post_id, user_id, reaction_type) VALUES (?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE reaction_type = VALUES(reaction_type)";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, postId);
+            ps.setInt(2, userId);
+            ps.setString(3, reactionType);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void removeReaction(int postId, int userId) {
+        String sql = "DELETE FROM post_reaction WHERE post_id=? AND user_id=?";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, postId);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Returns a map of reactionType -> count for a given post */
+    public java.util.Map<String, Integer> getReactions(int postId) {
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        String sql = "SELECT reaction_type, COUNT(*) as cnt FROM post_reaction WHERE post_id=? GROUP BY reaction_type";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, postId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) map.put(rs.getString("reaction_type"), rs.getInt("cnt"));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    /** Returns current user's reaction for a post, or null */
+    public String getUserReaction(int postId, int userId) {
+        String sql = "SELECT reaction_type FROM post_reaction WHERE post_id=? AND user_id=?";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setInt(1, postId);
+            ps.setInt(2, userId);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return rs.getString("reaction_type");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    // ─── Admin: Reports ───────────────────────────────────────
+    public List<java.util.Map<String, Object>> getPendingReports() {
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        String sql = """
+            SELECT pr.id, pr.post_id, pr.reason, pr.status, pr.created_at,
+                   ft.title as post_title, u.full_name as reporter
+            FROM post_report pr
+            LEFT JOIN forum_thread ft ON ft.id = pr.post_id
+            LEFT JOIN user u ON u.id = pr.reporter_id
+            WHERE pr.status = 'PENDING'
+            ORDER BY pr.created_at DESC
+            """;
+        try (Statement st = cnx.createStatement();
+             ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
+                row.put("id",         rs.getInt("id"));
+                row.put("postId",     rs.getInt("post_id"));
+                row.put("postTitle",  rs.getString("post_title"));
+                row.put("reason",     rs.getString("reason"));
+                row.put("reporter",   rs.getString("reporter"));
+                row.put("createdAt",  rs.getTimestamp("created_at"));
+                list.add(row);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void dismissReport(int reportId) {
+        updateReportStatus(reportId, "DISMISSED");
+    }
+
+    public void actionReport(int reportId, int postId) {
+        updateReportStatus(reportId, "ACTIONED");
+        // Cascade delete the post and its reactions
+        try (PreparedStatement ps = cnx.prepareStatement(
+                "DELETE FROM forum_thread WHERE id=?")) {
+            ps.setInt(1, postId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateReportStatus(int reportId, String status) {
+        String sql = "UPDATE post_report SET status=? WHERE id=?";
+        try (PreparedStatement ps = cnx.prepareStatement(sql)) {
+            ps.setString(1, status);
+            ps.setInt(2, reportId);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
