@@ -185,11 +185,21 @@ public class HelpRequestListController implements Initializable {
         delBtn.setOnAction(e -> handleDelete(req));
         
         // Add session logic UI
+        int currentUserId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : -1;
+        boolean isOwner = (req.getStudentId() != null && req.getStudentId() == currentUserId);
+
         if ("OPEN".equals(req.getStatus())) {
-            Button joinBtn = new Button("Join as Tutor");
-            joinBtn.setStyle("-fx-background-color:#10b981;-fx-text-fill:white;-fx-background-radius:20;");
-            joinBtn.setOnAction(e -> handleJoinAsTutor(req));
-            actions.getChildren().add(joinBtn);
+            if (isOwner) {
+                Button findBtn = new Button("Find Tutors");
+                findBtn.setStyle("-fx-background-color:#8b5cf6;-fx-text-fill:white;-fx-background-radius:20;");
+                findBtn.setOnAction(e -> handleFindTutors(req));
+                actions.getChildren().add(findBtn);
+            } else {
+                Button joinBtn = new Button("Join as Tutor");
+                joinBtn.setStyle("-fx-background-color:#10b981;-fx-text-fill:white;-fx-background-radius:20;");
+                joinBtn.setOnAction(e -> handleJoinAsTutor(req));
+                actions.getChildren().add(joinBtn);
+            }
         } else if ("IN_PROGRESS".equals(req.getStatus())) {
             Button viewBtn = new Button("View Session");
             viewBtn.setStyle("-fx-background-color:#3b82f6;-fx-text-fill:white;-fx-background-radius:20;");
@@ -243,6 +253,29 @@ public class HelpRequestListController implements Initializable {
             return;
         }
         openChat(session);
+    }
+
+    private void handleFindTutors(HelpRequest req) {
+        SmartMatchingService matcher = new SmartMatchingService();
+        List<SmartMatchingService.TutorMatch> matches = matcher.findMatches(req.getCategory(), req.getDifficulty(), req.getDescription());
+        
+        if (matches.isEmpty()) {
+            showAlert("No Matches", "Could not find any suitable tutors at this moment.");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder("Top Tutors for your request:\n\n");
+        for (SmartMatchingService.TutorMatch m : matches) {
+            sb.append("• ").append(m.fullName).append(" (").append(m.sessionsCompleted).append(" sessions)\n");
+            sb.append("  Rating: ").append(String.format("%.1f", m.avgQuality)).append("/100\n");
+            sb.append("  AI Note: ").append(m.aiReason).append("\n\n");
+        }
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Recommended Tutors");
+        alert.setHeaderText("AI Matching Results");
+        alert.setContentText(sb.toString());
+        alert.showAndWait();
     }
 
     /** Non-owner tutor joins an open request */
