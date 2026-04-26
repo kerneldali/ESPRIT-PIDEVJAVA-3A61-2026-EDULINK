@@ -16,15 +16,18 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import com.edulink.gui.services.assistance.ForumService;
 
 public class AdminAssistanceController implements Initializable {
 
     @FXML private Label totalRequestsLabel, openTicketsLabel, reportedLabel, bountyLabel, rateLabel, dbStatusLabel;
     @FXML private FlowPane ticketsContainer;
+    @FXML private FlowPane forumReportsContainer;
     @FXML private ComboBox<String> searchByCombo;
     @FXML private TextField searchField;
 
     private HelpRequestService service = new HelpRequestService();
+    private ForumService forumService = new ForumService();
     private List<HelpRequest> allTickets;
 
     @Override
@@ -38,6 +41,7 @@ public class AdminAssistanceController implements Initializable {
         });
 
         refreshAll();
+        loadForumReports();
     }
 
     private void filterCards(String keyword) {
@@ -197,5 +201,85 @@ public class AdminAssistanceController implements Initializable {
             pw.close();
             new Alert(Alert.AlertType.INFORMATION, "Exported to " + file.getAbsolutePath()).show();
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @FXML
+    public void loadForumReports() {
+        if (forumReportsContainer == null) return;
+        forumReportsContainer.getChildren().clear();
+        List<Map<String, Object>> reports = forumService.getPendingReports();
+        
+        for (Map<String, Object> report : reports) {
+            forumReportsContainer.getChildren().add(createReportCard(report));
+        }
+        
+        if (reports.isEmpty()) {
+            Label noData = new Label("No pending forum reports at this time. 🎉");
+            noData.setStyle("-fx-text-fill: gray; -fx-font-size: 14px; -fx-padding: 20;");
+            forumReportsContainer.getChildren().add(noData);
+        }
+    }
+
+    private VBox createReportCard(Map<String, Object> report) {
+        int reportId = (int) report.get("id");
+        int postId = (int) report.get("postId");
+        String postTitle = (String) report.get("postTitle");
+        String reason = (String) report.get("reason");
+        String reporter = (String) report.get("reporter");
+        
+        VBox card = new VBox(10);
+        card.getStyleClass().add("card");
+        card.setPrefWidth(320);
+
+        HBox header = new HBox(5);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label idLabel = new Label("Report #" + reportId);
+        idLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #ef4444; -fx-font-size: 14px;");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        header.getChildren().addAll(idLabel, spacer);
+
+        Label titleLabel = new Label("Post: " + (postTitle != null ? postTitle : "Unknown Post"));
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+        titleLabel.setWrapText(true);
+
+        Label reporterLabel = new Label("Reporter: " + reporter);
+        reporterLabel.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 11px;");
+
+        Label descLabel = new Label("Reason: " + reason);
+        descLabel.setWrapText(true);
+        descLabel.setStyle("-fx-text-fill: #d1d5db;");
+        descLabel.setMaxHeight(60);
+
+        HBox actions = new HBox(10);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        
+        Button dismissBtn = new Button("Dismiss");
+        dismissBtn.setStyle("-fx-background-color: #4b5563; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 12;");
+        dismissBtn.setOnAction(e -> {
+            forumService.dismissReport(reportId);
+            loadForumReports();
+        });
+
+        Button deletePostBtn = new Button("Delete Post");
+        deletePostBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 12;");
+        deletePostBtn.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete the reported post permanently?", ButtonType.YES, ButtonType.NO);
+            confirm.showAndWait().ifPresent(res -> {
+                if (res == ButtonType.YES) {
+                    forumService.actionReport(reportId, postId);
+                    loadForumReports();
+                }
+            });
+        });
+
+        actions.getChildren().addAll(dismissBtn, deletePostBtn);
+
+        card.getChildren().addAll(header, titleLabel, reporterLabel, descLabel, new Separator(), actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
+        return card;
     }
 }

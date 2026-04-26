@@ -45,20 +45,41 @@
     <Separator/>
 
     <!-- Main Content: Moderation Queue -->
-    <HBox spacing="20" VBox.vgrow="ALWAYS">
-        <!-- Moderation Container -->
-        <VBox spacing="10" HBox.hgrow="ALWAYS">
-            <HBox spacing="10" alignment="CENTER_LEFT">
-                <Label text="Moderation Queue (All Tickets)" styleClass="card-title" style="-fx-font-size: 16px;"/>
-                <Region HBox.hgrow="ALWAYS"/>
-                <ComboBox fx:id="searchByCombo" promptText="Search By..." styleClass="form-combo" prefWidth="120" />
-                <TextField fx:id="searchField" promptText="Search..." styleClass="form-field" prefWidth="250"/>
-                <Button text="📥 Export CSV" onAction="#handleExportLog" styleClass="edit-button"/>
-            </HBox>
+    <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE" styleClass="admin-tabs">
+        <Tab text="Help Requests (Tickets)">
+            <HBox spacing="20" VBox.vgrow="ALWAYS">
+                <padding><Insets top="15"/></padding>
+                <!-- Moderation Container -->
+                <VBox spacing="10" HBox.hgrow="ALWAYS">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Moderation Queue (All Tickets)" styleClass="card-title" style="-fx-font-size: 16px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <ComboBox fx:id="searchByCombo" promptText="Search By..." styleClass="form-combo" prefWidth="120" />
+                        <TextField fx:id="searchField" promptText="Search..." styleClass="form-field" prefWidth="250"/>
+                        <Button text="📥 Export CSV" onAction="#handleExportLog" styleClass="edit-button"/>
+                    </HBox>
 
-            <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
-                <FlowPane fx:id="ticketsContainer" hgap="15" vgap="15" prefWrapLength="1000" />
-            </ScrollPane>
-        </VBox>
-    </HBox>
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
+                        <FlowPane fx:id="ticketsContainer" hgap="15" vgap="15" prefWrapLength="1000" />
+                    </ScrollPane>
+                </VBox>
+            </HBox>
+        </Tab>
+        <Tab text="Forum Reports">
+            <HBox spacing="20" VBox.vgrow="ALWAYS">
+                <padding><Insets top="15"/></padding>
+                <VBox spacing="10" HBox.hgrow="ALWAYS">
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="Pending Forum Reports" styleClass="card-title" style="-fx-font-size: 16px;"/>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="🔄 Refresh Reports" onAction="#loadForumReports" styleClass="secondary-button"/>
+                    </HBox>
+
+                    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 0; -fx-border-color: transparent;">
+                        <FlowPane fx:id="forumReportsContainer" hgap="15" vgap="15" prefWrapLength="1000" />
+                    </ScrollPane>
+                </VBox>
+            </HBox>
+        </Tab>
+    </TabPane>
 </VBox>
