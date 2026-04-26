@@ -67,7 +67,7 @@
                         <Button styleClass="module-button" text="📅  Events"
                                 onAction="#toggleEventMenu" maxWidth="1.7976931348623157E308"/>
                         <VBox fx:id="eventSubMenu" styleClass="sub-menu" visible="false" managed="false">
-                            <Button styleClass="sub-nav-button" text="• All Events"      onAction="#showEvent"/>
+                            <Button styleClass="sub-nav-button" text="• All Events" onAction="#showEvent"/>
                             <Button styleClass="sub-nav-button" text="• My Reservations" onAction="#showReservation"/>
                         </VBox>
                     </VBox>

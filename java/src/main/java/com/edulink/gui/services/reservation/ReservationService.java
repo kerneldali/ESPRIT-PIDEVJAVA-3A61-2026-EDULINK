@@ -1,12 +1,19 @@
 package com.edulink.gui.services.reservation;
 
-import com.edulink.gui.util.MyConnection;
-import com.edulink.gui.models.reservation.Reservation;
-
-import java.sql.*;
-import java.time.LocalDateTime;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.edulink.gui.models.event.Event;
+import com.edulink.gui.models.reservation.Reservation;
+import com.edulink.gui.services.event.EventService;
+import com.edulink.gui.services.mail.MailService;
+import com.edulink.gui.util.MyConnection;
 
 public class ReservationService {
 
@@ -19,7 +26,7 @@ public class ReservationService {
     // =====================
     // CREATE
     // =====================
-    public boolean addReservation(Reservation reservation) {
+    public boolean addReservation(Reservation reservation, String userEmail) {
         // Business logic: check if already reserved
         if (isAlreadyReserved(reservation.getUserId(), reservation.getEventId())) {
             System.out.println("❌ Erreur : L'utilisateur a déjà réservé cet événement.");
@@ -28,12 +35,28 @@ public class ReservationService {
 
         String sql = "INSERT INTO reservation (user_id, event_id, reserved_at) VALUES (?, ?, ?)";
         try {
-            PreparedStatement ps = cnx.prepareStatement(sql);
+            PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setInt(1, reservation.getUserId());
             ps.setInt(2, reservation.getEventId());
             ps.setTimestamp(3, Timestamp.valueOf(reservation.getReservedAt()));
             ps.executeUpdate();
+
+            // Récupérer l'id généré automatiquement
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                reservation.setId(generatedKeys.getInt(1));
+            }
+
             System.out.println("✅ Réservation effectuée !");
+
+            // Envoyer le mail de confirmation
+            EventService eventService = new EventService();
+            Event event = eventService.getEventById(reservation.getEventId());
+
+            if (event != null && userEmail != null) {
+                MailService.sendReservationConfirmation(userEmail, event, reservation);
+            }
+
             return true;
         } catch (SQLException e) {
             System.out.println("❌ Erreur ajout réservation : " + e.getMessage());

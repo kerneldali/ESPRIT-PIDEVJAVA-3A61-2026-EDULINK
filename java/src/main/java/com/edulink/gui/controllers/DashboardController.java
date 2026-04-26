@@ -1,18 +1,19 @@
 package com.edulink.gui.controllers;
 
+import java.io.IOException;
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import com.edulink.gui.Main;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.control.Label;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import com.edulink.gui.Main;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class DashboardController implements Initializable {
 
@@ -24,7 +25,7 @@ public class DashboardController implements Initializable {
     private VBox helpSubMenu, challengeSubMenu, eventSubMenu, courseSubMenu, notesSubMenu, userSubMenu;
     @FXML
     private Button adminOnlyTickets, adminUserStats, adminWallets, adminJournalStats;
-    
+
     @FXML
     private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
     @FXML
@@ -109,15 +110,25 @@ public class DashboardController implements Initializable {
         }
     }
 
-    @FXML public void showChallengeList()        { loadView("/view/challenge/ChallengeList.fxml"); }
-    @FXML public void showMyChallenges()         { loadView("/view/challenge/MyChallenges.fxml"); }
-    @FXML public void showManageChallenges()     { loadView("/view/challenge/ManageChallenges.fxml"); }
-    @FXML public void showReviewSubmissions()    { loadView("/view/challenge/ReviewSubmissions.fxml"); }
-    @FXML public void showChallengeStats()       { loadView("/view/challenge/ChallengeStats.fxml"); }
+    @FXML
+    public void showCatalog() {
+        loadView("/view/courses/MatiereList.fxml");
+    }
 
-    // ── Events ──────────────────────────────────────────────────────────────
-    @FXML public void showEvent()                { loadView("/view/event/event.fxml"); }
-    @FXML public void showReservation()          { loadView("/view/reservation/reservation.fxml"); }
+    @FXML
+    public void showMyLearning() {
+        loadView("/view/courses/MyLearning.fxml");
+    }
+
+    @FXML
+    public void showStudentSuggestions() {
+        loadView("/view/courses/StudentSuggestions.fxml");
+    }
+
+    @FXML
+    public void showManageCatalog() {
+        loadView("/view/courses/ManageMatiere.fxml");
+    }
 
     @FXML public void showCatalog() { loadView("/view/courses/MatiereList.fxml"); }
     @FXML public void showMyLearning() { loadView("/view/courses/MyLearning.fxml"); }
@@ -257,6 +268,16 @@ public class DashboardController implements Initializable {
     @FXML
     public void showTasks() {
         loadView("/view/journal/TaskList.fxml");
+    }
+
+    @FXML
+    public void showEvent() {
+        loadView("/view/event/event.fxml");
+    }
+
+    @FXML
+    public void showReservation() {
+        loadView("/view/reservation/reservation.fxml");
     }
 
     @FXML

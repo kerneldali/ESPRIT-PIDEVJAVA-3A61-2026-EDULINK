@@ -31,7 +31,6 @@ public class EventController implements Initializable {
     @FXML private ComboBox<String> onlineComboFilter;
     @FXML private ComboBox<String> sortCombo;
 
-    // Form overlay nodes
     @FXML private VBox formOverlay;
     @FXML private Label formTitle;
     @FXML private TextField titleField;
@@ -50,16 +49,14 @@ public class EventController implements Initializable {
     @FXML private Label datesError;
     @FXML private Label capacityError;
 
-    private final EventService eventService           = new EventService();
+    private final EventService eventService = new EventService();
     private final ReservationService reservationService = new ReservationService();
-    private final ObservableList<Event> eventList     = FXCollections.observableArrayList();
+    private final ObservableList<Event> eventList = FXCollections.observableArrayList();
     private Event currentEditableEvent = null;
-
     private int currentUserId = -1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Récupération de l'utilisateur connecté via SessionManager
         if (SessionManager.getCurrentUser() != null) {
             currentUserId = SessionManager.getCurrentUser().getId();
         }
@@ -75,13 +72,11 @@ public class EventController implements Initializable {
         onlineComboFilter.valueProperty().addListener((obs, oldV, newV) -> filterData());
         sortCombo.valueProperty().addListener((obs, oldV, newV) -> filterData());
 
-        // Activer/désactiver les champs selon le type
         onlineCheck.selectedProperty().addListener((obs, oldV, newV) -> {
             meetLinkField.setDisable(!newV);
             locationField.setDisable(newV);
         });
 
-        // Listeners de validation
         titleField.textProperty().addListener((obs, old, newV) -> validateForm());
         descField.textProperty().addListener((obs, old, newV) -> validateForm());
         maxCapacityField.textProperty().addListener((obs, old, newV) -> validateForm());
@@ -142,28 +137,28 @@ public class EventController implements Initializable {
 
     private void filterData() {
         cardContainer.getChildren().clear();
-        String query        = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
+        String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         String onlineFilter = onlineComboFilter.getValue();
-        String sort         = sortCombo.getValue();
+        String sort = sortCombo.getValue();
 
         java.util.List<Event> filtered = eventList.stream()
                 .filter(e -> e.getTitle() == null || e.getTitle().toLowerCase().contains(query))
                 .filter(e -> "All".equals(onlineFilter)
-                          || ("Online".equals(onlineFilter) && e.isOnline())
-                          || ("Offline".equals(onlineFilter) && !e.isOnline()))
+                        || ("Online".equals(onlineFilter) && e.isOnline())
+                        || ("Offline".equals(onlineFilter) && !e.isOnline()))
                 .collect(java.util.stream.Collectors.toList());
 
         java.util.Comparator<Event> cmp = switch (sort == null ? "" : sort) {
-            case "Titre Z → A"   -> java.util.Comparator.comparing(Event::getTitle,
-                                      String.CASE_INSENSITIVE_ORDER.reversed());
-            case "Date (récent)" -> java.util.Comparator.comparing(e -> e.getDateStart() == null
-                                      ? LocalDateTime.MIN : e.getDateStart(),
-                                      java.util.Comparator.reverseOrder());
-            case "Date (ancien)" -> java.util.Comparator.comparing(e -> e.getDateStart() == null
-                                      ? LocalDateTime.MAX : e.getDateStart());
-            default              -> java.util.Comparator.comparing(
-                                      e -> e.getTitle() == null ? "" : e.getTitle(),
-                                      String.CASE_INSENSITIVE_ORDER);
+            case "Titre Z → A" -> java.util.Comparator.comparing(Event::getTitle,
+                    String.CASE_INSENSITIVE_ORDER.reversed());
+            case "Date (récent)" -> java.util.Comparator.comparing(
+                    e -> e.getDateStart() == null ? LocalDateTime.MIN : e.getDateStart(),
+                    java.util.Comparator.reverseOrder());
+            case "Date (ancien)" -> java.util.Comparator.comparing(
+                    e -> e.getDateStart() == null ? LocalDateTime.MAX : e.getDateStart());
+            default -> java.util.Comparator.comparing(
+                    e -> e.getTitle() == null ? "" : e.getTitle(),
+                    String.CASE_INSENSITIVE_ORDER);
         };
         filtered.sort(cmp);
 
@@ -178,7 +173,6 @@ public class EventController implements Initializable {
         card.setPrefWidth(300);
         card.setMaxWidth(300);
 
-        // Header: Titre + Badge Online/Offline
         HBox header = new HBox(10);
         header.setAlignment(Pos.CENTER_LEFT);
         Label title = new Label(e.getTitle() != null ? e.getTitle() : "Untitled Event");
@@ -191,7 +185,6 @@ public class EventController implements Initializable {
 
         Label badge = new Label(e.isOnline() ? "ONLINE" : "OFFLINE");
         badge.getStyleClass().add(e.isOnline() ? "badge-online" : "badge-offline");
-
         header.getChildren().addAll(title, spacer1, badge);
 
         Label dateLbl = new Label("📅 " + (e.getDateStart() != null ? e.getDateStart().toLocalDate() : "TBD"));
@@ -205,7 +198,6 @@ public class EventController implements Initializable {
         Label capLbl = new Label("👥 Places restantes: " + e.getMaxCapacity());
         capLbl.getStyleClass().add("capacity-text");
 
-        // Bouton Réserver
         Button reserveBtn = new Button("🔥 Réserver");
         reserveBtn.setMaxWidth(Double.MAX_VALUE);
         reserveBtn.getStyleClass().add("btn-reserve");
@@ -235,7 +227,10 @@ public class EventController implements Initializable {
             res.setUserId(currentUserId);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
-            boolean success = reservationService.addReservation(res);
+            // ✅ On passe l'email pour envoyer le mail de confirmation
+            String userEmail = SessionManager.getCurrentUser() != null
+                    ? SessionManager.getCurrentUser().getEmail() : null;
+            boolean success = reservationService.addReservation(res, userEmail);
             if (success) {
                 EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
                         "Tu es inscrit à : " + e.getTitle());
@@ -246,7 +241,6 @@ public class EventController implements Initializable {
             }
         });
 
-        // Boutons Edit / Delete (visibles uniquement pour l'organisateur ou admin)
         HBox manageBox = new HBox(10);
         manageBox.setAlignment(Pos.CENTER);
 
@@ -286,7 +280,6 @@ public class EventController implements Initializable {
         popupContainer.setMaxWidth(600);
         popupContainer.setPrefWidth(600);
 
-        // Header section
         VBox headerSection = new VBox(10);
         headerSection.getStyleClass().add("popup-header-section");
         headerSection.setAlignment(Pos.CENTER_LEFT);
@@ -313,7 +306,6 @@ public class EventController implements Initializable {
 
         headerSection.getChildren().addAll(topRow, titleLbl);
 
-        // Body section
         HBox bodySection = new HBox(25);
         bodySection.getStyleClass().add("popup-body-section");
 
@@ -326,11 +318,11 @@ public class EventController implements Initializable {
 
         VBox dateBox = createInfoBox("📅", "Date & Heure",
                 e.getDateStart() != null ? e.getDateStart().toString().replace("T", " ") : "TBD");
-        VBox locBox  = createInfoBox(e.isOnline() ? "🌐" : "📍", e.isOnline() ? "Lien Meet" : "Lieu",
+        VBox locBox = createInfoBox(e.isOnline() ? "🌐" : "📍", e.isOnline() ? "Lien Meet" : "Lieu",
                 e.isOnline()
                         ? (e.getMeetLink() != null && !e.getMeetLink().isEmpty() ? e.getMeetLink() : "Non spécifié")
                         : (e.getLocation() != null && !e.getLocation().isEmpty() ? e.getLocation() : "TBD"));
-        VBox orgBox  = createInfoBox("👤", "Organisateur", "ID: " + e.getOrganizerId());
+        VBox orgBox = createInfoBox("👤", "Organisateur", "ID: " + e.getOrganizerId());
 
         detailsCol.getChildren().addAll(infoTitle, dateBox, locBox, orgBox);
 
@@ -350,7 +342,6 @@ public class EventController implements Initializable {
         Separator vertSep = new Separator(javafx.geometry.Orientation.VERTICAL);
         bodySection.getChildren().addAll(detailsCol, vertSep, descCol);
 
-        // Footer / Actions
         HBox footerSection = new HBox(15);
         footerSection.getStyleClass().add("popup-footer-section");
         footerSection.setAlignment(Pos.CENTER_RIGHT);
@@ -385,7 +376,10 @@ public class EventController implements Initializable {
             res.setUserId(currentUserId);
             res.setEventId(e.getId());
             res.setReservedAt(LocalDateTime.now());
-            boolean success = reservationService.addReservation(res);
+            // ✅ On passe l'email pour envoyer le mail de confirmation
+            String userEmail = SessionManager.getCurrentUser() != null
+                    ? SessionManager.getCurrentUser().getEmail() : null;
+            boolean success = reservationService.addReservation(res, userEmail);
             if (success) {
                 EduAlert.show(EduAlert.AlertType.SUCCESS, "Réservation confirmée !",
                         "Tu es inscrit à : " + e.getTitle());
@@ -429,7 +423,7 @@ public class EventController implements Initializable {
         return new VBox(4, lbl, valBox);
     }
 
-    @FXML private void handleNewEvent()    { showForm(null); }
+    @FXML private void handleNewEvent() { showForm(null); }
     @FXML private void handleApplyFilter() { filterData(); }
 
     private void showForm(Event e) {
@@ -439,12 +433,12 @@ public class EventController implements Initializable {
             titleField.setText(e.getTitle());
             descField.setText(e.getDescription());
             dateStartField.setValue(e.getDateStart() != null ? e.getDateStart().toLocalDate() : null);
-            dateEndField.setValue(e.getDateEnd()   != null ? e.getDateEnd().toLocalDate()   : null);
+            dateEndField.setValue(e.getDateEnd() != null ? e.getDateEnd().toLocalDate() : null);
             onlineCheck.setSelected(e.isOnline());
-            meetLinkField.setText(e.getMeetLink()  != null ? e.getMeetLink()  : "");
-            locationField.setText(e.getLocation()  != null ? e.getLocation()  : "");
+            meetLinkField.setText(e.getMeetLink() != null ? e.getMeetLink() : "");
+            locationField.setText(e.getLocation() != null ? e.getLocation() : "");
             maxCapacityField.setText(String.valueOf(e.getMaxCapacity()));
-            imageField.setText(e.getImage()        != null ? e.getImage()     : "");
+            imageField.setText(e.getImage() != null ? e.getImage() : "");
         } else {
             formTitle.setText("New Event");
             titleField.clear(); descField.clear();
