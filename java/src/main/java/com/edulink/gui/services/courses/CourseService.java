@@ -14,6 +14,12 @@ public class CourseService implements IService<Course> {
 
     public CourseService() {
         cnx = MyConnection.getInstance().getCnx();
+        ensureColumns();
+    }
+
+    private void ensureColumns() {
+        try { cnx.createStatement().executeUpdate("ALTER TABLE cours ADD COLUMN quiz_count INT DEFAULT 0"); } catch(SQLException e) {}
+        try { cnx.createStatement().executeUpdate("ALTER TABLE cours ADD COLUMN summary_count INT DEFAULT 0"); } catch(SQLException e) {}
     }
 
     @Override
@@ -184,6 +190,22 @@ public class CourseService implements IService<Course> {
         return courses;
     }
 
+    public void incrementQuizCount(int courseId) {
+        try {
+            cnx.createStatement().executeUpdate("UPDATE cours SET quiz_count = quiz_count + 1 WHERE id=" + courseId);
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to increment quiz count: " + e.getMessage());
+        }
+    }
+
+    public void incrementSummaryCount(int courseId) {
+        try {
+            cnx.createStatement().executeUpdate("UPDATE cours SET summary_count = summary_count + 1 WHERE id=" + courseId);
+        } catch (SQLException e) {
+            System.err.println("❌ Failed to increment summary count: " + e.getMessage());
+        }
+    }
+
     private Course mapResultSetToCourse(ResultSet rs) throws SQLException {
         Course c = new Course();
         c.setId(rs.getInt("id"));
@@ -200,6 +222,10 @@ public class CourseService implements IService<Course> {
         Timestamp ts = rs.getTimestamp("created_at");
         if (ts != null) c.setCreatedAt(ts.toLocalDateTime());
         else c.setCreatedAt(java.time.LocalDateTime.now());
+        
+        try { c.setQuizCount(rs.getInt("quiz_count")); } catch (SQLException e) { c.setQuizCount(0); }
+        try { c.setSummaryCount(rs.getInt("summary_count")); } catch (SQLException e) { c.setSummaryCount(0); }
+        
         return c;
     }
 }

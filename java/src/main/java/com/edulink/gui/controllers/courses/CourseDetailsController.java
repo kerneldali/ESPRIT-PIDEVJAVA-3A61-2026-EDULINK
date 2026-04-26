@@ -467,6 +467,7 @@ public class CourseDetailsController implements Initializable {
             com.edulink.gui.util.EduAlert.show(com.edulink.gui.util.EduAlert.AlertType.ERROR, "Extraction Failed", "Could not extract text from this PDF. It might be empty, a scanned image, or missing.");
             return;
         }
+        new com.edulink.gui.services.courses.CourseService().incrementSummaryCount(currentCourse.getId());
         String systemPrompt = "You are an AI assistant. Provide a concise, easy-to-understand summary of the following document.";
         showAiDialog("Summary: " + r.getTitle(), "Generating summary... Please wait.", systemPrompt, pdfText);
     }
@@ -477,6 +478,7 @@ public class CourseDetailsController implements Initializable {
             com.edulink.gui.util.EduAlert.show(com.edulink.gui.util.EduAlert.AlertType.ERROR, "Extraction Failed", "Could not extract text from this PDF. It might be empty, a scanned image, or missing.");
             return;
         }
+        new com.edulink.gui.services.courses.CourseService().incrementQuizCount(currentCourse.getId());
         String systemPrompt = "You are a teacher. Generate a 5-question multiple-choice quiz based on the provided document. "
             + "You MUST format your EXACT response strictly as follows for each question:\n\n"
             + "Q: [Question Text]\n"

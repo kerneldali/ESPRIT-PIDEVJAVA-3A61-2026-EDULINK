@@ -187,18 +187,27 @@ public class AnalyzeActivityController implements Initializable {
         String userName = (user.getFullName() != null) ? user.getFullName() : "Student";
 
         String subject = "We miss you on EduLink!";
-        String body = "Hello " + userName + ",\n\n"
-                + "We noticed it's been a while since you were active on EduLink.\n"
-                + "Your current engagement score is " + user.getEngagementScore() + "/100.\n\n"
-                + "Come back and keep progressing!\n"
-                + "New courses and challenges await you.\n\n"
-                + "Continue your learning journey with us today.\n\n"
-                + "Best regards,\nThe EduLink Team";
+        String htmlBody = "<div style=\"background-color: #f4f6f9; padding: 20px; font-family: Arial, sans-serif; color: #333;\">"
+                + "<div style=\"max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                + "<div style=\"background-color: #2a2a3e; color: white; padding: 20px; text-align: center;\">"
+                + "<h1 style=\"margin: 0; font-size: 24px;\">\uD83C\uDF93 EduLink</h1>"
+                + "<p style=\"margin: 5px 0 0; font-size: 14px; opacity: 0.8;\">Plateforme \u00E9tudiante ESPRIT</p>"
+                + "</div>"
+                + "<div style=\"padding: 30px;\">"
+                + "<h2 style=\"color: #2a2a3e; margin-top: 0;\">We miss you on EduLink!</h2>"
+                + "<p>Hello <strong>" + userName + "</strong>,</p>"
+                + "<p>We noticed it's been a while since you were active on EduLink.</p>"
+                + "<div style=\"background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;\">"
+                + "<p style=\"margin: 0;\"><strong>Your current engagement score is:</strong> <span style=\"color: #ef4444; font-weight: bold; font-size: 18px;\">" + user.getEngagementScore() + "/100</span></p>"
+                + "</div>"
+                + "<p>Come back and keep progressing! New courses and challenges await you.</p>"
+                + "<p style=\"margin-bottom: 0;\">Best regards,<br><strong>The EduLink Team</strong></p>"
+                + "</div></div></div>";
 
         System.out.println("====== REMINDER EMAIL ======");
         System.out.println("To: " + toEmail);
         System.out.println("Subject: " + subject);
-        System.out.println(body);
+        System.out.println("HTML EMAIL PREPARED");
         System.out.println("============================");
 
         new Thread(() -> {
@@ -223,7 +232,7 @@ public class AnalyzeActivityController implements Initializable {
                 message.setFrom(new javax.mail.internet.InternetAddress(username));
                 message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(toEmail));
                 message.setSubject(subject);
-                message.setText(body);
+                message.setContent(htmlBody, "text/html; charset=utf-8");
 
                 javax.mail.Transport.send(message);
                 System.out.println("✅ Reminder sent to " + toEmail);

@@ -72,7 +72,7 @@ public class CourseListController implements Initializable {
         String level = levelFilterCombo.getValue();
 
         java.util.List<Course> filtered = new java.util.ArrayList<>(allCourses.stream()
-                .filter(c -> "ACCEPTED".equalsIgnoreCase(c.getStatus()))
+                .filter(c -> "ACCEPTED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus()))
                 .filter(c -> c.getTitle() != null && c.getTitle().toLowerCase().contains(query))
                 .filter(c -> "All Levels".equals(level) || level.equals(c.getLevel()))
                 .toList());
@@ -108,7 +108,7 @@ public class CourseListController implements Initializable {
         this.currentMatiere = matiere;
         this.pageTitle.setText("Courses in " + matiere.getName());
         this.allCourses = courseService.findByMatiere(matiere.getId());
-        displayCourses(this.allCourses);
+        applyFilters();
     }
 
     private void displayCourses(List<Course> list) {

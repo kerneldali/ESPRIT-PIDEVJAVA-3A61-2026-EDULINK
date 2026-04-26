@@ -13,6 +13,8 @@ public class Course {
     private int xp;
     private String status;
     private LocalDateTime createdAt;
+    private int quizCount;
+    private int summaryCount;
 
     public Course() {}
 
@@ -61,6 +63,10 @@ public class Course {
     public void setStatus(String status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public int getQuizCount() { return quizCount; }
+    public void setQuizCount(int quizCount) { this.quizCount = quizCount; }
+    public int getSummaryCount() { return summaryCount; }
+    public void setSummaryCount(int summaryCount) { this.summaryCount = summaryCount; }
 
     @Override
     public String toString() {

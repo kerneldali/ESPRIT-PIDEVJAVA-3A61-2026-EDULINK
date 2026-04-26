@@ -19,9 +19,8 @@ public class GroqService {
                     .connectTimeout(Duration.ofSeconds(30))
                     .build();
 
-            // Escape strings for JSON manually
-            String escapedSystem = systemPrompt.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "").replace("\t", "\\t");
-            String escapedUser = userMessage.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "").replace("\t", "\\t");
+            String escapedSystem = sanitizeJsonString(systemPrompt);
+            String escapedUser = sanitizeJsonString(userMessage);
 
             String requestBody = "{"
                     + "\"model\": \"llama-3.1-8b-instant\","
@@ -82,5 +81,24 @@ public class GroqService {
             return sb.toString();
         }
         return "Could not parse response.";
+    }
+
+    private String sanitizeJsonString(String input) {
+        if (input == null) return "";
+        StringBuilder sb = new StringBuilder(input.length());
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '\\') sb.append("\\\\");
+            else if (c == '"') sb.append("\\\"");
+            else if (c == '\n') sb.append("\\n");
+            else if (c == '\r') { /* ignore */ }
+            else if (c == '\t') sb.append("\\t");
+            else if (c < 32) {
+                // Ignore invalid control characters like \x13
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
     }
 }

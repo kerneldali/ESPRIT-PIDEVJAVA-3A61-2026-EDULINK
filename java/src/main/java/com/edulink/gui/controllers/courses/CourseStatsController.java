@@ -49,7 +49,12 @@ public class CourseStatsController implements Initializable {
 
         java.util.List<Course> filtered = courseList.stream()
             .filter(c -> (c.getTitle() != null && c.getTitle().toLowerCase().contains(query)))
-            .filter(c -> "All Statuses".equals(status) || status.equalsIgnoreCase(c.getStatus()) || ("ACTIVE".equals(status) && "ACCEPTED".equalsIgnoreCase(c.getStatus())))
+            .filter(c -> {
+                if ("All Statuses".equals(status)) return true;
+                if ("ACTIVE".equals(status)) return "ACCEPTED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus());
+                if ("ARCHIVED".equals(status)) return "ARCHIVED".equalsIgnoreCase(c.getStatus()) || "FORCE_ARCHIVED".equalsIgnoreCase(c.getStatus());
+                return status.equalsIgnoreCase(c.getStatus());
+            })
             .collect(java.util.stream.Collectors.toList());
 
         for (Course c : filtered) {
@@ -73,10 +78,8 @@ public class CourseStatsController implements Initializable {
         }
         double avgProgress = enrollCount > 0 ? totalProgress / enrollCount : 0.0;
         int resCount = resourceService.findByCourse(c.getId()).size();
-        
-        int quizzes = resCount * 2; 
-        int summaries = resCount * 3; 
-        
+        int quizzes = c.getQuizCount(); 
+        int summaries = c.getSummaryCount(); 
         double score = Math.min(enrollCount * 5, 25) 
                      + (avgProgress * 0.25) 
                      + Math.min(resCount * 2, 20) 
@@ -86,15 +89,17 @@ public class CourseStatsController implements Initializable {
         if (score > 100) score = 100;
 
         boolean needsAutoArchive = false;
-        if (score < 25 && !"ARCHIVED".equals(c.getStatus())) {
-            c.setStatus("ARCHIVED");
-            courseService.edit(c);
-            sendEmailToOwner(c, "Low performance (Score: " + Math.round(score) + "/100)");
-            needsAutoArchive = true;
-        } else if (score >= 25 && "ARCHIVED".equals(c.getStatus())) {
-            c.setStatus("ACCEPTED");
-            courseService.edit(c);
-            needsAutoArchive = true;
+        if ("ACCEPTED".equals(c.getStatus()) && score < 25) {
+            long daysPassed = java.time.temporal.ChronoUnit.DAYS.between(
+                c.getCreatedAt() != null ? c.getCreatedAt() : java.time.LocalDateTime.now(), 
+                java.time.LocalDateTime.now()
+            );
+            if (daysPassed >= 7) {
+                c.setStatus("ARCHIVED");
+                courseService.edit(c);
+                sendEmailToOwner(c, "Automated system: Low performance (Score: " + Math.round(score) + "/100) after 7 days", true);
+                needsAutoArchive = true;
+            }
         }
 
         // Top Header
@@ -104,8 +109,12 @@ public class CourseStatsController implements Initializable {
         Label title = new Label(c.getTitle());
         title.setStyle("-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 16px;");
 
-        Label statusLabel = new Label(c.getStatus() != null ? c.getStatus() : "ACTIVE");
-        String statusColor = "ARCHIVED".equals(c.getStatus()) ? "#ef4444" : "#10b981";
+        String displayStatus = c.getStatus() != null ? c.getStatus() : "ACTIVE";
+        if ("FORCE_ACTIVE".equals(displayStatus)) displayStatus = "ACTIVE (FORCED)";
+        if ("FORCE_ARCHIVED".equals(displayStatus)) displayStatus = "ARCHIVED (FORCED)";
+        Label statusLabel = new Label(displayStatus);
+        
+        String statusColor = ("ARCHIVED".equals(c.getStatus()) || "FORCE_ARCHIVED".equals(c.getStatus())) ? "#ef4444" : "#10b981";
         statusLabel.setStyle("-fx-background-color: " + statusColor + "; -fx-text-fill: white; -fx-padding: 3 8; -fx-background-radius: 10; -fx-font-size: 11px; -fx-font-weight: bold;");
 
         Label scoreLabel = new Label("Performance Score: " + Math.round(score) + "/100");
@@ -114,16 +123,25 @@ public class CourseStatsController implements Initializable {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button archiveBtn = new Button("Archive Course");
-        archiveBtn.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;");
-        archiveBtn.setVisible(!"ARCHIVED".equals(c.getStatus()));
-        archiveBtn.setManaged(!"ARCHIVED".equals(c.getStatus()));
+        boolean isArchived = "ARCHIVED".equals(c.getStatus()) || "FORCE_ARCHIVED".equals(c.getStatus());
+        Button archiveBtn = new Button(isArchived ? "Re open Course" : "Archive Course");
+        archiveBtn.setStyle(isArchived ? "-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;" 
+                                       : "-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand; -fx-font-weight: bold;");
         archiveBtn.setOnAction(e -> {
-            if (EduAlert.confirm("Archive Course", "Archive '" + c.getTitle() + "' manually?")) {
-                c.setStatus("ARCHIVED");
-                courseService.edit(c);
-                sendEmailToOwner(c, "Manual admin decision");
-                loadData();
+            if (isArchived) {
+                if (EduAlert.confirm("Re open Course", "Re open '" + c.getTitle() + "' manually?")) {
+                    c.setStatus("FORCE_ACTIVE");
+                    courseService.edit(c);
+                    sendEmailToOwner(c, "Manual admin decision", false);
+                    loadData();
+                }
+            } else {
+                if (EduAlert.confirm("Archive Course", "Archive '" + c.getTitle() + "' manually?")) {
+                    c.setStatus("FORCE_ARCHIVED");
+                    courseService.edit(c);
+                    sendEmailToOwner(c, "Manual admin decision", true);
+                    loadData();
+                }
             }
         });
 
@@ -151,11 +169,11 @@ public class CourseStatsController implements Initializable {
         if (needsAutoArchive) {
             javafx.application.Platform.runLater(this::loadData);
         }
-        
+
         return card;
     }
 
-    private void sendEmailToOwner(Course c, String reason) {
+    private void sendEmailToOwner(Course c, String reason, boolean isArchivedMode) {
         com.edulink.gui.services.UserService us = new com.edulink.gui.services.UserService();
         com.edulink.gui.models.User author = null;
         for (com.edulink.gui.models.User u : us.getAll()) {
@@ -168,18 +186,34 @@ public class CourseStatsController implements Initializable {
         String ownerEmail = (author != null && author.getEmail() != null) ? author.getEmail() : "admin@edulink.com";
         String ownerName = (author != null && author.getFullName() != null) ? author.getFullName() : "Course Owner";
         
-        String subject = "Course Archived: " + c.getTitle();
-        String body = "Hello " + ownerName + ",\n\n"
-                    + "Your course '" + c.getTitle() + "' has been archived.\n"
-                    + "Reason: " + reason + "\n\n"
-                    + "Please update or improve the course content to re-activate it. "
-                    + "If you have any questions, contact the administration.\n\n"
-                    + "Best regards,\nThe EduLink Admin Team";
+        String subject = isArchivedMode ? "Course Archived: " + c.getTitle() : "Course Re-opened: " + c.getTitle();
+        
+        String colorTheme = isArchivedMode ? "#ef4444" : "#10b981";
+        String statusText = isArchivedMode ? "has been archived" : "has been successfully re-opened";
+        String nextSteps = isArchivedMode ? "Please update or improve the course content to re-activate it." : "Students can now enroll and interact with your course again!";
+        
+        String htmlBody = "<div style=\"background-color: #f4f6f9; padding: 20px; font-family: Arial, sans-serif; color: #333;\">"
+                + "<div style=\"max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">"
+                + "<div style=\"background-color: #2a2a3e; color: white; padding: 20px; text-align: center;\">"
+                + "<h1 style=\"margin: 0; font-size: 24px;\">\uD83C\uDF93 EduLink</h1>"
+                + "<p style=\"margin: 5px 0 0; font-size: 14px; opacity: 0.8;\">Plateforme \u00E9tudiante ESPRIT</p>"
+                + "</div>"
+                + "<div style=\"padding: 30px;\">"
+                + "<h2 style=\"color: #2a2a3e; margin-top: 0;\">Course Update Notification</h2>"
+                + "<p>Hello <strong>" + ownerName + "</strong>,</p>"
+                + "<p>Your course '<strong>" + c.getTitle() + "</strong>' " + statusText + ".</p>"
+                + "<div style=\"background-color: #f8fafc; border-left: 4px solid " + colorTheme + "; padding: 15px; margin: 20px 0; border-radius: 4px;\">"
+                + "<p style=\"margin: 0;\"><strong>Reason:</strong> " + reason + "</p>"
+                + "</div>"
+                + "<p>" + nextSteps + "</p>"
+                + "<p>If you have any questions, please contact the administration.</p>"
+                + "<p style=\"margin-bottom: 0;\">Best regards,<br><strong>The EduLink Admin Team</strong></p>"
+                + "</div></div></div>";
                     
         System.out.println("================= EMAIL NOTIFICATION =================");
         System.out.println("To: " + ownerEmail);
         System.out.println("Subject: " + subject);
-        System.out.println(body);
+        System.out.println("HTML EMAIL PREPARED");
         System.out.println("======================================================");
         
         // Actual SMTP Sending
@@ -205,7 +239,7 @@ public class CourseStatsController implements Initializable {
                 message.setFrom(new javax.mail.internet.InternetAddress(username));
                 message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(ownerEmail));
                 message.setSubject(subject);
-                message.setText(body);
+                message.setContent(htmlBody, "text/html; charset=utf-8");
                 
                 try {
                     javax.mail.Transport.send(message);
@@ -218,7 +252,12 @@ public class CourseStatsController implements Initializable {
             }
         }).start();
         
-        EduAlert.show(EduAlert.AlertType.INFO, "Course Archived", 
-            "The course was archived. An email notification has been triggered for the owner:\n" + ownerEmail + "\nReason: " + reason);
+        String alertTitle = isArchivedMode ? "Course Archived" : "Course Re-opened";
+        String alertMessage = isArchivedMode ? "The course was archived. An email notification has been triggered for the owner:\n" + ownerEmail + "\nReason: " + reason
+                                             : "The course was re-opened. An email notification has been triggered for the owner:\n" + ownerEmail + "\nReason: " + reason;
+        
+        javafx.application.Platform.runLater(() -> {
+            EduAlert.show(EduAlert.AlertType.INFO, alertTitle, alertMessage);
+        });
     }
 }
