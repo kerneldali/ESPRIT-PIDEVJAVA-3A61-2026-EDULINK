@@ -1,7 +1,9 @@
 package com.edulink.gui.controllers.assistance;
 
 import com.edulink.gui.models.assistance.HelpRequest;
+import com.edulink.gui.services.assistance.AiClassificationService;
 import com.edulink.gui.services.assistance.HelpRequestService;
+import com.edulink.gui.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,15 +32,49 @@ public class HelpRequestFormController implements Initializable {
 
     private HelpRequest currentRequest;
     private HelpRequestService service = new HelpRequestService();
+    private AiClassificationService aiService = new AiClassificationService();
+    private Label aiStatusLabel;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         statusCombo.getItems().addAll("OPEN", "IN_PROGRESS", "CLOSED");
         statusCombo.setValue("OPEN");
-        difficultyCombo.getItems().addAll("Easy", "Medium", "Hard");
-        difficultyCombo.setValue("Medium");
-        
+        difficultyCombo.getItems().addAll("EASY", "MEDIUM", "HARD");
+        difficultyCombo.setValue("MEDIUM");
+
+        // Auto-classify when user finishes typing the description
+        descField.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+            if (wasFocused && !isNowFocused) {
+                handleAiSuggest();
+            }
+        });
+
         Platform.runLater(() -> titleField.requestFocus());
+    }
+
+    /** Calls Groq in a background thread then updates category/difficulty fields */
+    @FXML
+    public void handleAiSuggest() {
+        String title = titleField.getText();
+        String desc  = descField.getText();
+        if (title == null || title.isBlank() || desc == null || desc.isBlank()) return;
+
+        if (errorLabel != null) {
+            errorLabel.setStyle("-fx-text-fill:#6366f1;");
+            errorLabel.setText("🤖 AI is classifying your request...");
+        }
+
+        new Thread(() -> {
+            String[] result = aiService.classify(title, desc);
+            Platform.runLater(() -> {
+                categoryField.setText(result[0]);
+                difficultyCombo.setValue(result[1]);
+                if (errorLabel != null) {
+                    errorLabel.setStyle("-fx-text-fill:#10b981;");
+                    errorLabel.setText("✓ Auto-classified: " + result[0] + " / " + result[1]);
+                }
+            });
+        }).start();
     }
 
     public void setHelpRequest(HelpRequest req) {
@@ -66,9 +102,9 @@ public class HelpRequestFormController implements Initializable {
 
         // 1. Title Validation (10-100 chars, Alphanumeric + Basic Punctuation)
         String title = titleField.getText() == null ? "" : titleField.getText().trim();
-        if (title.length() < 10 || title.length() > 100 || !title.matches("^[a-zA-Z0-9\\s\\-.,!?()]+$")) {
+        if (title.length() < 10 || title.length() > 100 || !title.matches("^[a-zA-Z0-9\\s\\-.,!?()+#@]+$")) {
             applyErrorStyle(titleField);
-            showError("Title must be 10-100 chars and contain only safe alphanumeric/punctuation.");
+            showError("Title must be 10-100 chars (safe alphanumeric, +, #, @ allowed).");
             isValid = false;
         }
 

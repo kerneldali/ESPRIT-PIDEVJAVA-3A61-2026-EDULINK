@@ -3,6 +3,8 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -31,8 +33,14 @@
             <Label fx:id="errorLabel" style="-fx-text-fill: #ef4444;"/>
             <Label fx:id="loadingLabel" text="" styleClass="splash-loading" visible="false"/>
             
-            <Button onAction="#handleLogin" text="Sign In" styleClass="btn-primary" prefWidth="300" style="-fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px;"/>
-            <Label text="Don't have an account? Register" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showRegister"/>
+            <HBox spacing="10" alignment="CENTER">
+                <Button onAction="#handleLogin" text="Sign In" styleClass="btn-primary" prefWidth="200" style="-fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px;"/>
+                <Button onAction="#handleFaceIdLogin" text="📷 Face ID" prefWidth="90" style="-fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5px; -fx-cursor: hand;"/>
+            </HBox>
+            <HBox spacing="20" alignment="CENTER">
+                <Label text="Don't have an account? Register" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showRegister"/>
+                <Label text="Forgot Password?" style="-fx-text-fill: #fcd34d; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showForgotPassword"/>
+            </HBox>
         </VBox>
 
         <!-- Register Form -->
@@ -44,10 +52,49 @@
             <TextField fx:id="regEmailField" promptText="Email Address" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
             <PasswordField fx:id="regPasswordField" promptText="Password" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
             
+            <HBox spacing="10" alignment="CENTER">
+                <StackPane style="-fx-background-color: white; -fx-background-radius: 5px; -fx-padding: 2;">
+                    <Canvas fx:id="captchaCanvas" width="120" height="40" />
+                </StackPane>
+                <TextField fx:id="captchaField" promptText="Code" prefWidth="100" style="-fx-padding: 5px; -fx-font-size: 14px;"/>
+                <Button text="🔄" onAction="#refreshCaptcha" style="-fx-background-radius: 5px; -fx-cursor: hand; -fx-font-size: 14px; -fx-padding: 5px 10px;"/>
+            </HBox>
+            
             <Label fx:id="regErrorLabel" style="-fx-text-fill: #ef4444;"/>
             
             <Button onAction="#handleRegister" text="Create Account" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px; -fx-cursor: hand;" prefWidth="300"/>
             <Label text="Already have an account? Login" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showLogin"/>
+        </VBox>
+        
+        <!-- Forgot Password Form -->
+        <VBox fx:id="forgotPasswordBox" spacing="15.0" styleClass="splash-card" alignment="CENTER" maxWidth="400" visible="false" managed="false">
+            <padding><Insets top="30" right="30" bottom="30" left="30"/></padding>
+            <Label text="Reset Password" style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            
+            <TextField fx:id="resetEmailField" promptText="Enter your Email" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+            <HBox spacing="10">
+                <TextField fx:id="otpField" promptText="OTP Code" visible="false" managed="false" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+                <PasswordField fx:id="newPasswordField" promptText="New Password" visible="false" managed="false" style="-fx-padding: 10px; -fx-background-color: #f3f4f6; -fx-background-radius: 5px; -fx-text-fill: black;"/>
+            </HBox>
+            
+            <Label fx:id="resetErrorLabel" style="-fx-text-fill: #ef4444;"/>
+            
+            <Button fx:id="sendOtpBtn" onAction="#handleSendOtp" text="Send OTP" styleClass="btn-primary" prefWidth="300" style="-fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px;"/>
+            <Button fx:id="verifyOtpBtn" onAction="#handleVerifyOtpAndReset" text="Reset Password" visible="false" managed="false" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-padding: 10px; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 5px; -fx-cursor: hand;" prefWidth="300"/>
+            <Label text="Back to Login" style="-fx-text-fill: #bfdbfe; -fx-cursor: hand; -fx-underline: true;" onMouseClicked="#showLogin"/>
+        </VBox>
+
+        <!-- Face ID Camera Box -->
+        <VBox fx:id="faceIdBox" spacing="15.0" styleClass="splash-card" alignment="CENTER" maxWidth="450" visible="false" managed="false">
+            <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+            <Label text="Face ID Verification" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            
+            <StackPane style="-fx-background-color: #0f172a; -fx-border-color: #3b82f6; -fx-border-width: 2; -fx-border-radius: 8;">
+                <ImageView fx:id="cameraFeed" fitWidth="320" fitHeight="240" preserveRatio="true"/>
+                <Label fx:id="cameraStatusLabel" text="Initializing Camera..." style="-fx-text-fill: #94a3b8;"/>
+            </StackPane>
+            
+            <Button onAction="#cancelFaceId" text="Cancel" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20; -fx-background-radius: 5; -fx-cursor: hand;"/>
         </VBox>
 
         <Label text="v1.1 - Professional Education Platform" styleClass="splash-footer"/>

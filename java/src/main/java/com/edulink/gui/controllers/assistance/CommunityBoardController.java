@@ -3,6 +3,7 @@ package com.edulink.gui.controllers.assistance;
 import com.edulink.gui.models.assistance.ForumThread;
 import com.edulink.gui.models.assistance.ForumReply;
 import com.edulink.gui.services.assistance.ForumService;
+import com.edulink.gui.util.SessionManager;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -22,6 +23,12 @@ public class CommunityBoardController implements Initializable {
     @FXML private VBox threadFocusArea;
     @FXML private Label focusedThreadTitle;
     @FXML private Label focusedThreadAuthor;
+    @FXML private Button btnLike;
+    @FXML private Button btnLove;
+    @FXML private Button btnInsightful;
+    @FXML private Button btnFunny;
+    @FXML private Button btnSupport;
+    @FXML private HBox reactionBar;
     @FXML private HBox adminActionsPane;
     @FXML private Button pinThreadBtn;
     @FXML private Button lockThreadBtn;
@@ -35,6 +42,7 @@ public class CommunityBoardController implements Initializable {
     @FXML private TextArea newThreadContent;
 
     private ForumService service = new ForumService();
+    private com.edulink.gui.services.assistance.ToxicityService toxicityService = new com.edulink.gui.services.assistance.ToxicityService();
     private ObservableList<ForumThread> allThreads = FXCollections.observableArrayList();
     private ForumThread currentThread = null;
     private boolean isAdmin = false;
@@ -141,6 +149,8 @@ public class CommunityBoardController implements Initializable {
         focusedThreadAuthor.setText("Posted by: " + (thread.getAuthorName() != null ? thread.getAuthorName() : "Anonymous"));
         focusedThreadContent.setText(thread.getContent());
         
+        loadReactions();
+
         // Load replies
         ObservableList<ForumReply> replies = FXCollections.observableArrayList(service.getRepliesForThread(thread.getId()));
         repliesList.setItems(replies);
@@ -176,7 +186,8 @@ public class CommunityBoardController implements Initializable {
                 showAlert("Error", "Please provide a valid reason.");
                 return;
             }
-            service.reportPost(currentThread.getId(), 1, reason.trim()); // AuthorId = 1 mocked
+            int reporterId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+            service.reportPost(currentThread.getId(), reporterId, reason.trim());
             showAlert("Report Received", "Thank you. A moderator has been alerted and will review this topic shortly.");
         });
     }
@@ -235,12 +246,17 @@ public class CommunityBoardController implements Initializable {
             showAlert("Input Error", "Reply is too long (max 500 characters).");
             return;
         }
+        
+        if (toxicityService.analyze(content).isToxic) {
+            showAlert("Content Blocked", "Your reply was flagged for inappropriate or toxic language. Please revise it.");
+            return;
+        }
 
         ForumReply r = new ForumReply();
         r.setThreadId(currentThread.getId());
         r.setContent(content.trim());
-        // Hardcoding author 1 as logged in user for now
-        r.setAuthorId(1); 
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        r.setAuthorId(userId); 
 
         service.addReply(r);
         newReplyField.clear();
@@ -281,17 +297,65 @@ public class CommunityBoardController implements Initializable {
             showAlert("Input Error", "Topic content must be at least 10 characters long.");
             return;
         }
+        
+        if (toxicityService.analyze(title).isToxic || toxicityService.analyze(content).isToxic) {
+            showAlert("Content Blocked", "Your post was flagged for inappropriate or toxic language. Please revise it.");
+            return;
+        }
 
         ForumThread t = new ForumThread();
         t.setTitle(title.trim());
         t.setContent(content.trim());
         t.setBoardId(1);
-        t.setAuthorId(1); 
+        int authorId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        t.setAuthorId(authorId); 
 
         service.addThread(t);
         hideNewThreadForm();
         loadThreads();
     }
+    
+    private static final String[] REACTION_TYPES = {"LIKE", "LOVE", "INSIGHTFUL", "FUNNY", "SUPPORT"};
+    private static final String[] REACTION_EMOJIS = {"👍", "❤️", "💡", "😂", "🤝"};
+
+    private void loadReactions() {
+        if (currentThread == null || btnLike == null) return;
+        java.util.Map<String, Integer> reactions = service.getReactions(currentThread.getId());
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        String myReact = service.getUserReaction(currentThread.getId(), userId);
+
+        Button[] btns = {btnLike, btnLove, btnInsightful, btnFunny, btnSupport};
+        for (int i = 0; i < btns.length; i++) {
+            if (btns[i] == null) continue;
+            int count = reactions.getOrDefault(REACTION_TYPES[i], 0);
+            btns[i].setText(REACTION_EMOJIS[i] + " " + count);
+            boolean isActive = REACTION_TYPES[i].equals(myReact);
+            btns[i].setStyle(isActive
+                ? "-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 10;"
+                : "-fx-background-color: transparent; -fx-text-fill: #94a3b8; -fx-font-size: 14; -fx-cursor: hand; -fx-background-radius: 6; -fx-padding: 4 10;");
+        }
+    }
+
+    private void doReaction(String type) {
+        if (currentThread == null) return;
+        int userId = SessionManager.getCurrentUser() != null ? SessionManager.getCurrentUser().getId() : 1;
+        String myReact = service.getUserReaction(currentThread.getId(), userId);
+        if (type.equals(myReact)) {
+            service.removeReaction(currentThread.getId(), userId);
+        } else {
+            service.addReaction(currentThread.getId(), userId, type);
+        }
+        loadReactions();
+    }
+
+    @FXML public void handleReactionLike()       { doReaction("LIKE"); }
+    @FXML public void handleReactionLove()       { doReaction("LOVE"); }
+    @FXML public void handleReactionInsightful() { doReaction("INSIGHTFUL"); }
+    @FXML public void handleReactionFunny()      { doReaction("FUNNY"); }
+    @FXML public void handleReactionSupport()    { doReaction("SUPPORT"); }
+
+    /** kept for backward compat if any old FXML references it */
+    @FXML public void handleReaction() { doReaction("LIKE"); }
 
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

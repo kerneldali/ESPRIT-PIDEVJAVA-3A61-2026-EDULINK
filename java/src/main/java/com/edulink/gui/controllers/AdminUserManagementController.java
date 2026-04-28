@@ -37,6 +37,7 @@ public class AdminUserManagementController implements Initializable {
     @FXML private Label selectedNameLabel;
     @FXML private Label selectedRolesLabel;
     @FXML private Label selectedWalletLabel;
+    @FXML private Label selectedFaceIdLabel;
     @FXML private VBox detailBadgeBox;
 
     // Form Pane
@@ -135,6 +136,8 @@ public class AdminUserManagementController implements Initializable {
         selectedNameLabel.setText(user.getFullName());
         selectedRolesLabel.setText("System Roles: " + user.getRoles());
         selectedWalletLabel.setText(String.format("%.2f XP", user.getWalletBalance()));
+        selectedFaceIdLabel.setText("Biometric Auth: " + (user.getFaceHash() != null ? "CONFIGURED ✓" : "NOT SETUP ✗"));
+        selectedFaceIdLabel.setStyle("-fx-text-fill: " + (user.getFaceHash() != null ? "#10b981" : "#ef4444") + "; -fx-font-weight: bold;");
         
         formNameField.setText(user.getFullName());
         formEmailField.setText(user.getEmail());

@@ -2,6 +2,10 @@ package com.edulink.gui.controllers.assistance;
 
 import com.edulink.gui.models.assistance.HelpRequest;
 import com.edulink.gui.services.assistance.HelpRequestService;
+import com.edulink.gui.services.assistance.SessionSummaryService;
+import com.edulink.gui.services.assistance.SentimentService;
+import com.edulink.gui.services.GroqService;
+import com.edulink.gui.util.MyConnection;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -11,20 +15,25 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import java.net.URL;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import com.edulink.gui.services.assistance.ForumService;
 
 public class AdminAssistanceController implements Initializable {
 
     @FXML private Label totalRequestsLabel, openTicketsLabel, reportedLabel, bountyLabel, rateLabel, dbStatusLabel;
     @FXML private FlowPane ticketsContainer;
+    @FXML private FlowPane forumReportsContainer;
     @FXML private ComboBox<String> searchByCombo;
     @FXML private TextField searchField;
+    @FXML private Label avgSentimentLabel, toxicBlockedLabel, healthyCategoryLabel;
 
     private HelpRequestService service = new HelpRequestService();
+    private ForumService forumService = new ForumService();
     private List<HelpRequest> allTickets;
 
     @Override
@@ -38,6 +47,7 @@ public class AdminAssistanceController implements Initializable {
         });
 
         refreshAll();
+        loadForumReports();
     }
 
     private void filterCards(String keyword) {
@@ -183,6 +193,104 @@ public class AdminAssistanceController implements Initializable {
         // Refresh Table with Cards
         allTickets = service.getAll();
         filterCards(searchField.getText());
+        refreshAnalytics();
+    }
+
+    @FXML
+    public void refreshAnalytics() {
+        // Pull real DB data for analytics
+        new Thread(() -> {
+            Connection cnx = MyConnection.getInstance().getCnx();
+            if (cnx == null) return;
+
+            // 1. Toxic messages count from chat_message
+            int toxicCount = 0;
+            try (Statement st = cnx.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM chat_message WHERE is_toxic = 1")) {
+                if (rs.next()) toxicCount = rs.getInt(1);
+            } catch (Exception e) {
+                System.err.println("[AdminAssistance] toxic count: " + e.getMessage());
+            }
+
+            // 2. Most active category in help requests
+            String topCategory = "N/A";
+            try (Statement st = cnx.createStatement();
+                 ResultSet rs = st.executeQuery(
+                     "SELECT category, COUNT(*) AS cnt FROM help_request WHERE category IS NOT NULL " +
+                     "GROUP BY category ORDER BY cnt DESC LIMIT 1")) {
+                if (rs.next()) topCategory = rs.getString("category");
+            } catch (Exception e) {
+                System.err.println("[AdminAssistance] top category: " + e.getMessage());
+            }
+
+            // 3. Average session quality
+            double avgQuality = 0;
+            try (Statement st = cnx.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT AVG(quality_score) FROM help_session WHERE bounty_paid = 1")) {
+                if (rs.next()) avgQuality = rs.getDouble(1);
+            } catch (Exception e) {
+                System.err.println("[AdminAssistance] avg quality: " + e.getMessage());
+            }
+
+            final int finalToxic = toxicCount;
+            final String finalCat = topCategory;
+            final double finalQuality = avgQuality;
+            javafx.application.Platform.runLater(() -> {
+                toxicBlockedLabel.setText(String.valueOf(finalToxic));
+                healthyCategoryLabel.setText(finalCat);
+                String sentiment = finalQuality >= 70 ? "Positive ("+String.format("%.0f",finalQuality)+"%)" :
+                                   finalQuality >= 40 ? "Neutral ("+String.format("%.0f",finalQuality)+"%)" :
+                                                       "Negative (" + String.format("%.0f",finalQuality) + "%)";
+                avgSentimentLabel.setText(sentiment);
+            });
+        }).start();
+    }
+
+    @FXML
+    public void handleGenerateAiReport() {
+        new Thread(() -> {
+            try {
+                Connection cnx = MyConnection.getInstance().getCnx();
+                int totalSessions = 0, bountyPaid = 0, toxicBlocked = 0;
+                String topTutor = "N/A", topCat = "N/A";
+
+                if (cnx != null) {
+                    try (Statement st = cnx.createStatement()) {
+                        try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM help_session")) { if (rs.next()) totalSessions = rs.getInt(1); }
+                        try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM help_session WHERE bounty_paid=1")) { if (rs.next()) bountyPaid = rs.getInt(1); }
+                        try (ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM chat_message WHERE is_toxic=1")) { if (rs.next()) toxicBlocked = rs.getInt(1); }
+                        try (ResultSet rs = st.executeQuery("SELECT u.full_name, COUNT(*) c FROM help_session hs JOIN user u ON u.id=hs.tutor_id GROUP BY hs.tutor_id ORDER BY c DESC LIMIT 1")) { if (rs.next()) topTutor = rs.getString(1); }
+                        try (ResultSet rs = st.executeQuery("SELECT category, COUNT(*) c FROM help_request WHERE category IS NOT NULL GROUP BY category ORDER BY c DESC LIMIT 1")) { if (rs.next()) topCat = rs.getString(1); }
+                    }
+                }
+
+                String prompt = String.format(
+                    "You are the EduLink AI reporting assistant. Generate a 4-point executive summary from these platform stats:\n" +
+                    "- Total tutoring sessions: %d | Bounty paid: %d\n" +
+                    "- Toxic messages blocked: %d\n" +
+                    "- Most active tutor: %s | Most active category: %s\n" +
+                    "Provide 4 actionable insights. Keep it concise and professional.",
+                    totalSessions, bountyPaid, toxicBlocked, topTutor, topCat);
+
+                String aiReport = new GroqService().ask(prompt);
+                final String report = (aiReport != null && !aiReport.isBlank()) ? aiReport :
+                    "1. Sessions completed: " + totalSessions + "\n" +
+                    "2. Bounties paid: " + bountyPaid + "\n" +
+                    "3. Toxic messages blocked: " + toxicBlocked + "\n" +
+                    "4. Top category: " + topCat;
+
+                javafx.application.Platform.runLater(() -> {
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("AI Executive Report");
+                    alert.setHeaderText("🤖 Platform Intelligence Summary");
+                    alert.setContentText(report);
+                    alert.getDialogPane().setPrefWidth(520);
+                    alert.show();
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
     }
 
     @FXML
@@ -197,5 +305,85 @@ public class AdminAssistanceController implements Initializable {
             pw.close();
             new Alert(Alert.AlertType.INFORMATION, "Exported to " + file.getAbsolutePath()).show();
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @FXML
+    public void loadForumReports() {
+        if (forumReportsContainer == null) return;
+        forumReportsContainer.getChildren().clear();
+        List<Map<String, Object>> reports = forumService.getPendingReports();
+        
+        for (Map<String, Object> report : reports) {
+            forumReportsContainer.getChildren().add(createReportCard(report));
+        }
+        
+        if (reports.isEmpty()) {
+            Label noData = new Label("No pending forum reports at this time. 🎉");
+            noData.setStyle("-fx-text-fill: gray; -fx-font-size: 14px; -fx-padding: 20;");
+            forumReportsContainer.getChildren().add(noData);
+        }
+    }
+
+    private VBox createReportCard(Map<String, Object> report) {
+        int reportId = (int) report.get("id");
+        int postId = (int) report.get("postId");
+        String postTitle = (String) report.get("postTitle");
+        String reason = (String) report.get("reason");
+        String reporter = (String) report.get("reporter");
+        
+        VBox card = new VBox(10);
+        card.getStyleClass().add("card");
+        card.setPrefWidth(320);
+
+        HBox header = new HBox(5);
+        header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+        
+        Label idLabel = new Label("Report #" + reportId);
+        idLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: #ef4444; -fx-font-size: 14px;");
+        
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        
+        header.getChildren().addAll(idLabel, spacer);
+
+        Label titleLabel = new Label("Post: " + (postTitle != null ? postTitle : "Unknown Post"));
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white;");
+        titleLabel.setWrapText(true);
+
+        Label reporterLabel = new Label("Reporter: " + reporter);
+        reporterLabel.setStyle("-fx-text-fill: #9ca3af; -fx-font-size: 11px;");
+
+        Label descLabel = new Label("Reason: " + reason);
+        descLabel.setWrapText(true);
+        descLabel.setStyle("-fx-text-fill: #d1d5db;");
+        descLabel.setMaxHeight(60);
+
+        HBox actions = new HBox(10);
+        actions.setAlignment(javafx.geometry.Pos.CENTER_RIGHT);
+        
+        Button dismissBtn = new Button("Dismiss");
+        dismissBtn.setStyle("-fx-background-color: #4b5563; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 12;");
+        dismissBtn.setOnAction(e -> {
+            forumService.dismissReport(reportId);
+            loadForumReports();
+        });
+
+        Button deletePostBtn = new Button("Delete Post");
+        deletePostBtn.setStyle("-fx-background-color: #ef4444; -fx-text-fill: white; -fx-font-size: 12px; -fx-padding: 6 12;");
+        deletePostBtn.setOnAction(e -> {
+            Alert confirm = new Alert(Alert.AlertType.CONFIRMATION, "Delete the reported post permanently?", ButtonType.YES, ButtonType.NO);
+            confirm.showAndWait().ifPresent(res -> {
+                if (res == ButtonType.YES) {
+                    forumService.actionReport(reportId, postId);
+                    loadForumReports();
+                }
+            });
+        });
+
+        actions.getChildren().addAll(dismissBtn, deletePostBtn);
+
+        card.getChildren().addAll(header, titleLabel, reporterLabel, descLabel, new Separator(), actions);
+        com.edulink.gui.util.ThemeManager.applyTheme(card);
+        return card;
     }
 }

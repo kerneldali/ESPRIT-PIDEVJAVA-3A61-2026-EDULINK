@@ -9,6 +9,10 @@ import java.time.Duration;
 
 public class GroqService {
 
+    public String ask(String prompt) {
+        return generateResponse("You are a helpful AI assistant.", prompt);
+    }
+
     public String generateResponse(String systemPrompt, String userMessage) {
         if (GroqConfig.mahdi_api_key == null || GroqConfig.mahdi_api_key.isEmpty() || GroqConfig.mahdi_api_key.equals("dummy_key_to_be_replaced")) {
             return "Please configure your Groq API key in the code (mahdi_api_key).";

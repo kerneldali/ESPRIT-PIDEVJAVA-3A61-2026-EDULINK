@@ -76,6 +76,7 @@
                         <Label fx:id="selectedNameLabel" text="Selected Name" style="-fx-font-size: 24px; -fx-font-weight: 900; -fx-text-fill: white;"/>
                         <Label fx:id="selectedRolesLabel" text="Roles" style="-fx-text-fill: #2563eb; -fx-font-size: 14px; -fx-font-weight: 800; -fx-background-color: #dbeafe; -fx-padding: 6 15; -fx-background-radius: 15;"/>
                         <Label fx:id="selectedWalletLabel" text="0.00 XP" style="-fx-font-size: 22px; -fx-font-weight: 900; -fx-text-fill: #10b981; -fx-padding: 10 0 0 0;"/>
+                        <Label fx:id="selectedFaceIdLabel" text="Biometric Auth: -" style="-fx-font-size: 13px; -fx-font-weight: 800;"/>
                     </VBox>
                 </VBox>
 
