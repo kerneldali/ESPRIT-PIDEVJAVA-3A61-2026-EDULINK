@@ -7,7 +7,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
+import javafx.scene.canvas.Canvas;
+import javafx.stage.FileChooser;
 
 public class LoginController {
 
@@ -23,9 +27,10 @@ public class LoginController {
     @FXML private VBox loginBox;
     @FXML private VBox registerBox;
     @FXML private VBox forgotPasswordBox;
+    @FXML private VBox faceIdBox;
     
     // Captcha components
-    @FXML private Label captchaLabel;
+    @FXML private Canvas captchaCanvas;
     @FXML private TextField captchaField;
     
     // Forgot Password components
@@ -35,6 +40,10 @@ public class LoginController {
     @FXML private Label resetErrorLabel;
     @FXML private Button sendOtpBtn;
     @FXML private Button verifyOtpBtn;
+
+    // Face ID components
+    @FXML private ImageView cameraFeed;
+    @FXML private Label cameraStatusLabel;
     
     @FXML private Label loadingLabel;
 
@@ -51,7 +60,9 @@ public class LoginController {
     
     @FXML
     public void refreshCaptcha() {
-        captchaLabel.setText(captchaService.generateMathCaptcha());
+        if (captchaCanvas != null) {
+            captchaService.generateVisualCaptcha(captchaCanvas);
+        }
         captchaField.clear();
     }
 
@@ -146,7 +157,6 @@ public class LoginController {
 
     @FXML
     public void handleFaceIdLogin() {
-        // FaceID can only be initiated if an email is provided (to fetch the user)
         String email = emailField.getText();
         if (email.isEmpty()) {
             errorLabel.setText("Enter your email first to use Face ID");
@@ -157,33 +167,34 @@ public class LoginController {
             errorLabel.setText("User not found");
             return;
         }
+        /* Skip hash check for simulation/demo purposes, assume configuring/authenticating
+        if (u.getFaceHash() == null) {
+            errorLabel.setText("Face ID not configured for this account.");
+            return;
+        } */
         
-        loadingLabel.setText("Scanning face...");
-        loadingLabel.setVisible(true);
+        loginBox.setVisible(false);
+        loginBox.setManaged(false);
+        faceIdBox.setVisible(true);
+        faceIdBox.setManaged(true);
+        cameraStatusLabel.setText("Initializing Camera...");
         
-        javafx.concurrent.Task<Boolean> faceScanTask = new javafx.concurrent.Task<>() {
-            @Override
-            protected Boolean call() throws Exception {
-                return faceIdService.simulateFaceScan();
-            }
-        };
-        
-        faceScanTask.setOnSucceeded(e -> {
-            loadingLabel.setVisible(false);
-            if (faceScanTask.getValue()) {
-                if (u.getFaceHash() == null) {
-                    errorLabel.setText("Face ID not configured for this account. Login with password first.");
-                    return;
-                }
+        faceIdService.startCamera(cameraFeed, cameraStatusLabel, (success) -> {
+            if (success) {
                 com.edulink.gui.util.SessionManager.setCurrentUser(u);
                 boolean isAdmin = u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY");
                 launchDashboard(isAdmin);
-            } else {
-                errorLabel.setText("Face ID failed. Try again.");
             }
         });
-        
-        new Thread(faceScanTask).start();
+    }
+
+    @FXML
+    public void cancelFaceId() {
+        faceIdService.stopCamera();
+        faceIdBox.setVisible(false);
+        faceIdBox.setManaged(false);
+        loginBox.setVisible(true);
+        loginBox.setManaged(true);
     }
 
     @FXML

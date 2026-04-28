@@ -19,7 +19,7 @@ public class NoteService implements IService<Note> {
 
     @Override
     public void add(Note n) {
-        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags) VALUES (?,?,?,?,?)";
+        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags, sentiment, ai_category_suggestion, audio_path) VALUES (?,?,?,?,?,?,?,?)";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setInt(1, n.getNotebookId());
             if (n.getCategoryId() > 0)
@@ -29,6 +29,9 @@ public class NoteService implements IService<Note> {
             pstm.setString(3, n.getTitle());
             pstm.setString(4, n.getContent());
             pstm.setString(5, n.getTags());
+            pstm.setString(6, n.getSentiment());
+            pstm.setString(7, n.getAiCategorySuggestion());
+            pstm.setString(8, n.getAudioPath());
             pstm.executeUpdate();
             System.out.println("✅ Note added successfully: " + n.getTitle());
         } catch (SQLException e) {
@@ -39,7 +42,7 @@ public class NoteService implements IService<Note> {
 
     @Override
     public void add2(Note n) {
-        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags) VALUES (?,?,?,?,?)";
+        String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags, sentiment, ai_category_suggestion, audio_path) VALUES (?,?,?,?,?,?,?,?)";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setInt(1, n.getNotebookId());
             if (n.getCategoryId() > 0)
@@ -49,6 +52,9 @@ public class NoteService implements IService<Note> {
             pstm.setString(3, n.getTitle());
             pstm.setString(4, n.getContent());
             pstm.setString(5, n.getTags());
+            pstm.setString(6, n.getSentiment());
+            pstm.setString(7, n.getAiCategorySuggestion());
+            pstm.setString(8, n.getAudioPath());
             pstm.executeUpdate();
             System.out.println("✅ Note added (add2): " + n.getTitle());
         } catch (SQLException e) {
@@ -59,7 +65,7 @@ public class NoteService implements IService<Note> {
 
     @Override
     public void edit(Note n) {
-        String qry = "UPDATE note SET title=?, content=?, tags=?, category_id=? WHERE id=?";
+        String qry = "UPDATE note SET title=?, content=?, tags=?, category_id=?, sentiment=?, ai_category_suggestion=?, audio_path=? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setString(1, n.getTitle());
             pstm.setString(2, n.getContent());
@@ -68,7 +74,10 @@ public class NoteService implements IService<Note> {
                 pstm.setInt(4, n.getCategoryId());
             else
                 pstm.setNull(4, java.sql.Types.INTEGER);
-            pstm.setInt(5, n.getId());
+            pstm.setString(5, n.getSentiment());
+            pstm.setString(6, n.getAiCategorySuggestion());
+            pstm.setString(7, n.getAudioPath());
+            pstm.setInt(8, n.getId());
             pstm.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -99,9 +108,13 @@ public class NoteService implements IService<Note> {
                 pstm.setInt(1, notebookId);
             ResultSet rs = pstm.executeQuery();
             while (rs.next()) {
-                list.add(new Note(rs.getInt("id"), rs.getInt("notebook_id"), rs.getInt("category_id"),
+                Note n = new Note(rs.getInt("id"), rs.getInt("notebook_id"), rs.getInt("category_id"),
                         rs.getString("title"),
-                        rs.getString("content"), rs.getString("tags"), rs.getTimestamp("created_at")));
+                        rs.getString("content"), rs.getString("tags"), rs.getTimestamp("created_at"));
+                n.setSentiment(rs.getString("sentiment"));
+                n.setAiCategorySuggestion(rs.getString("ai_category_suggestion"));
+                n.setAudioPath(rs.getString("audio_path"));
+                list.add(n);
             }
         } catch (SQLException e) {
             e.printStackTrace();

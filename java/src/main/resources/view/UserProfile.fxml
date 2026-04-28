@@ -3,6 +3,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.image.ImageView?>
 
 <ScrollPane fitToWidth="true" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.edulink.gui.controllers.UserProfileController" style="-fx-background-color: transparent; -fx-background: transparent;">
     <!-- Main wrapper -->
@@ -51,6 +52,15 @@
                     <Button text="📷 Setup Face ID" onAction="#handleSetupFaceId" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10;"/>
                     <Button text="Save Changes" onAction="#handleUpdateProfile" style="-fx-background-color: linear-gradient(to right, #2563eb, #3b82f6); -fx-text-fill: white; -fx-padding: 14 30; -fx-font-size: 15px; -fx-font-weight: 800; -fx-cursor: hand; -fx-background-radius: 10;" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
                 </HBox>
+
+                <!-- Face ID Setup Camera Box -->
+                <VBox fx:id="faceIdSetupBox" spacing="10" alignment="CENTER" visible="false" managed="false" style="-fx-background-color: #0f172a; -fx-padding: 15; -fx-background-radius: 10; -fx-border-color: #3b82f6; -fx-border-radius: 10; -fx-border-width: 2;">
+                    <StackPane>
+                        <ImageView fx:id="setupCameraFeed" fitWidth="320" fitHeight="240" preserveRatio="true"/>
+                        <Label fx:id="setupCameraStatusLabel" text="Initializing Camera..." style="-fx-text-fill: #94a3b8;"/>
+                    </StackPane>
+                    <Button text="Cancel Setup" onAction="#cancelFaceIdSetup" style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-padding: 8 20; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;"/>
+                </VBox>
             </VBox>
 
             <!-- Fintech Wallet Card & Transfer -->
