@@ -2,7 +2,6 @@ package com.edulink.gui.controllers.courses;
 
 import com.edulink.gui.models.courses.Course;
 import com.edulink.gui.models.courses.Matiere;
-import com.edulink.gui.models.courses.Resource;
 import com.edulink.gui.services.courses.CourseService;
 import com.edulink.gui.services.courses.ResourceService;
 import com.edulink.gui.util.EduAlert;
@@ -17,7 +16,6 @@ import javafx.scene.layout.*;
 
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class ManageCoursesController implements Initializable {

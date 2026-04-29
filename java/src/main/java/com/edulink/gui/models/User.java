@@ -7,6 +7,7 @@ public class User {
     private String password;
     private String roles; // Store as raw JSON string for simplicity, or we could parse
     private double walletBalance;
+    private String ethWalletAddress;
     private String faceDescriptor;
     private String resetOtp;
     private String resetOtpExpiresAt; // simplified datetime
@@ -41,6 +42,9 @@ public class User {
 
     public double getWalletBalance() { return walletBalance; }
     public void setWalletBalance(double walletBalance) { this.walletBalance = walletBalance; }
+
+    public String getEthWalletAddress() { return ethWalletAddress; }
+    public void setEthWalletAddress(String ethWalletAddress) { this.ethWalletAddress = ethWalletAddress; }
 
     public String getFaceDescriptor() { return faceDescriptor; }
     public void setFaceDescriptor(String faceDescriptor) { this.faceDescriptor = faceDescriptor; }

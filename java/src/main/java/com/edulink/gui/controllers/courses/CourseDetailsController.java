@@ -18,9 +18,6 @@ import javafx.scene.layout.*;
 
 import java.awt.Desktop;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
