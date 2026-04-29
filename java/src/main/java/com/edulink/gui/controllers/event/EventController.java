@@ -8,6 +8,7 @@ import java.util.ResourceBundle;
 import com.edulink.gui.models.event.Event;
 import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
+import com.edulink.gui.services.ml.MLService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.util.SessionManager;
@@ -491,6 +492,18 @@ public class EventController implements Initializable {
         } else {
             eventService.updateEvent(result);
             EduAlert.show(EduAlert.AlertType.SUCCESS, "Succès", "Événement mis à jour !");
+        }
+
+        // Prédiction ML avant création
+        if (!result.isOnline() || result.getMaxCapacity() > 0) {
+            int score = MLService.predictEventSuccess(result);
+            result.setPredictedScore(score);
+            
+            boolean confirm = EduAlert.confirm(
+                "🤖 Prédiction IA",
+                MLService.getPredictionMessage(score) + "\n\nVoulez-vous quand même créer cet événement ?"
+            );
+            if (!confirm) return;
         }
         handleCloseForm();
         loadData();

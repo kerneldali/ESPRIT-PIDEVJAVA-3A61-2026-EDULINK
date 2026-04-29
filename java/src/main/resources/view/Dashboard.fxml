@@ -69,6 +69,7 @@
                         <VBox fx:id="eventSubMenu" styleClass="sub-menu" visible="false" managed="false">
                             <Button styleClass="sub-nav-button" text="• All Events" onAction="#showEvent"/>
                             <Button styleClass="sub-nav-button" text="• My Reservations" onAction="#showReservation"/>
+                            <Button styleClass="sub-nav-button" text="• 📷 Scanner QR" onAction="#showQRScanner"/>
                         </VBox>
                     </VBox>
 

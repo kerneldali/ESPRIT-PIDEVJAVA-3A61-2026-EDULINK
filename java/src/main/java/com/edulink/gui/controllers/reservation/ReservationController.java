@@ -1,19 +1,31 @@
 package com.edulink.gui.controllers.reservation;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import com.edulink.gui.models.event.Event;
 import com.edulink.gui.models.reservation.Reservation;
 import com.edulink.gui.services.event.EventService;
 import com.edulink.gui.services.reservation.ReservationService;
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.util.SessionManager;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import java.net.URL;
-import java.util.ResourceBundle;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 
 public class ReservationController implements Initializable {
 
@@ -32,10 +44,16 @@ public class ReservationController implements Initializable {
     private EventService eventService = new EventService();
     private ObservableList<Reservation> reservationList = FXCollections.observableArrayList();
 
-    private final int CURRENT_USER_ID = 1; // Simulated connected user
+    private int currentUserId = -1; // Simulated connected user
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+
+        if (SessionManager.getCurrentUser() != null) {
+            currentUserId = SessionManager.getCurrentUser().getId();
+        }
+
+
         filterCombo.setItems(FXCollections.observableArrayList("All"));
         filterCombo.setValue("All");
 
@@ -50,7 +68,7 @@ public class ReservationController implements Initializable {
     }
 
     private void loadData() {
-        reservationList.setAll(reservationService.getReservationsByUserId(CURRENT_USER_ID));
+        reservationList.setAll(reservationService.getReservationsByUserId(currentUserId));
         filterData();
     }
 

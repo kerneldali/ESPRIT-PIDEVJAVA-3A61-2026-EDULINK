@@ -162,6 +162,7 @@ public class DashboardController implements Initializable {
         toggleMenu(userSubMenu);
     }
 
+    
     private void toggleMenu(VBox subMenu) {
         boolean isVisible = subMenu.isVisible();
         if (helpSubMenu != null) {
@@ -267,6 +268,36 @@ public class DashboardController implements Initializable {
     @FXML
     public void showReservation() {
         loadView("/view/reservation/reservation.fxml");
+    }
+
+    @FXML
+    public void showChallengeList() {
+        loadView("/view/challenge/ChallengeList.fxml");
+    }
+
+    @FXML
+    public void showMyChallenges() {
+        loadView("/view/challenge/MyChallenges.fxml");
+    }
+
+    @FXML
+    public void showManageChallenges() {
+        loadView("/view/challenge/ManageChallenges.fxml");
+    }
+
+    @FXML
+    public void showReviewSubmissions() {
+        loadView("/view/challenge/ReviewSubmissions.fxml");
+    }
+
+    @FXML
+    public void showChallengeStats() {
+        loadView("/view/challenge/ChallengeStats.fxml");
+    }
+
+    @FXML
+    public void showQRScanner() {
+        loadView("/view/event/QRScanner.fxml");
     }
 
     @FXML
