@@ -23,3 +23,5 @@ Thumbs.db
 
 # Ignored API Keys and sensitive config
 **/GroqConfig.java
+
+*.md
