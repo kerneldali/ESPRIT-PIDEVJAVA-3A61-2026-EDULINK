@@ -1,6 +1,7 @@
 package com.edulink.gui.controllers.challenge;
 
 import com.edulink.gui.models.challenge.Challenge;
+import com.edulink.gui.services.challenge.ChallengeImageService;
 import com.edulink.gui.services.challenge.ChallengeParticipationService;
 import com.edulink.gui.services.challenge.ChallengeService;
 import com.edulink.gui.util.EduAlert;
@@ -14,7 +15,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.scene.shape.Rectangle;
 
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -30,6 +34,7 @@ public class ChallengeListController implements Initializable {
 
     private final ChallengeService challengeService                = new ChallengeService();
     private final ChallengeParticipationService participationService = new ChallengeParticipationService();
+    private final ChallengeImageService imageService               = new ChallengeImageService();
     private final ObservableList<Challenge> challengeList          = FXCollections.observableArrayList();
 
     private int currentUserId;
@@ -51,6 +56,10 @@ public class ChallengeListController implements Initializable {
         searchField.textProperty().addListener((obs, o, n) -> filterData());
         difficultyFilterCombo.valueProperty().addListener((obs, o, n) -> filterData());
         sortCombo.valueProperty().addListener((obs, o, n) -> filterData());
+
+        // One-shot backfill: any pre-existing challenge without a cover gets one.
+        // The work is just URL-building + UPDATE statements, so it's cheap.
+        try { challengeService.backfillImageUrls(imageService); } catch (Exception ignore) {}
 
         loadData();
     }
@@ -101,10 +110,46 @@ public class ChallengeListController implements Initializable {
         boolean completed = currentUserId != -1 && participationService.hasCompleted(currentUserId, c.getId());
 
         VBox card = new VBox(12);
-        // Bordure verte si complété, violette si rejoint, neutre sinon
-        String borderColor = completed ? "#00d289" : (joined ? "#7c3aed" : "#ffffff11");
-        card.setStyle("-fx-background-color: #1a1a2e; -fx-padding: 18; -fx-background-radius: 10; " +
-                      "-fx-border-color: " + borderColor + "; -fx-border-radius: 10; -fx-border-width: 1.5;");
+        // Border priority: gold for FEATURED, then green for completed, purple for joined.
+        String borderColor;
+        if (c.isFeatured())      borderColor = "#f59e0b";
+        else if (completed)      borderColor = "#00d289";
+        else if (joined)         borderColor = "#7c3aed";
+        else                     borderColor = "#ffffff11";
+        double borderWidth = c.isFeatured() ? 2.5 : 1.5;
+        // Padding 0 on top so the cover image hugs the rounded corners; we re-add
+        // horizontal/bottom padding inside the content rows.
+        card.setStyle("-fx-background-color: #1a1a2e; -fx-background-radius: 10; " +
+                      "-fx-border-color: " + borderColor + "; -fx-border-radius: 10; " +
+                      "-fx-border-width: " + borderWidth + ";");
+
+        // ── Cover image (Pollinations AI) ──────────────────────────────────────
+        if (c.getImageUrl() != null && !c.getImageUrl().isBlank()) {
+            try {
+                ImageView iv = new ImageView();
+                // background loading: don't block the UI thread
+                iv.setImage(new Image(c.getImageUrl(), 600, 200, true, true, true));
+                iv.setFitWidth(600);
+                iv.setFitHeight(160);
+                iv.setPreserveRatio(false);
+                iv.setSmooth(true);
+                // Round only the top corners so the image fits the card's rounded outline.
+                Rectangle clip = new Rectangle(600, 160);
+                clip.setArcWidth(20);
+                clip.setArcHeight(20);
+                iv.setClip(clip);
+                StackPane imgWrap = new StackPane(iv);
+                imgWrap.setStyle("-fx-background-color: #0e0e1a; -fx-background-radius: 10 10 0 0;");
+                card.getChildren().add(imgWrap);
+            } catch (Exception ignore) {
+                // bad URL → silently skip the cover, keep the rest of the card
+            }
+        }
+
+        // Inner content holder so we still get padding around text rows even when
+        // the cover image is flush with the card edges.
+        VBox content = new VBox(12);
+        content.setStyle("-fx-padding: 18;");
 
         // ── Ligne 1 : Titre + badges ─────────────────────────────────────────
         HBox header = new HBox(10);
@@ -123,10 +168,28 @@ public class ChallengeListController implements Initializable {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Label xpLabel = new Label("+" + c.getXpReward() + " XP");
+        // Show effective XP (with boost) if active, otherwise base reward.
+        int xpDisplay = c.getEffectiveXpReward();
+        Label xpLabel = new Label("+" + xpDisplay + " XP");
         xpLabel.setStyle("-fx-text-fill: #00d289; -fx-font-weight: bold; -fx-font-size: 14px;");
 
-        header.getChildren().addAll(titleLabel, diffLabel, spacer, xpLabel);
+        header.getChildren().addAll(titleLabel, diffLabel);
+        if (c.isFeatured()) {
+            Label featBadge = new Label("⭐ FEATURED");
+            featBadge.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: #1a1a2e; " +
+                    "-fx-padding: 3 10; -fx-background-radius: 12; " +
+                    "-fx-font-size: 11px; -fx-font-weight: bold;");
+            header.getChildren().add(featBadge);
+        }
+        if (c.isBoostActive()) {
+            Label boostBadge = new Label("+" + c.getXpBoostPct() + "% XP");
+            boostBadge.setStyle("-fx-background-color: #00d28922; -fx-text-fill: #00d289; " +
+                    "-fx-padding: 3 10; -fx-background-radius: 12; " +
+                    "-fx-font-size: 11px; -fx-font-weight: bold; " +
+                    "-fx-border-color: #00d28966; -fx-border-radius: 12; -fx-border-width: 1;");
+            header.getChildren().add(boostBadge);
+        }
+        header.getChildren().addAll(spacer, xpLabel);
 
         // ── Ligne 2 : Description ─────────────────────────────────────────────
         Label descLabel = new Label(c.getDescription());
@@ -152,7 +215,8 @@ public class ChallengeListController implements Initializable {
 
         footer.getChildren().addAll(deadlineLabel, footerSpacer, actionBtn);
 
-        card.getChildren().addAll(header, descLabel, footer);
+        content.getChildren().addAll(header, descLabel, footer);
+        card.getChildren().add(content);
         com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
     }

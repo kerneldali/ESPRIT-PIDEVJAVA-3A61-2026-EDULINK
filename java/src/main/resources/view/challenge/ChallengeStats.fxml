@@ -66,6 +66,32 @@
         </VBox>
     </HBox>
 
+    <!-- ===== Auto-Decision Panel ===== -->
+    <VBox spacing="12"
+          style="-fx-background-color: #1a1a2e; -fx-padding: 18; -fx-background-radius: 10;
+                 -fx-border-color: #f59e0b55; -fx-border-radius: 10; -fx-border-width: 1.5;">
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="🤖" style="-fx-font-size: 26px;"/>
+            <VBox spacing="2" HBox.hgrow="ALWAYS">
+                <Label text="Décision automatique basée sur les statistiques"
+                       style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 15px;"/>
+                <Label text="Détecte le challenge le plus populaire (mis en avant) et booste les challenges sous-performants (+50% XP / 7 jours)."
+                       style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"
+                       wrapText="true"/>
+            </VBox>
+            <Button text="⚡  Appliquer maintenant" onAction="#handleApplyAutoDecisions"
+                    style="-fx-background-color: #f59e0b; -fx-text-fill: #1a1a2e;
+                           -fx-font-weight: bold; -fx-padding: 9 18; -fx-background-radius: 8;
+                           -fx-cursor: hand;"/>
+        </HBox>
+        <Label fx:id="autoDecisionResultLbl"
+               text="Aucune décision appliquée pour le moment."
+               style="-fx-text-fill: #f59e0b; -fx-font-size: 12px;
+                      -fx-background-color: #f59e0b15; -fx-padding: 8 12;
+                      -fx-background-radius: 6;"
+               wrapText="true"/>
+    </VBox>
+
     <!-- Tables side by side -->
     <HBox spacing="16" VBox.vgrow="ALWAYS">
 

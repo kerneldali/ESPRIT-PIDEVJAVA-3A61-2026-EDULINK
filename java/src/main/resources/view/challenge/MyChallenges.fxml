@@ -20,6 +20,24 @@
                        style="-fx-text-fill: #7B7FA0; -fx-font-size: 13px;"/>
             </VBox>
             <Region HBox.hgrow="ALWAYS"/>
+
+            <!-- ===== XP / Level Badge ===== -->
+            <HBox fx:id="xpBadge" alignment="CENTER" spacing="10"
+                  style="-fx-background-color: linear-gradient(to right, #7c3aed22, #00d28922);
+                         -fx-border-color: #7c3aed55; -fx-border-radius: 12;
+                         -fx-background-radius: 12; -fx-padding: 8 14 8 14;">
+                <Label text="⚡"
+                       style="-fx-text-fill: #f59e0b; -fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <VBox spacing="0" alignment="CENTER_LEFT">
+                    <Label fx:id="xpLabel" text="0 XP"
+                           style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+                    <Label fx:id="xpLevelLabel" text="Niveau 1 — 0/100"
+                           style="-fx-text-fill: #a0a0ab; -fx-font-size: 10px;"/>
+                </VBox>
+                <ProgressBar fx:id="xpProgressBar" prefWidth="90" prefHeight="6"
+                             style="-fx-accent: #00d289;"/>
+            </HBox>
+
             <!-- Légende -->
             <HBox spacing="14" alignment="CENTER">
                 <HBox spacing="5" alignment="CENTER">

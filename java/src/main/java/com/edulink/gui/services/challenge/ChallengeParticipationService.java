@@ -96,7 +96,20 @@ public class ChallengeParticipationService {
     // ── Validation / Rejet par l'admin ────────────────────────────────────────
 
     /**
-     * L'admin valide la soumission → COMPLETED + XP crédités.
+     * L'admin valide la soumission → COMPLETED.
+     *
+     * <p>Récompense duale (volontaire) :
+     * <ul>
+     *   <li><b>XP de progression</b> ({@code user.xp}) — non-dépensable, sert au level / leaderboard.</li>
+     *   <li><b>Solde du wallet</b> ({@code user.wallet_balance}) — monnaie liquide, échangeable
+     *       avec d'autres étudiants via le module "Send to a Friend".</li>
+     * </ul>
+     * Compléter un challenge récompense les deux dimensions : tu progresses ET tu reçois
+     * de la monnaie utilisable. Cela explique pourquoi la "EduLink Card" se met à jour
+     * en même temps que le compteur d'XP du profil.
+     *
+     * <p>Note : chaque méthode update logue elle-même dans {@code transaction_log},
+     * donc l'utilisateur verra deux entrées d'activité (une pour l'XP, une pour le wallet).
      */
     public void validate(int participationId, int userId, int xpReward) {
         String qry = "UPDATE challenge_participation SET status='COMPLETED', completed_at=? WHERE id=?";
@@ -105,8 +118,13 @@ public class ChallengeParticipationService {
             p.setInt(2, participationId);
             int rows = p.executeUpdate();
             if (rows > 0) {
-                userService.updateXp(userId, xpReward); // crédite les XP + log transaction
-                System.out.println("✅ Validated id=" + participationId + " → +" + xpReward + " XP");
+                // 1) Progression permanente (level)
+                userService.updateXp(userId, xpReward);
+                // 2) Monnaie liquide affichée sur l'EduLink Card (échangeable entre users)
+                userService.updateWallet(userId, (double) xpReward);
+                System.out.println("✅ Validated id=" + participationId
+                        + " → +" + xpReward + " XP (progression) & +"
+                        + xpReward + " coins (wallet)");
             }
         } catch (SQLException e) {
             System.err.println("❌ validate: " + e.getMessage());

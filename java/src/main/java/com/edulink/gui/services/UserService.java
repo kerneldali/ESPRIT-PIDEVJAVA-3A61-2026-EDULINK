@@ -173,6 +173,24 @@ public class UserService implements IService<User> {
         addTransactionLog(userId, "Gained " + amountToAdd + " XP points!");
     }
 
+    /**
+     * Returns the current XP for a user by id, or 0 if missing / error.
+     * Used by views that need a fresh XP value without reloading the whole User.
+     */
+    public int getXpById(int userId) {
+        if (cnx == null) { System.err.println("❌ getXpById: no DB connection"); return 0; }
+        String qry = "SELECT xp FROM user WHERE id=?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, userId);
+            try (java.sql.ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) return rs.getInt("xp");
+            }
+        } catch (SQLException e) {
+            System.err.println("❌ getXpById failed: " + e.getMessage());
+        }
+        return 0;
+    }
+
     public void updateWallet(int userId, double amountToAdd) {
         String qry = "UPDATE user SET wallet_balance = wallet_balance + ? WHERE id=?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {

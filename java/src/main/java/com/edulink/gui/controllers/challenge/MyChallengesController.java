@@ -3,6 +3,7 @@ package com.edulink.gui.controllers.challenge;
 import com.edulink.gui.models.challenge.Challenge;
 import com.edulink.gui.models.challenge.ChallengeParticipation;
 import com.edulink.gui.models.challenge.ChallengeTask;
+import com.edulink.gui.services.UserService;
 import com.edulink.gui.services.challenge.ChallengeParticipationService;
 import com.edulink.gui.services.challenge.ChallengeService;
 import com.edulink.gui.services.challenge.ChallengeTaskService;
@@ -34,6 +35,12 @@ public class MyChallengesController implements Initializable {
     @FXML private ComboBox<String> statusFilterCombo;
     @FXML private ComboBox<String> sortCombo;
 
+    // XP badge in header
+    @FXML private HBox xpBadge;
+    @FXML private Label xpLabel;
+    @FXML private Label xpLevelLabel;
+    @FXML private ProgressBar xpProgressBar;
+
     // Overlay de soumission
     @FXML private VBox submissionOverlay;
     @FXML private Label overlayTitle;
@@ -45,6 +52,10 @@ public class MyChallengesController implements Initializable {
     private final ChallengeService challengeService               = new ChallengeService();
     private final ChallengeParticipationService participationService = new ChallengeParticipationService();
     private final ChallengeTaskService taskService                = new ChallengeTaskService();
+    private final UserService userService                         = new UserService();
+
+    // ── Level math (tweak constants in one place) ─────────────────────────────
+    private static final int XP_PER_LEVEL = 100;
 
     private int currentUserId;
     private int currentChallengeId = -1;
@@ -72,6 +83,27 @@ public class MyChallengesController implements Initializable {
         sortCombo.valueProperty().addListener((obs, o, n) -> filterData());
 
         loadData();
+        refreshXpBadge();
+    }
+
+    /**
+     * Pulls the latest XP from DB and updates the header badge (XP, level, progress).
+     * Safe to call multiple times — used at init and after a successful submission.
+     */
+    private void refreshXpBadge() {
+        if (xpLabel == null || xpLevelLabel == null || xpProgressBar == null) return;
+        if (currentUserId == -1) {
+            if (xpBadge != null) xpBadge.setVisible(false);
+            return;
+        }
+        int xp = userService.getXpById(currentUserId);
+        int level = (xp / XP_PER_LEVEL) + 1;
+        int xpInLevel = xp % XP_PER_LEVEL;
+        double progress = xpInLevel / (double) XP_PER_LEVEL;
+
+        xpLabel.setText(xp + " XP");
+        xpLevelLabel.setText("Niveau " + level + " — " + xpInLevel + "/" + XP_PER_LEVEL);
+        xpProgressBar.setProgress(progress);
     }
 
     // ── Données ───────────────────────────────────────────────────────────────

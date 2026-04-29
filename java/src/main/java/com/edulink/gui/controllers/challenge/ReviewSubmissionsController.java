@@ -136,10 +136,20 @@ public class ReviewSubmissionsController implements Initializable {
 
         Region sp = new Region(); HBox.setHgrow(sp, Priority.ALWAYS);
 
-        Label xpLbl = new Label("+" + c.getXpReward() + " XP");
+        int effectiveXp = c.getEffectiveXpReward();
+        Label xpLbl = new Label("+" + effectiveXp + " XP");
         xpLbl.setStyle("-fx-text-fill: #00d289; -fx-font-weight: bold; -fx-font-size: 14px;");
 
         header.getChildren().addAll(info, sp, xpLbl);
+
+        // Visible boost indicator so the admin knows the XP is multiplied.
+        if (c.isBoostActive()) {
+            Label boostLbl = new Label("+" + c.getXpBoostPct() + "% BOOST");
+            boostLbl.setStyle("-fx-background-color: #f59e0b22; -fx-text-fill: #f59e0b; " +
+                    "-fx-font-size: 10px; -fx-font-weight: bold; -fx-padding: 2 8; " +
+                    "-fx-background-radius: 8;");
+            header.getChildren().add(boostLbl);
+        }
 
         // ── Texte soumis
         VBox submissionBox = new VBox(6);
@@ -177,7 +187,7 @@ public class ReviewSubmissionsController implements Initializable {
                 "-fx-font-weight: bold; -fx-padding: 9 20; -fx-background-radius: 7; -fx-cursor: hand;");
         rejectBtn.setOnAction(e -> handleReject(p));
 
-        Button validateBtn = new Button("✅  Valider  +" + c.getXpReward() + " XP");
+        Button validateBtn = new Button("✅  Valider  +" + effectiveXp + " XP");
         validateBtn.setStyle("-fx-background-color: #00d289; -fx-text-fill: white; " +
                 "-fx-font-weight: bold; -fx-padding: 9 20; -fx-background-radius: 7; -fx-cursor: hand;");
         validateBtn.setOnAction(e -> handleValidate(p, c, userName));
@@ -192,14 +202,19 @@ public class ReviewSubmissionsController implements Initializable {
     // ── Handlers ─────────────────────────────────────────────────────────────
 
     private void handleValidate(ChallengeParticipation p, Challenge c, String userName) {
+        // Apply XP boost if the challenge is currently boosted.
+        int xpToAward = c.getEffectiveXpReward();
+        String boostNote = c.isBoostActive()
+                ? "  (+ " + c.getXpBoostPct() + "% boost actif)" : "";
+
         boolean ok = EduAlert.confirm("Valider la soumission",
                 "Valider le travail de " + userName + " pour \"" + c.getTitle() + "\" ?\n" +
-                "+" + c.getXpReward() + " XP seront crédités sur son compte.");
+                "+" + xpToAward + " XP seront crédités sur son compte" + boostNote + ".");
         if (!ok) return;
 
-        participationService.validate(p.getId(), p.getUserId(), c.getXpReward());
+        participationService.validate(p.getId(), p.getUserId(), xpToAward);
         EduAlert.show(EduAlert.AlertType.SUCCESS, "Soumission validée !",
-                "+" + c.getXpReward() + " XP accordés à " + userName + ".");
+                "+" + xpToAward + " XP accordés à " + userName + boostNote + ".");
 
         // Demander confirmation avant de générer le certificat
         boolean genCert = EduAlert.confirm("Générer le certificat PDF",
@@ -207,7 +222,7 @@ public class ReviewSubmissionsController implements Initializable {
                 "Le fichier sera sauvegardé sur le Bureau.");
         if (genCert) {
             String certPath = certificateService.generateCertificate(
-                    userName, c.getTitle(), c.getXpReward(), c.getDifficulty());
+                    userName, c.getTitle(), xpToAward, c.getDifficulty());
             if (certPath != null) {
                 EduAlert.show(EduAlert.AlertType.SUCCESS, "Certificat généré !",
                         "📄 Fichier sauvegardé :\n" + certPath);

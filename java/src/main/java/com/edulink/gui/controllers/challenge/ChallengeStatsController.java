@@ -1,5 +1,7 @@
 package com.edulink.gui.controllers.challenge;
 
+import com.edulink.gui.services.challenge.ChallengeService;
+import com.edulink.gui.services.challenge.ChallengeService.AutoDecisionResult;
 import com.edulink.gui.util.MyConnection;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -9,6 +11,7 @@ import javafx.scene.layout.*;
 
 import java.net.URL;
 import java.sql.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 
 public class ChallengeStatsController implements Initializable {
@@ -19,8 +22,10 @@ public class ChallengeStatsController implements Initializable {
     @FXML private Label completionRateLbl;
     @FXML private VBox topStudentsContainer;
     @FXML private VBox perChallengeContainer;
+    @FXML private Label autoDecisionResultLbl;
 
     private Connection cnx;
+    private final ChallengeService challengeService = new ChallengeService();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -122,19 +127,54 @@ public class ChallengeStatsController implements Initializable {
         perChallengeContainer.getChildren().add(header);
 
         try {
-            String sql = "SELECT c.title, c.difficulty, " +
+            String sql = "SELECT c.title, c.difficulty, c.featured, c.xp_boost_pct, c.boost_until, " +
                          "COUNT(cp.id) AS total, " +
                          "COUNT(CASE WHEN cp.status='COMPLETED' THEN 1 END) AS completed " +
                          "FROM challenge c " +
                          "LEFT JOIN challenge_participation cp ON c.id = cp.challenge_id " +
-                         "GROUP BY c.id, c.title, c.difficulty ORDER BY total DESC";
+                         "GROUP BY c.id, c.title, c.difficulty, c.featured, c.xp_boost_pct, c.boost_until " +
+                         "ORDER BY c.featured DESC, total DESC";
             ResultSet rs = cnx.createStatement().executeQuery(sql);
             while (rs.next()) {
                 HBox row = new HBox(10);
                 row.setAlignment(Pos.CENTER_LEFT);
                 row.setStyle("-fx-padding: 9 12; -fx-border-color: transparent transparent #ffffff08 transparent;");
 
-                addCell(row, rs.getString("title"), 220, "white", false);
+                // Title cell with optional FEATURED / BOOST badges.
+                HBox titleCell = new HBox(6);
+                titleCell.setAlignment(Pos.CENTER_LEFT);
+                titleCell.setPrefWidth(220);
+                Label titleLbl = new Label(rs.getString("title"));
+                titleLbl.setStyle("-fx-text-fill: white; -fx-font-size: 13px;");
+                titleCell.getChildren().add(titleLbl);
+
+                int featured = 0;
+                try { featured = rs.getInt("featured"); } catch (SQLException ignore) {}
+                if (featured == 1) {
+                    Label feat = new Label("⭐ FEATURED");
+                    feat.setStyle("-fx-background-color: #f59e0b22; -fx-text-fill: #f59e0b; " +
+                            "-fx-padding: 1 6; -fx-background-radius: 6; " +
+                            "-fx-font-size: 9px; -fx-font-weight: bold;");
+                    titleCell.getChildren().add(feat);
+                }
+
+                int boost = 0;
+                java.sql.Timestamp boostUntilTs = null;
+                try {
+                    boost = rs.getInt("xp_boost_pct");
+                    boostUntilTs = rs.getTimestamp("boost_until");
+                } catch (SQLException ignore) {}
+                boolean boostActive = boost > 0 && boostUntilTs != null
+                        && boostUntilTs.toLocalDateTime().isAfter(java.time.LocalDateTime.now());
+                if (boostActive) {
+                    Label bo = new Label("+" + boost + "% BOOST");
+                    bo.setStyle("-fx-background-color: #00d28922; -fx-text-fill: #00d289; " +
+                            "-fx-padding: 1 6; -fx-background-radius: 6; " +
+                            "-fx-font-size: 9px; -fx-font-weight: bold;");
+                    titleCell.getChildren().add(bo);
+                }
+
+                row.getChildren().add(titleCell);
 
                 // Difficulty badge
                 String diff = rs.getString("difficulty");
@@ -195,6 +235,36 @@ public class ChallengeStatsController implements Initializable {
 
     @FXML
     private void handleRefresh() {
+        loadStats();
+    }
+
+    /**
+     * Triggers the stat-driven auto-decision engine and reflects the outcome
+     * in the UI. The actual logic lives in ChallengeService.runAutoDecisions()
+     * — keeping this handler thin lets the same engine be reused (e.g. by a
+     * scheduled job later) without any UI dependency.
+     */
+    @FXML
+    private void handleApplyAutoDecisions() {
+        AutoDecisionResult result = challengeService.runAutoDecisions();
+
+        StringBuilder ui = new StringBuilder();
+        if (result.summary != null) ui.append(result.summary);
+        if (result.boostUntil != null && !result.boostedTitles.isEmpty()) {
+            ui.append("  Boost actif jusqu'au ")
+              .append(result.boostUntil.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")))
+              .append(".");
+        }
+        if (!result.boostedTitles.isEmpty()) {
+            ui.append("\nChallenges boostés : ")
+              .append(String.join(", ", result.boostedTitles));
+        }
+
+        if (autoDecisionResultLbl != null) {
+            autoDecisionResultLbl.setText(ui.toString());
+        }
+        // Refresh the stats panels so the user immediately sees the new ordering
+        // / featured state if the data is reflected later in the UI.
         loadStats();
     }
 }
