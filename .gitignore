@@ -21,3 +21,6 @@ java/*.iml
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Ignored API Keys and sensitive config
+**/GroqConfig.java

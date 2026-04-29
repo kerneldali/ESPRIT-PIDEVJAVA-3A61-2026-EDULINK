@@ -2,7 +2,7 @@ package com.edulink.gui.controllers.courses;
 
 import com.edulink.gui.models.courses.ContentProposal;
 import com.edulink.gui.models.courses.Matiere;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.util.EduAlert;
 import com.edulink.gui.services.courses.MatiereService;
 import javafx.fxml.FXML;
@@ -27,6 +27,7 @@ public class MatiereListController implements Initializable {
     @FXML private FlowPane matiereContainer;
     @FXML private ComboBox<String> filterCombo;
     @FXML private TextField searchField;
+    @FXML private TextField recommendField;
 
     // Suggest overlay
     @FXML private VBox formOverlay;
@@ -50,23 +51,36 @@ public class MatiereListController implements Initializable {
         filterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         // Suggestion form validation
-        suggestNameField.textProperty().addListener((obs, old, nv) -> {
-            suggestNameError.setText("");
-            if (nv == null || nv.trim().isEmpty()) {
-                suggestNameError.setText("Name is required");
-                suggestSaveBtn.setDisable(true);
-            } else if (nv.trim().length() < 2) {
-                suggestNameError.setText("At least 2 characters");
-                suggestSaveBtn.setDisable(true);
-            } else {
-                suggestSaveBtn.setDisable(false);
-            }
-        });
+        suggestNameField.textProperty().addListener((obs, old, nv) -> validateSuggestForm());
+        suggestDescField.textProperty().addListener((obs, old, nv) -> validateSuggestForm());
+    }
+
+    private void validateSuggestForm() {
+        suggestNameError.setText("");
+        boolean valid = true;
+        
+        String name = suggestNameField.getText();
+        if (name == null || name.trim().isEmpty()) {
+            suggestNameError.setText("Name is required");
+            valid = false;
+        } else if (name.trim().length() < 2) {
+            suggestNameError.setText("At least 2 characters");
+            valid = false;
+        }
+        
+        String desc = suggestDescField.getText();
+        if (desc == null || desc.trim().isEmpty()) {
+            if (valid) suggestNameError.setText("Description is required"); // Reusing error label for simplicity
+            valid = false;
+        }
+        
+        suggestSaveBtn.setDisable(!valid);
     }
 
     private void applyFilters() {
         String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         java.util.List<Matiere> filtered = new java.util.ArrayList<>(allMatieres.stream()
+                .filter(m -> "ACCEPTED".equalsIgnoreCase(m.getStatus()))
                 .filter(m -> m.getName() != null && m.getName().toLowerCase().contains(query))
                 .toList());
 
@@ -160,20 +174,62 @@ public class MatiereListController implements Initializable {
 
     @FXML
     private void handleSubmitSuggest() {
-        ContentProposal p = new ContentProposal();
-        p.setType("MATIERE");
-        p.setTitle(suggestNameField.getText().trim());
-        p.setDescription(suggestDescField.getText() != null ? suggestDescField.getText().trim() : "");
-        p.setStatus("PENDING");
+        Matiere p = new Matiere();
+        p.setName(suggestNameField.getText().trim());
+        p.setDescription(suggestDescField.getText().trim());
+        
+        boolean isAdmin = false;
+        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
+            com.edulink.gui.models.User u = com.edulink.gui.util.SessionManager.getCurrentUser();
+            p.setCreatorId(u.getId());
+            if (u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY")) {
+                isAdmin = true;
+            }
+        } else {
+            p.setCreatorId(1);
+        }
+        
+        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
         p.setCreatedAt(LocalDateTime.now());
-        int sid = 1;
-        if (com.edulink.gui.util.SessionManager.getCurrentUser() != null)
-            sid = com.edulink.gui.util.SessionManager.getCurrentUser().getId();
-        p.setSuggestedBy(sid);
 
-        new ContentProposalService().add2(p);
+        new MatiereService().add2(p);
+        
+        // Refresh the list immediately if it's automatically accepted
+        allMatieres = matiereService.getAll();
+        applyFilters();
+
         handleCloseSuggest();
-        EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
-                "Your category suggestion has been sent to admin for review.");
+        
+        if (isAdmin) {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Category Added",
+                    "The category has been automatically accepted and added.");
+        } else {
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "Proposal Submitted",
+                    "Your category suggestion has been sent to admin for review.");
+        }
+    }
+
+    @FXML
+    private void handleRecommend() {
+        String query = recommendField.getText();
+        if (query == null || query.trim().isEmpty()) {
+            applyFilters();
+            return;
+        }
+        
+        // Clear search field so it doesn't conflict visually
+        searchField.setText("");
+
+        List<com.edulink.gui.util.TfIdfRecommender.MatchResult> results = 
+            com.edulink.gui.util.TfIdfRecommender.recommend(query.trim(), allMatieres);
+
+        List<Matiere> recommended = new java.util.ArrayList<>();
+        for (int i = 0; i < Math.min(5, results.size()); i++) {
+            if (results.get(i).score > 0 || recommended.isEmpty()) {
+                recommended.add(results.get(i).matiere);
+            }
+        }
+        
+        displayMatieres(recommended);
     }
 }

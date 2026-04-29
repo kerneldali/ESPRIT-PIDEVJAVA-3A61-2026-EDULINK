@@ -29,7 +29,7 @@ public class DashboardController implements Initializable {
     @FXML
     private Button studentCatalogBtn, studentLearningBtn, studentSuggestionsBtn;
     @FXML
-    private Button adminCatalogBtn, adminSuggestionsBtn;
+    private Button adminCatalogBtn, adminSuggestionsBtn, adminCourseStatsBtn, adminActivityStatsBtn;
     @FXML
     private Button adminChallengesBtn;
     @FXML
@@ -71,6 +71,14 @@ public class DashboardController implements Initializable {
             if (adminSuggestionsBtn != null) {
                 adminSuggestionsBtn.setVisible(true);
                 adminSuggestionsBtn.setManaged(true);
+            }
+            if (adminCourseStatsBtn != null) {
+                adminCourseStatsBtn.setVisible(true);
+                adminCourseStatsBtn.setManaged(true);
+            }
+            if (adminActivityStatsBtn != null) {
+                adminActivityStatsBtn.setVisible(true);
+                adminActivityStatsBtn.setManaged(true);
             }
             if (adminChallengesBtn != null) {
                 adminChallengesBtn.setVisible(true);
@@ -121,11 +129,15 @@ public class DashboardController implements Initializable {
     public void showManageCatalog() {
         loadView("/view/courses/ManageMatiere.fxml");
     }
+    @FXML public void showManageSuggestions() { loadView("/view/courses/ManageSuggestions.fxml"); }
+    @FXML public void showCourseStats() { loadView("/view/courses/CourseStats.fxml"); }
+    @FXML public void showActivityStats() { loadView("/view/courses/AnalyzeActivity.fxml"); }
 
-    @FXML
-    public void showManageSuggestions() {
-        loadView("/view/courses/ManageSuggestions.fxml");
-    }
+    @FXML public void showChallengeList() { loadView("/view/challenge/ChallengeList.fxml"); }
+    @FXML public void showMyChallenges() { loadView("/view/challenge/MyChallenges.fxml"); }
+    @FXML public void showManageChallenges() { loadView("/view/challenge/ManageChallenges.fxml"); }
+    @FXML public void showReviewSubmissions() { loadView("/view/challenge/ReviewSubmissions.fxml"); }
+    @FXML public void showChallengeStats() { loadView("/view/challenge/ChallengeStats.fxml"); }
 
     @FXML
     public void showAdminJournalStats() {
@@ -238,6 +250,11 @@ public class DashboardController implements Initializable {
     @FXML
     public void showUserProfile() {
         loadView("/view/UserProfile.fxml");
+    }
+
+    @FXML
+    public void showWeb3Wallet() {
+        loadView("/view/Web3Wallet.fxml");
     }
 
     @FXML

@@ -5,6 +5,9 @@ import com.edulink.gui.models.journal.NoteCategory;
 import com.edulink.gui.models.journal.Notebook;
 import com.edulink.gui.services.journal.NoteCategoryService;
 import com.edulink.gui.services.journal.NoteService;
+import com.edulink.gui.services.GeminiService;
+import com.edulink.gui.services.STTService;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,6 +29,8 @@ public class NoteController {
     private Label notebookTitleLabel;
     private NoteService noteService = new NoteService();
     private NoteCategoryService categoryService = new NoteCategoryService();
+    private GeminiService geminiService = new GeminiService();
+    private STTService sttService = new STTService();
     private Notebook currentNotebook;
 
     public void setNotebook(Notebook n) {
@@ -90,6 +95,18 @@ public class NoteController {
         pdfBtn.setOnAction(e -> handleExportPdf(n));
 
         actions.getChildren().addAll(editBtn, pdfBtn, deleteBtn);
+        
+        if (n.getSentiment() != null && !n.getSentiment().isEmpty()) {
+            Label sentimentLabel = new Label();
+            switch (n.getSentiment()) {
+                case "POSITIVE": sentimentLabel.setText("😊"); break;
+                case "NEGATIVE": sentimentLabel.setText("😞"); break;
+                default: sentimentLabel.setText("😐"); break;
+            }
+            sentimentLabel.getStyleClass().add("badge");
+            card.getChildren().add(1, sentimentLabel);
+        }
+
         card.getChildren().addAll(header, contentPreview, actions);
         com.edulink.gui.util.ThemeManager.applyTheme(card);
         return card;
@@ -131,6 +148,33 @@ public class NoteController {
         showNoteEditor(null);
     }
 
+    @FXML
+    public void handleWeeklySummary() {
+        if (currentNotebook == null) return;
+        List<Note> notes = noteService.getByNotebook(currentNotebook.getId());
+        
+        Alert loading = new Alert(Alert.AlertType.INFORMATION);
+        loading.setTitle("AI Summary");
+        loading.setHeaderText("Generating Weekly Summary...");
+        loading.setContentText("Gemini is analyzing your notes. Please wait...");
+        loading.show();
+
+        new Thread(() -> {
+            String summary = geminiService.generateWeeklySummary(notes);
+            Platform.runLater(() -> {
+                loading.close();
+                Alert result = new Alert(Alert.AlertType.INFORMATION);
+                result.setTitle("Weekly AI Summary");
+                result.setHeaderText("Summary for " + currentNotebook.getTitle());
+                TextArea textArea = new TextArea(summary);
+                textArea.setEditable(false);
+                textArea.setWrapText(true);
+                result.getDialogPane().setContent(textArea);
+                result.show();
+            });
+        }).start();
+    }
+
     private void handleEditNote(Note n) {
         showNoteEditor(n);
     }
@@ -159,9 +203,43 @@ public class NoteController {
 
         TextArea contentField = new TextArea(existingNote == null ? "" : existingNote.getContent());
         contentField.setPromptText("Content");
+        contentField.setPrefHeight(200);
 
-        grid.getChildren().addAll(new Label("Title:"), titleField, new Label("Category:"), catCombo,
-                new Label("Content:"), contentField);
+        Button recordBtn = new Button("🎙 Record Voice");
+        recordBtn.getStyleClass().add("primary-button");
+        Label recordingStatus = new Label();
+
+        recordBtn.setOnMousePressed(e -> {
+            try {
+                sttService.startRecording();
+                recordingStatus.setText("🔴 Recording...");
+                recordBtn.setStyle("-fx-background-color: #ef4444;");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        recordBtn.setOnMouseReleased(e -> {
+            recordingStatus.setText("⌛ Transcribing...");
+            recordBtn.setStyle("");
+            new Thread(() -> {
+                try {
+                    String text = sttService.stopRecordingAndTranscribe();
+                    Platform.runLater(() -> {
+                        contentField.appendText(" " + text);
+                        recordingStatus.setText("✅ Done");
+                    });
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    Platform.runLater(() -> recordingStatus.setText("❌ Error"));
+                }
+            }).start();
+        });
+
+        grid.getChildren().addAll(new Label("Title:"), titleField, 
+                new Label("Category:"), catCombo,
+                new Label("Content:"), contentField,
+                recordBtn, recordingStatus);
         dialog.getDialogPane().setContent(grid);
 
         // Validation
@@ -182,6 +260,11 @@ public class NoteController {
                 res.setNotebookId(currentNotebook.getId());
                 res.setCategoryId(catCombo.getValue() != null ? catCombo.getValue().getId() : 0);
                 res.setTags("");
+                
+                // AI Enrichment
+                String sentiment = geminiService.analyzeSentiment(res.getContent());
+                res.setSentiment(sentiment);
+                
                 return res;
             }
             return null;

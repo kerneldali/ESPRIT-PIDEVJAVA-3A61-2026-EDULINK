@@ -30,7 +30,7 @@ public class ManageResourcesController implements Initializable {
     @FXML private TextField titleField;
     @FXML private ComboBox<String> typeCombo;
     @FXML private TextField urlField;
-    @FXML private ComboBox<String> statusCombo;
+
     @FXML private Button browseBtn;
     @FXML private Button saveBtn;
     @FXML private Label titleError;
@@ -42,23 +42,16 @@ public class ManageResourcesController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        typeCombo.setItems(FXCollections.observableArrayList("VIDEO", "PDF", "LINK", "TEXT"));
-        statusCombo.setItems(FXCollections.observableArrayList("ACTIVE", "INACTIVE"));
+        typeCombo.setItems(FXCollections.observableArrayList("PDF"));
 
-        typeCombo.valueProperty().addListener((obs, o, n) -> {
-            browseBtn.setDisable(!"PDF".equals(n) && !"VIDEO".equals(n));
-        });
+        typeCombo.setValue("PDF");
+        typeCombo.setDisable(true); // Since it's only PDF now
+
+        browseBtn.setDisable(false);
 
         browseBtn.setOnAction(e -> {
             FileChooser fc = new FileChooser();
-            String type = typeCombo.getValue();
-            if ("PDF".equals(type) || "TEXT".equals(type)) {
-                fc.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter("Documents (PDF, Word)", "*.pdf", "*.doc", "*.docx")
-                );
-            } else if ("VIDEO".equals(type)) {
-                fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("Video Files", "*.mp4", "*.avi", "*.mkv"));
-            }
+            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF Documents", "*.pdf"));
             File file = fc.showOpenDialog(rootPane.getScene().getWindow());
             if (file != null) urlField.setText(file.getAbsolutePath());
         });
@@ -119,11 +112,8 @@ public class ManageResourcesController implements Initializable {
         row.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
         row.setStyle("-fx-background-color: #1a1a2e; -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8; -fx-border-color: #ffffff11;");
 
-        Label icon = new Label("▶");
+        Label icon = new Label("📄");
         icon.setStyle("-fx-text-fill: #7c3aed; -fx-font-size: 16px;");
-        if ("PDF".equals(r.getType())) icon.setText("📄");
-        else if ("LINK".equals(r.getType())) icon.setText("🔗");
-        else if ("TEXT".equals(r.getType())) icon.setText("📝");
 
         VBox info = new VBox(2);
         Label title = new Label(r.getTitle());
@@ -165,15 +155,13 @@ public class ManageResourcesController implements Initializable {
         if (r != null) {
             formTitle.setText("Edit Resource");
             titleField.setText(r.getTitle());
-            typeCombo.setValue(r.getType());
+            typeCombo.setValue("PDF"); // Enforce PDF
             urlField.setText(r.getUrl());
-            statusCombo.setValue(r.getStatus());
         } else {
             formTitle.setText("New Resource");
             titleField.clear();
-            typeCombo.setValue("VIDEO");
+            typeCombo.setValue("PDF");
             urlField.clear();
-            statusCombo.setValue("ACTIVE");
         }
         formOverlay.setVisible(true);
         formOverlay.toFront();
@@ -189,9 +177,11 @@ public class ManageResourcesController implements Initializable {
     private void handleSaveResource() {
         Resource result = currentEditableResource != null ? currentEditableResource : new Resource();
         result.setTitle(titleField.getText().trim());
-        result.setType(typeCombo.getValue());
-        result.setUrl(urlField.getText().trim());
-        result.setStatus(statusCombo.getValue());
+        result.setType("PDF");
+        
+        String savedPath = saveFileToProject(urlField.getText().trim());
+        result.setUrl(savedPath);
+        result.setStatus("ACCEPTED");
         if (currentEditableResource == null && filteredCourse != null) {
             result.setCoursId(filteredCourse.getId());
             result.setAuthorId(1);
@@ -234,6 +224,45 @@ public class ManageResourcesController implements Initializable {
             EduAlert.show(EduAlert.AlertType.ERROR, "Save Failed",
                     "Could not save the resource.\n" + errorMsg + "\nCheck console for details.");
         }
+    }
+
+    private String saveFileToProject(String sourcePath) {
+        if (sourcePath == null || sourcePath.trim().isEmpty()) return sourcePath;
+        File sourceFile = new File(sourcePath);
+        if (!sourceFile.exists() || !sourceFile.isAbsolute()) return sourcePath; // already relative or invalid
+        
+        File destDir = new File(System.getProperty("user.dir"), "src/main/resources/pdfs");
+        if (!destDir.exists() && new File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
+            destDir = new File(System.getProperty("user.dir"), "java/src/main/resources/pdfs");
+        } else if (!destDir.exists()) {
+            destDir = new File("src/main/resources/pdfs");
+        }
+        
+        if (!destDir.exists()) {
+            destDir.mkdirs();
+        }
+        
+        File destFile = new File(destDir, sourceFile.getName());
+        int counter = 1;
+        while (destFile.exists() && !destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
+            String name = sourceFile.getName();
+            int dotIndex = name.lastIndexOf(".");
+            String base = dotIndex > 0 ? name.substring(0, dotIndex) : name;
+            String ext = dotIndex > 0 ? name.substring(dotIndex) : "";
+            destFile = new File(destDir, base + "_" + counter + ext);
+            counter++;
+        }
+        
+        if (!destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
+            try {
+                java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                return "src/main/resources/pdfs/" + destFile.getName();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return sourcePath;
+            }
+        }
+        return "src/main/resources/pdfs/" + destFile.getName();
     }
 
     /**

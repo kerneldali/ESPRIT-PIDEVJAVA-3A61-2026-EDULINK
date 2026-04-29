@@ -5,6 +5,7 @@ import com.edulink.gui.models.User;
 import com.edulink.gui.util.MyConnection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class UserService implements IService<User> {
         cnx = MyConnection.getInstance().getCnx();
         ensureXpColumn();
         ensureTransactionLogTable();
+        ensureLastRemindedAtColumn();
     }
 
     private void ensureXpColumn() {
@@ -23,6 +25,15 @@ public class UserService implements IService<User> {
             st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS xp INT DEFAULT 0");
         } catch (Exception e) {
             // colonne déjà existante ou syntaxe non supportée
+        }
+    }
+
+    private void ensureLastRemindedAtColumn() {
+        if (cnx == null) return;
+        try (Statement st = cnx.createStatement()) {
+            st.execute("ALTER TABLE user ADD COLUMN IF NOT EXISTS last_reminded_at DATETIME");
+        } catch (Exception e) {
+            // ignore
         }
     }
 
@@ -107,6 +118,45 @@ public class UserService implements IService<User> {
         return null;
     }
 
+    public void setOtp(String email, String otp) {
+        String qry = "UPDATE user SET reset_otp = ? WHERE email = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, otp);
+            pstm.setString(2, email);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        String qry = "SELECT id FROM user WHERE email = ? AND reset_otp = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, email);
+            pstm.setString(2, otp);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                // clear OTP
+                setOtp(email, null);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void updatePassword(String email, String newPassword) {
+        String qry = "UPDATE user SET password = ? WHERE email = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, newPassword);
+            pstm.setString(2, email);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void updateXp(int userId, int amountToAdd) {
         if (cnx == null) { System.err.println("❌ updateXp: no DB connection"); return; }
         String qry = "UPDATE user SET xp = xp + ? WHERE id=?";
@@ -143,6 +193,17 @@ public class UserService implements IService<User> {
             pstm.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Failed to insert log: " + e.getMessage());
+        }
+    }
+
+    public void updateLastRemindedAt(int userId) {
+        if (cnx == null) return;
+        String qry = "UPDATE user SET last_reminded_at = NOW() WHERE id=?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setInt(1, userId);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -250,6 +311,21 @@ public class UserService implements IService<User> {
             u.setXp(rs.getInt("xp"));
         } catch (SQLException e) {
             u.setXp(0);
+        }
+
+        try {
+            u.setEthWalletAddress(rs.getString("eth_wallet_address"));
+            u.setEthPrivateKey(rs.getString("eth_private_key"));
+            u.setFaceHash(rs.getString("face_hash"));
+        } catch (SQLException ignored) {}
+        
+        try {
+            Timestamp ts = rs.getTimestamp("last_reminded_at");
+            if (ts != null) {
+                u.setLastRemindedAt(ts.toLocalDateTime());
+            }
+        } catch (SQLException e) {
+            // ignore
         }
         return u;
     }

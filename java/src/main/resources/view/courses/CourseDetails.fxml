@@ -17,6 +17,7 @@
                 <Label fx:id="courseTitleLabel" text="Course Title" style="-fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 24;"/>
                 <Label fx:id="courseDescLabel" wrapText="true" style="-fx-text-fill: #a0a0ab;"/>
             </VBox>
+            <Button text="🤖 Ask AI" onAction="#handleAskAi" style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"/>
             <Button text="💡 Suggest Resource" onAction="#handleSuggestResource" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5; -fx-cursor: hand;"/>
         </HBox>
         
@@ -62,20 +63,17 @@
                 <Label fx:id="suggestTitleError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
             </VBox>
             
-            <HBox spacing="15">
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                    <ComboBox fx:id="suggestTypeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
-                </VBox>
-                <VBox spacing="5" HBox.hgrow="ALWAYS">
-                    <Label text="URL / File Path" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                    <TextField fx:id="suggestUrlField" promptText="https://..." style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
-                </VBox>
-            </HBox>
+            <VBox spacing="5">
+                <Label text="Type" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <ComboBox fx:id="suggestTypeCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
+            </VBox>
             
             <VBox spacing="5">
-                <Label text="Description" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                <TextArea fx:id="suggestDescField" promptText="Additional details..." prefRowCount="2" style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #555;"/>
+                <Label text="URL / File Path *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <HBox spacing="10">
+                    <TextField fx:id="suggestUrlField" HBox.hgrow="ALWAYS" promptText="Browse for PDF file" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                    <Button fx:id="browseSuggestBtn" text="Browse" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5;"/>
+                </HBox>
             </VBox>
             
             <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">

@@ -21,7 +21,6 @@
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #1a1a2e; -fx-padding: 12; -fx-background-radius: 8;">
             <TextField fx:id="searchField" promptText="🔍 Search categories..." prefWidth="300" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #666;"/>
             <ComboBox fx:id="filterCombo" promptText="Alphabetical (A-Z)" style="-fx-background-color: #2a2a3e;"/>
-            <Button text="Apply" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5;"/>
         </HBox>
         
         <!-- Cards -->
@@ -41,17 +40,12 @@
                 <Label fx:id="nameError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
             </VBox>
             
-            <VBox spacing="5">
-                <Label text="Status" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                <ComboBox fx:id="statusCombo" maxWidth="Infinity" style="-fx-background-color: #2a2a3e;"/>
-            </VBox>
+
             
             <VBox spacing="5">
-                <Label text="Cover Image" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
-                <HBox spacing="10">
-                    <TextField fx:id="imagePathField" editable="false" HBox.hgrow="ALWAYS" promptText="No image selected" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-padding: 10; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
-                    <Button fx:id="browseBtn" text="Browse" onAction="#handleBrowseImage" style="-fx-background-color: #3b82f6; -fx-text-fill: white; -fx-background-radius: 5;"/>
-                </HBox>
+                <Label text="Category Description *" style="-fx-text-fill: #a0a0ab; -fx-font-size: 12px;"/>
+                <TextArea fx:id="descField" promptText="Enter category description" prefRowCount="3" style="-fx-control-inner-background: #2a2a3e; -fx-text-fill: white; -fx-padding: 5; -fx-background-radius: 6; -fx-prompt-text-fill: #555;"/>
+                <Label fx:id="descError" text="" style="-fx-text-fill: #ef4444; -fx-font-size: 11px;"/>
             </VBox>
             
             <HBox spacing="15" alignment="CENTER_RIGHT" style="-fx-padding: 10 0 0 0;">

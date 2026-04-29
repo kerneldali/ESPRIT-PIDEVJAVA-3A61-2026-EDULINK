@@ -19,6 +19,12 @@
             <ComboBox fx:id="filterCombo" promptText="Sort By" style="-fx-background-color: #2a2a3e; -fx-text-fill: white;" />
         </HBox>
         
+        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-background-color: #7c3aed11; -fx-padding: 15; -fx-background-radius: 8; -fx-border-color: #7c3aed44; -fx-border-radius: 8;">
+            <Label text="✨ Discover:" style="-fx-text-fill: #b18cff; -fx-font-weight: bold; -fx-font-size: 14px;"/>
+            <TextField fx:id="recommendField" promptText="What do you want to learn? (AI, Java, Design...)" HBox.hgrow="ALWAYS" style="-fx-background-color: #2a2a3e; -fx-text-fill: white; -fx-prompt-text-fill: #888;"/>
+            <Button text="Recommend" onAction="#handleRecommend" style="-fx-background-color: #7c3aed; -fx-text-fill: white; -fx-font-weight: bold; -fx-cursor: hand; -fx-background-radius: 5;"/>
+        </HBox>
+        
         <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS" style="-fx-background-color: transparent;">
             <FlowPane fx:id="matiereContainer" hgap="20" vgap="20" />
         </ScrollPane>

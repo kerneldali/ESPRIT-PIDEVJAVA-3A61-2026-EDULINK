@@ -1,7 +1,7 @@
 package com.edulink.gui.controllers.courses;
 
 import com.edulink.gui.models.courses.ContentProposal;
-import com.edulink.gui.services.courses.ContentProposalService;
+
 import com.edulink.gui.util.EduAlert;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -30,7 +30,7 @@ public class StudentSuggestionsController implements Initializable {
     @FXML private TextField xpField;
     @FXML private Button saveBtn;
 
-    private ContentProposalService proposalService = new ContentProposalService();
+
     private List<ContentProposal> allProposals;
     private ContentProposal currentEditingProposal;
 
@@ -52,7 +52,61 @@ public class StudentSuggestionsController implements Initializable {
         if(com.edulink.gui.util.SessionManager.getCurrentUser() != null) {
             studentId = com.edulink.gui.util.SessionManager.getCurrentUser().getId();
         }
-        allProposals = proposalService.getByStudent(studentId);
+        allProposals = new java.util.ArrayList<>();
+        int finalStudentId = studentId;
+
+        java.util.List<com.edulink.gui.models.courses.Matiere> matieres = new com.edulink.gui.services.courses.MatiereService().getAll();
+        java.util.List<com.edulink.gui.models.courses.Course> courses = new com.edulink.gui.services.courses.CourseService().getAll();
+        java.util.List<com.edulink.gui.models.courses.Resource> resources = new com.edulink.gui.services.courses.ResourceService().getAll();
+
+        for (com.edulink.gui.models.courses.Matiere m : matieres) {
+            if (m.getCreatorId() == finalStudentId) {
+                ContentProposal p = new ContentProposal();
+                p.setId(m.getId());
+                p.setType("MATIERE");
+                p.setTitle(m.getName() != null ? m.getName() : "Untitled");
+                p.setStatus(m.getStatus());
+                p.setCreatedAt(m.getCreatedAt());
+                p.setSuggestedBy(m.getCreatorId());
+                allProposals.add(p);
+            }
+        }
+        for (com.edulink.gui.models.courses.Course c : courses) {
+            // Prevent orphaned courses
+            if (matieres.stream().noneMatch(m -> m.getId() == c.getMatiereId())) continue;
+            
+            if (c.getAuthorId() == finalStudentId) {
+                ContentProposal p = new ContentProposal();
+                p.setId(c.getId());
+                p.setType("COURSE");
+                p.setTitle(c.getTitle());
+                p.setDescription(c.getDescription());
+                p.setStatus(c.getStatus());
+                p.setCreatedAt(c.getCreatedAt());
+                p.setSuggestedBy(c.getAuthorId());
+                allProposals.add(p);
+            }
+        }
+        for (com.edulink.gui.models.courses.Resource r : resources) {
+            // Prevent orphaned resources
+            if (courses.stream().noneMatch(c -> c.getId() == r.getCoursId())) continue;
+
+            if (r.getAuthorId() == finalStudentId) {
+                ContentProposal p = new ContentProposal();
+                p.setId(r.getId());
+                p.setType("RESOURCE");
+                p.setTitle(r.getTitle());
+                p.setDescription(r.getUrl());
+                p.setStatus(r.getStatus());
+                p.setSuggestedBy(r.getAuthorId());
+                p.setCreatedAt(java.time.LocalDateTime.now());
+                allProposals.add(p);
+            }
+        }
+        
+        allProposals.sort((a, b) -> (b.getCreatedAt() == null ? java.time.LocalDateTime.MIN : b.getCreatedAt())
+                .compareTo(a.getCreatedAt() == null ? java.time.LocalDateTime.MIN : a.getCreatedAt()));
+
         renderProposals();
     }
 
@@ -117,7 +171,7 @@ public class StudentSuggestionsController implements Initializable {
     }
 
     private Label createStatusBadge(String statusStr) {
-        Label status = new Label(statusStr);
+        Label status = new Label(statusStr != null ? statusStr : "UNKNOWN");
         String color = "#f59e0b";
         if ("ACCEPTED".equals(statusStr)) color = "#00d289";
         else if ("REJECTED".equals(statusStr)) color = "#ef4444";
@@ -135,7 +189,13 @@ public class StudentSuggestionsController implements Initializable {
             delBtn.setStyle("-fx-background-color: #ef444433; -fx-text-fill: #ef4444; -fx-cursor: hand;");
             delBtn.setOnAction(e -> {
                 if (EduAlert.confirm("Delete", "Remove this proposal?")) {
-                    proposalService.delete(p.getId());
+                    if ("MATIERE".equals(p.getType())) {
+                        new com.edulink.gui.services.courses.MatiereService().delete(p.getId());
+                    } else if ("COURSE".equals(p.getType())) {
+                        new com.edulink.gui.services.courses.CourseService().delete(p.getId());
+                    } else if ("RESOURCE".equals(p.getType())) {
+                        new com.edulink.gui.services.courses.ResourceService().delete(p.getId());
+                    }
                     loadData();
                 }
             });
@@ -161,11 +221,11 @@ public class StudentSuggestionsController implements Initializable {
         if (isCourse) {
             // Try to extract level/xp from description if it was saved that way
             String desc = p.getDescription();
-            if (desc.contains("[Level: ")) {
+            if (desc != null && desc.contains("[Level: ")) {
                 String lvl = desc.substring(desc.indexOf("[Level: ") + 8, desc.indexOf(",", desc.indexOf("[Level: ")));
                 levelCombo.setValue(lvl);
             }
-            if (desc.contains(", XP: ")) {
+            if (desc != null && desc.contains(", XP: ")) {
                 String xp = desc.substring(desc.indexOf(", XP: ") + 6, desc.indexOf("]", desc.indexOf(", XP: ")));
                 xpField.setText(xp);
             }
@@ -187,19 +247,37 @@ public class StudentSuggestionsController implements Initializable {
         String newTitle = titleField.getText().trim();
         if (newTitle.isEmpty()) return;
 
-        String newDesc = descField.getText().trim();
+        String newDesc = descField.getText() != null ? descField.getText().trim() : "";
         if ("COURSE".equals(currentEditingProposal.getType())) {
             // Re-embed metadata into description to keep it consistent
             newDesc += "\n[Level: " + levelCombo.getValue() + ", XP: " + xpField.getText() + "]";
         }
 
         try {
-            java.sql.Connection cnx = com.edulink.gui.util.MyConnection.getInstance().getCnx();
-            java.sql.PreparedStatement pst = cnx.prepareStatement("UPDATE content_proposal SET title=?, description=? WHERE id=?");
-            pst.setString(1, newTitle);
-            pst.setString(2, newDesc);
-            pst.setInt(3, currentEditingProposal.getId());
-            pst.executeUpdate();
+            if ("MATIERE".equals(currentEditingProposal.getType())) {
+                com.edulink.gui.services.courses.MatiereService ms = new com.edulink.gui.services.courses.MatiereService();
+                com.edulink.gui.models.courses.Matiere m = ms.getAll().stream().filter(x -> x.getId() == currentEditingProposal.getId()).findFirst().orElse(null);
+                if (m != null) {
+                    m.setName(newTitle);
+                    ms.edit(m);
+                }
+            } else if ("COURSE".equals(currentEditingProposal.getType())) {
+                com.edulink.gui.services.courses.CourseService cs = new com.edulink.gui.services.courses.CourseService();
+                com.edulink.gui.models.courses.Course c = cs.getAll().stream().filter(x -> x.getId() == currentEditingProposal.getId()).findFirst().orElse(null);
+                if (c != null) {
+                    c.setTitle(newTitle);
+                    c.setDescription(newDesc);
+                    cs.edit(c);
+                }
+            } else if ("RESOURCE".equals(currentEditingProposal.getType())) {
+                com.edulink.gui.services.courses.ResourceService rs = new com.edulink.gui.services.courses.ResourceService();
+                com.edulink.gui.models.courses.Resource r = rs.getAll().stream().filter(x -> x.getId() == currentEditingProposal.getId()).findFirst().orElse(null);
+                if (r != null) {
+                    r.setTitle(newTitle);
+                    r.setUrl(newDesc);
+                    rs.edit(r);
+                }
+            }
             
             EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Proposal updated!");
             handleCloseForm();

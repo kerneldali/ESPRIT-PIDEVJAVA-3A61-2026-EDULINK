@@ -3,11 +3,11 @@ package com.edulink.gui.controllers;
 import com.edulink.gui.models.User;
 import com.edulink.gui.services.UserService;
 import com.edulink.gui.util.SessionManager;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 
 import java.net.URL;
@@ -29,8 +29,13 @@ public class UserProfileController implements Initializable {
     @FXML private TextField sendAmountField;
     
     @FXML private ListView<String> logsListView;
+    
+    @FXML private VBox faceIdSetupBox;
+    @FXML private ImageView setupCameraFeed;
+    @FXML private Label setupCameraStatusLabel;
 
     private UserService userService;
+    private com.edulink.gui.services.user.FaceIdService faceIdService = new com.edulink.gui.services.user.FaceIdService();
     private User currentUser;
 
     @Override
@@ -108,6 +113,47 @@ public class UserProfileController implements Initializable {
             statusLabel.setText("Error updating profile.");
             e.printStackTrace();
         }
+    }
+    
+    @FXML
+    public void handleSetupFaceId() {
+        if (currentUser == null) return;
+        
+        statusLabel.setStyle("-fx-text-fill: #3b82f6;");
+        statusLabel.setText("Starting camera...");
+        
+        faceIdSetupBox.setVisible(true);
+        faceIdSetupBox.setManaged(true);
+        
+        faceIdService.startCamera(setupCameraFeed, setupCameraStatusLabel, (success) -> {
+            if (success) {
+                Platform.runLater(() -> {
+                    faceIdSetupBox.setVisible(false);
+                    faceIdSetupBox.setManaged(false);
+                    statusLabel.setStyle("-fx-text-fill: #10b981;");
+                    statusLabel.setText("Face ID successfully configured!");
+                    
+                    // Save the mock hash to the user (since we aren't using an AI embedding model)
+                    String mockHash = "SHA256:" + java.util.UUID.randomUUID().toString().substring(0, 8);
+                    currentUser.setFaceHash(mockHash);
+                    try {
+                        userService.edit(currentUser);
+                        addLog("Configured Biometric Face ID successfully.");
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        statusLabel.setText("Failed to save Face ID to database.");
+                    }
+                });
+            }
+        });
+    }
+
+    @FXML
+    public void cancelFaceIdSetup() {
+        faceIdService.stopCamera();
+        faceIdSetupBox.setVisible(false);
+        faceIdSetupBox.setManaged(false);
+        statusLabel.setText("Face ID setup cancelled.");
     }
 
     @FXML

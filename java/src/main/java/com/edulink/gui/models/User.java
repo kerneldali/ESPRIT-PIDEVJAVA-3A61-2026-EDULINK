@@ -7,11 +7,20 @@ public class User {
     private String password;
     private String roles; // Store as raw JSON string for simplicity, or we could parse
     private double walletBalance;
-    private String faceDescriptor;
+    private String faceHash;
     private String resetOtp;
     private String resetOtpExpiresAt; // simplified datetime
+    private String ethWalletAddress;
+    private String ethPrivateKey;
     private int xp;
     private boolean isVerified;
+    
+    // Engagement fields
+    private int engagementScore;
+    private String lastActivity;
+    private int coursesTaken;
+    private String engagementStatus;
+    private java.time.LocalDateTime lastRemindedAt;
 
     public User() {}
 
@@ -42,14 +51,20 @@ public class User {
     public double getWalletBalance() { return walletBalance; }
     public void setWalletBalance(double walletBalance) { this.walletBalance = walletBalance; }
 
-    public String getFaceDescriptor() { return faceDescriptor; }
-    public void setFaceDescriptor(String faceDescriptor) { this.faceDescriptor = faceDescriptor; }
+    public String getFaceHash() { return faceHash; }
+    public void setFaceHash(String faceHash) { this.faceHash = faceHash; }
 
     public String getResetOtp() { return resetOtp; }
     public void setResetOtp(String resetOtp) { this.resetOtp = resetOtp; }
 
     public String getResetOtpExpiresAt() { return resetOtpExpiresAt; }
     public void setResetOtpExpiresAt(String resetOtpExpiresAt) { this.resetOtpExpiresAt = resetOtpExpiresAt; }
+
+    public String getEthWalletAddress() { return ethWalletAddress; }
+    public void setEthWalletAddress(String ethWalletAddress) { this.ethWalletAddress = ethWalletAddress; }
+
+    public String getEthPrivateKey() { return ethPrivateKey; }
+    public void setEthPrivateKey(String ethPrivateKey) { this.ethPrivateKey = ethPrivateKey; }
 
     public int getXp() { return xp; }
     public void setXp(int xp) { this.xp = xp; }
@@ -62,4 +77,20 @@ public class User {
         if (roles == null) return false;
         return roles.contains(roleName);
     }
+    
+    // Engagement Getters & Setters
+    public int getEngagementScore() { return engagementScore; }
+    public void setEngagementScore(int engagementScore) { this.engagementScore = engagementScore; }
+    
+    public String getLastActivity() { return lastActivity; }
+    public void setLastActivity(String lastActivity) { this.lastActivity = lastActivity; }
+    
+    public int getCoursesTaken() { return coursesTaken; }
+    public void setCoursesTaken(int coursesTaken) { this.coursesTaken = coursesTaken; }
+    
+    public String getEngagementStatus() { return engagementStatus; }
+    public void setEngagementStatus(String engagementStatus) { this.engagementStatus = engagementStatus; }
+    
+    public java.time.LocalDateTime getLastRemindedAt() { return lastRemindedAt; }
+    public void setLastRemindedAt(java.time.LocalDateTime lastRemindedAt) { this.lastRemindedAt = lastRemindedAt; }
 }

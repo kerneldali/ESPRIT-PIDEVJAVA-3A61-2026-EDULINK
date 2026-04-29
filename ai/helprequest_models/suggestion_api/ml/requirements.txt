@@ -1,0 +1,10 @@
+flask
+flask-cors
+joblib
+numpy
+scikit-learn
+langdetect
+textblob
+sentence-transformers
+edge-tts
+
