@@ -60,8 +60,7 @@ public class MLService {
     public static String getPredictionMessage(int score) {
         return switch (score) {
             case 1 -> "🚀 Cet événement a de grandes chances de cartonner !";
-            case 0 -> "⚠️ Cet événement risque de ne pas attirer beaucoup de participants.";
-            default -> "🤖 Prédiction indisponible — vérifie que le serveur ML est lancé.";
+            default -> "⚠️ Cet événement risque de ne pas attirer beaucoup de participants.";
         };
     }
 }
