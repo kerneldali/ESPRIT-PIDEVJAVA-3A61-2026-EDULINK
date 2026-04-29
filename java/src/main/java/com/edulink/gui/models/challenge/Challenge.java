@@ -12,6 +12,14 @@ public class Challenge {
     private LocalDateTime deadline;
     private LocalDateTime createdAt;
 
+    // ── Auto-decision fields (populated by ChallengeService.runAutoDecisions) ──
+    private boolean featured;        // true = currently the most popular challenge
+    private int xpBoostPct;          // 0 = no boost; 50 = +50% reward while active
+    private LocalDateTime boostUntil;// when the active boost expires
+
+    // ── AI-generated cover image (Pollinations.ai) ──
+    private String imageUrl;         // remote URL of the cover image, may be null
+
     public Challenge() {}
 
     public Challenge(int id, String title, String description, String difficulty,
@@ -61,6 +69,32 @@ public class Challenge {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public boolean isFeatured() { return featured; }
+    public void setFeatured(boolean featured) { this.featured = featured; }
+
+    public int getXpBoostPct() { return xpBoostPct; }
+    public void setXpBoostPct(int xpBoostPct) { this.xpBoostPct = xpBoostPct; }
+
+    public LocalDateTime getBoostUntil() { return boostUntil; }
+    public void setBoostUntil(LocalDateTime boostUntil) { this.boostUntil = boostUntil; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    /** True if the boost is configured and still active right now. */
+    public boolean isBoostActive() {
+        return xpBoostPct > 0 && boostUntil != null && boostUntil.isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Returns the XP reward to award now (base reward + active boost multiplier).
+     * If no boost is active, returns the base xpReward.
+     */
+    public int getEffectiveXpReward() {
+        if (!isBoostActive()) return xpReward;
+        return xpReward + (xpReward * xpBoostPct / 100);
+    }
 
     @Override
     public String toString() {

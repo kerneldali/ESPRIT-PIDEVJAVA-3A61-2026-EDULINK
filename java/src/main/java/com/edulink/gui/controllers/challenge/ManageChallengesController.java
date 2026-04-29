@@ -2,17 +2,23 @@ package com.edulink.gui.controllers.challenge;
 
 import com.edulink.gui.models.challenge.Challenge;
 import com.edulink.gui.models.challenge.ChallengeTask;
+import com.edulink.gui.services.challenge.AIChallengeGenerator;
+import com.edulink.gui.services.challenge.AIChallengeGenerator.GeneratedChallenge;
+import com.edulink.gui.services.challenge.ChallengeImageService;
 import com.edulink.gui.services.challenge.ChallengeService;
 import com.edulink.gui.services.challenge.ChallengeTaskService;
 import com.edulink.gui.util.EduAlert;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.util.StringConverter;
+import java.util.ArrayList;
 
 import java.net.URL;
 import java.time.LocalDate;
@@ -57,11 +63,22 @@ public class ManageChallengesController implements Initializable {
     @FXML private TextField newTaskDescField;
     @FXML private CheckBox newTaskRequiredCheck;
 
+    @FXML private Button aiGenerateBtn;
+
     private final ChallengeService challengeService     = new ChallengeService();
     private final ChallengeTaskService taskService      = new ChallengeTaskService();
+    private final AIChallengeGenerator aiGenerator      = new AIChallengeGenerator();
+    private final ChallengeImageService imageService    = new ChallengeImageService();
     private final ObservableList<Challenge> challengeList = FXCollections.observableArrayList();
     private Challenge currentEditable  = null;
     private Challenge currentTaskChallenge = null; // challenge dont on gère les tâches
+
+    /**
+     * Tasks produced by the AI generator before the parent Challenge has been
+     * persisted. Flushed to the DB right after handleSave() inserts the
+     * Challenge so we can attach the generated challengeId.
+     */
+    private List<ChallengeTask> pendingAITasks = new ArrayList<>();
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
@@ -376,10 +393,35 @@ public class ManageChallengesController implements Initializable {
             result.setDeadline(null);
         }
 
+        // Auto-generate (or refresh) the cover image URL whenever the challenge
+        // doesn't have one yet — keeps existing manual URLs intact while filling
+        // in the gap on every new/edited challenge that lacks an image.
+        if (result.getImageUrl() == null || result.getImageUrl().isBlank()) {
+            try {
+                result.setImageUrl(imageService.buildImageUrl(result.getTitle(), result.getDifficulty()));
+            } catch (Exception ex) {
+                System.err.println("[ManageChallenges] Could not build image URL: " + ex.getMessage());
+            }
+        }
+
         if (currentEditable == null) {
             result.setCreatedAt(LocalDateTime.now());
-            challengeService.add(result);
-            EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Challenge created successfully!");
+            int newId = challengeService.addReturningId(result);
+
+            // If the AI assistant pre-filled a list of tasks, persist them now
+            // that we have the generated challenge id.
+            if (newId > 0 && !pendingAITasks.isEmpty()) {
+                int persisted = 0;
+                for (ChallengeTask t : pendingAITasks) {
+                    t.setChallengeId(newId);
+                    if (taskService.add(t)) persisted++;
+                }
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Success",
+                        "Challenge créé avec " + persisted + " tâche(s) générée(s) par l'IA.");
+                pendingAITasks.clear();
+            } else {
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Challenge created successfully!");
+            }
         } else {
             challengeService.edit(result);
             EduAlert.show(EduAlert.AlertType.SUCCESS, "Success", "Challenge updated successfully!");
@@ -387,6 +429,93 @@ public class ManageChallengesController implements Initializable {
 
         handleCloseForm();
         loadData();
+    }
+
+    // ======================== IA: GÉNÉRATION ========================
+
+    /**
+     * Asks the user for a topic, calls the LLM in the background, then pre-fills
+     * the form fields with the generated content. Tasks are stashed in
+     * pendingAITasks and persisted by handleSave() after the Challenge row exists.
+     */
+    @FXML
+    private void handleAIGenerate() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Génération IA");
+        dialog.setHeaderText("Quel sujet pour ce challenge ?");
+        dialog.setContentText("Sujet :");
+        // Style the dialog minimally so it matches the dark theme without
+        // needing a separate FXML.
+        DialogPane pane = dialog.getDialogPane();
+        pane.setStyle("-fx-background-color: #16162a;");
+        pane.lookupAll(".label").forEach(l -> l.setStyle("-fx-text-fill: white;"));
+
+        java.util.Optional<String> topic = dialog.showAndWait();
+        if (topic.isEmpty() || topic.get().isBlank()) return;
+
+        // Disable the button during the call to prevent duplicate requests.
+        if (aiGenerateBtn != null) {
+            aiGenerateBtn.setDisable(true);
+            aiGenerateBtn.setText("⏳  Génération...");
+        }
+
+        Task<GeneratedChallenge> task = new Task<>() {
+            @Override
+            protected GeneratedChallenge call() {
+                return aiGenerator.generate(topic.get().trim());
+            }
+        };
+        task.setOnSucceeded(ev -> {
+            GeneratedChallenge gen = task.getValue();
+            restoreAIButton();
+            if (gen.error != null) {
+                EduAlert.show(EduAlert.AlertType.ERROR, "Génération IA échouée", gen.error);
+                return;
+            }
+            applyGeneratedChallenge(gen);
+        });
+        task.setOnFailed(ev -> {
+            restoreAIButton();
+            Throwable err = task.getException();
+            EduAlert.show(EduAlert.AlertType.ERROR, "Erreur",
+                    "Génération IA impossible : " + (err != null ? err.getMessage() : "inconnue"));
+        });
+        new Thread(task, "ai-challenge-gen").start();
+    }
+
+    private void restoreAIButton() {
+        Platform.runLater(() -> {
+            if (aiGenerateBtn != null) {
+                aiGenerateBtn.setDisable(false);
+                aiGenerateBtn.setText("✨  IA: Générer");
+            }
+        });
+    }
+
+    private void applyGeneratedChallenge(GeneratedChallenge gen) {
+        Challenge c = gen.challenge;
+        if (c == null) return;
+
+        titleField.setText(c.getTitle());
+        descField.setText(c.getDescription());
+        difficultyCombo.setValue(c.getDifficulty());
+        statusCombo.setValue(c.getStatus() != null ? c.getStatus() : "OPEN");
+        xpField.setText(String.valueOf(c.getXpReward()));
+        if (c.getDeadline() != null) {
+            deadlinePicker.setValue(c.getDeadline().toLocalDate());
+            hourSpinner.getValueFactory().setValue(c.getDeadline().getHour());
+            minuteSpinner.getValueFactory().setValue(c.getDeadline().getMinute());
+        }
+
+        // Stash the tasks for post-save persistence.
+        pendingAITasks = new ArrayList<>(gen.tasks);
+        validateForm();
+
+        String taskMsg = pendingAITasks.isEmpty()
+                ? "Aucune tâche générée."
+                : pendingAITasks.size() + " tâche(s) générée(s), elles seront ajoutées à la sauvegarde.";
+        EduAlert.show(EduAlert.AlertType.INFO, "Champs remplis par l'IA",
+                "Vérifie les champs et clique sur Save pour créer le challenge.\n" + taskMsg);
     }
 
     // ======================== VALIDATION ========================

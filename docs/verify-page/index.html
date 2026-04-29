@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vérification du Certificat — EduLink</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-1: #0f0f1e;
+    --bg-2: #1a1a2e;
+    --card: #16162a;
+    --green: #00d289;
+    --green-soft: #00d28922;
+    --purple: #7c3aed;
+    --purple-soft: #7c3aed22;
+    --text: #ffffff;
+    --muted: #a0a0ab;
+    --line: #ffffff14;
+    --gold: #f59e0b;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(ellipse at top, #1a1a3e 0%, var(--bg-1) 60%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    padding: 40px 32px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(124, 58, 237, 0.1);
+    animation: appear 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--green), var(--purple), var(--gold));
+  }
+
+  @keyframes appear {
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.05); }
+  }
+
+  .brand {
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .badge-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+
+  .badge {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--green), #00b876);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 30px rgba(0, 210, 137, 0.4);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+
+  .badge svg {
+    width: 44px;
+    height: 44px;
+    fill: white;
+  }
+
+  .title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+  }
+
+  .recipient {
+    text-align: center;
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--green);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .for-text {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .challenge {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--purple);
+    margin-bottom: 28px;
+    padding: 0 12px;
+  }
+
+  .meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .meta-item {
+    background: var(--bg-2);
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+
+  .meta-label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .meta-value {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .meta-value.xp {
+    color: var(--green);
+  }
+
+  .meta-value.diff-easy   { color: #3b82f6; }
+  .meta-value.diff-medium { color: var(--gold); }
+  .meta-value.diff-hard   { color: #ef4444; }
+
+  .id-section {
+    background: var(--purple-soft);
+    border: 1px solid #7c3aed44;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .id-label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .id-value {
+    color: #c4b5fd;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    letter-spacing: 1px;
+  }
+
+  .footer {
+    text-align: center;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .footer strong {
+    color: var(--text);
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    padding: 30px 20px;
+  }
+
+  .empty-state h2 {
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 32px 22px; }
+    .recipient { font-size: 24px; }
+    .title { font-size: 22px; }
+    .meta-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <!-- Filled by JS -->
+</div>
+
+<script>
+  function getParam(name) {
+    const url = new URL(window.location.href);
+    return url.searchParams.get(name);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  function render() {
+    const id        = getParam('id');
+    const name      = getParam('name');
+    const challenge = getParam('challenge');
+    const xp        = getParam('xp');
+    const difficulty= (getParam('difficulty') || '').toUpperCase();
+    const date      = getParam('date');
+
+    const card = document.getElementById('card');
+
+    // Empty / invalid state
+    if (!id || !name || !challenge) {
+      card.innerHTML = `
+        <div class="empty-state">
+          <h2>Lien de vérification invalide</h2>
+          <p>Cette page attend des paramètres de certificat.</p>
+          <p style="margin-top:12px;">Scannez un QR code EduLink valide pour afficher un certificat.</p>
+        </div>`;
+      return;
+    }
+
+    const diffClass = difficulty === 'HARD'   ? 'diff-hard'
+                    : difficulty === 'MEDIUM' ? 'diff-medium'
+                    : 'diff-easy';
+
+    card.innerHTML = `
+      <div class="brand">EduLink Academy</div>
+
+      <div class="badge-wrap">
+        <div class="badge" title="Certificat vérifié">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="title">Certificat Vérifié</div>
+      <div class="subtitle">Authenticité confirmée — EduLink Academy</div>
+
+      <div class="for-text">délivré à</div>
+      <div class="recipient">${escapeHtml(name)}</div>
+
+      <div class="for-text">pour la complétion du challenge</div>
+      <div class="challenge">« ${escapeHtml(challenge)} »</div>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <div class="meta-label">Difficulté</div>
+          <div class="meta-value ${diffClass}">${escapeHtml(difficulty || 'N/A')}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">XP gagné</div>
+          <div class="meta-value xp">+${escapeHtml(xp || '0')}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Émis le</div>
+          <div class="meta-value">${escapeHtml(date || 'N/A')}</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Statut</div>
+          <div class="meta-value xp">✓ Authentique</div>
+        </div>
+      </div>
+
+      <div class="id-section">
+        <div class="id-label">N° de Certificat</div>
+        <div class="id-value">${escapeHtml(id)}</div>
+      </div>
+
+      <div class="footer">
+        <strong>EduLink</strong> — Plateforme d'apprentissage gamifiée<br>
+        L'identifiant ci-dessus est dérivé d'un hash SHA-256 déterministe.<br>
+        Toute altération du certificat invalide la signature.
+      </div>
+    `;
+  }
+
+  render();
+</script>
+</body>
+</html>
