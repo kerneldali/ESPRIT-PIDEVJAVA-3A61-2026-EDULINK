@@ -5,6 +5,7 @@
 *.csv
 *.sql
 *.log
+edulink-486610-8edafaeff3a7.json
 
 # Java / Maven specific ignores
 java/target/

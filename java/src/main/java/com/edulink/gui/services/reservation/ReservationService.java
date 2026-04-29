@@ -143,4 +143,24 @@ public class ReservationService {
             return false;
         }
     }
+
+    public Reservation getReservationById(int id) {
+        String sql = "SELECT * FROM reservation WHERE id = ?";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Reservation r = new Reservation();
+                r.setId(rs.getInt("id"));
+                r.setUserId(rs.getInt("user_id"));
+                r.setEventId(rs.getInt("event_id"));
+                r.setReservedAt(rs.getTimestamp("reserved_at").toLocalDateTime());
+                return r;
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Erreur récupération réservation : " + e.getMessage());
+        }
+        return null;
+    }
 }
