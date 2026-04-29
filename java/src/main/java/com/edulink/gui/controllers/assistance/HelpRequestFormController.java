@@ -3,6 +3,7 @@ package com.edulink.gui.controllers.assistance;
 import com.edulink.gui.models.assistance.HelpRequest;
 import com.edulink.gui.services.assistance.AiClassificationService;
 import com.edulink.gui.services.assistance.HelpRequestService;
+import com.edulink.gui.services.assistance.ToxicityService;
 import com.edulink.gui.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -33,6 +34,7 @@ public class HelpRequestFormController implements Initializable {
     private HelpRequest currentRequest;
     private HelpRequestService service = new HelpRequestService();
     private AiClassificationService aiService = new AiClassificationService();
+    private ToxicityService toxicityService = new ToxicityService();
     private Label aiStatusLabel;
 
     @Override
@@ -161,6 +163,14 @@ public class HelpRequestFormController implements Initializable {
     @FXML
     public void handleSave() {
         if (!validate()) return; // Stop if validation fails
+
+        String titleText = titleField.getText() == null ? "" : titleField.getText().trim();
+        String descText = descField.getText() == null ? "" : descField.getText().trim();
+
+        if (toxicityService.analyze(titleText).isToxic || toxicityService.analyze(descText).isToxic) {
+            showError("Your help request was flagged for inappropriate or toxic language. Please revise it.");
+            return;
+        }
 
         boolean isNew = (currentRequest == null);
         if (isNew) currentRequest = new HelpRequest();

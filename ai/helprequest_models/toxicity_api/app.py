@@ -138,7 +138,7 @@ def health():
 
 
 if __name__ == "__main__":
-    print("🧠 EduLink Sentiment API starting on port 5001...")
+    print("[EduLink] Sentiment API starting on port 5001...")
     print("   Endpoint: POST http://localhost:5001/analyze")
     print("   Health:   GET  http://localhost:5001/health")
     app.run(host="0.0.0.0", port=5001, debug=False)
