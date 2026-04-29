@@ -221,20 +221,20 @@ public class AnalyzeActivityController implements Initializable {
                 final String username = "eya.makhlouf.isic@gmail.com";
                 final String password = "baunvjikeeyfhqfy";
 
-                javax.mail.Session session = javax.mail.Session.getInstance(props,
-                        new javax.mail.Authenticator() {
-                            protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
-                                return new javax.mail.PasswordAuthentication(username, password);
+                jakarta.mail.Session session = jakarta.mail.Session.getInstance(props,
+                        new jakarta.mail.Authenticator() {
+                            protected jakarta.mail.PasswordAuthentication getPasswordAuthentication() {
+                                return new jakarta.mail.PasswordAuthentication(username, password);
                             }
                         });
 
-                javax.mail.Message message = new javax.mail.internet.MimeMessage(session);
-                message.setFrom(new javax.mail.internet.InternetAddress(username));
-                message.setRecipients(javax.mail.Message.RecipientType.TO, javax.mail.internet.InternetAddress.parse(toEmail));
+                jakarta.mail.Message message = new jakarta.mail.internet.MimeMessage(session);
+                message.setFrom(new jakarta.mail.internet.InternetAddress(username));
+                message.setRecipients(jakarta.mail.Message.RecipientType.TO, jakarta.mail.internet.InternetAddress.parse(toEmail));
                 message.setSubject(subject);
                 message.setContent(htmlBody, "text/html; charset=utf-8");
 
-                javax.mail.Transport.send(message);
+                jakarta.mail.Transport.send(message);
                 System.out.println("✅ Reminder sent to " + toEmail);
 
                 userService.updateLastRemindedAt(user.getId());

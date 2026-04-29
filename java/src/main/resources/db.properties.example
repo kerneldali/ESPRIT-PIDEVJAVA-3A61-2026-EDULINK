@@ -1,0 +1,30 @@
+# =====================================================================
+# Edulink - Database configuration template
+# ---------------------------------------------------------------------
+# Copy this file to "db.properties" in the SAME folder, then adjust the
+# values to match your local environment (XAMPP, MAMP, native MySQL...).
+#
+# IMPORTANT:
+#   - "db.properties" is git-ignored on purpose. Each developer keeps
+#     their own local config. NEVER commit db.properties.
+#   - Only edit "db.properties.example" when adding a NEW config key.
+# =====================================================================
+
+# MySQL host (almost always 127.0.0.1 for local dev).
+# Avoid "localhost" on macOS to prevent IPv6 (::1) resolution issues.
+db.host=127.0.0.1
+
+# MySQL port.
+#   - Windows XAMPP / MAMP default: 3306
+#   - macOS XAMPP default:           3307
+db.port=3306
+
+# Database name (must already exist - import edulinkpi.sql first).
+db.name=edulinkpi
+
+# Credentials (XAMPP default = root / empty password).
+db.user=root
+db.password=
+
+# JDBC connection options. Leave as-is unless you know what you're doing.
+db.params=useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true

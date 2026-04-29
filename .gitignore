@@ -23,3 +23,6 @@ Thumbs.db
 
 # Ignored API Keys and sensitive config
 **/GroqConfig.java
+
+# Local DB config (each dev keeps their own; template lives in db.properties.example)
+**/db.properties
