@@ -35,6 +35,20 @@ public class EventService {
             ps.setString(10, event.getImage());
             ps.executeUpdate();
             System.out.println("✅ Événement ajouté !");
+
+            // Si l'événement est en ligne → générer un lien Meet
+            if (event.isOnline()) {
+                String meetLink = GoogleCalendarService.createMeetLink(event);
+                if (meetLink != null) {
+                    event.setMeetLink(meetLink);
+                    // Mettre à jour le meet_link en BDD
+                    String updateSql = "UPDATE event SET meet_link = ? WHERE id = ?";
+                    PreparedStatement updatePs = cnx.prepareStatement(updateSql);
+                    updatePs.setString(1, meetLink);
+                    updatePs.setInt(2, event.getId());
+                    updatePs.executeUpdate();
+                }
+            }
             return true;
         } catch (SQLException e) {
             System.out.println("❌ Erreur ajout : " + e.getMessage());

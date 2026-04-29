@@ -1,27 +1,42 @@
 package com.edulink.gui.controllers.event;
 
-import com.edulink.gui.models.event.Event;
-import com.edulink.gui.models.reservation.Reservation;
-import com.edulink.gui.services.event.EventService;
-import com.edulink.gui.services.reservation.ReservationService;
-import com.edulink.gui.util.EduAlert;
-import com.edulink.gui.util.SessionManager;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.*;
-import javafx.scene.layout.*;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.paint.Color;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ResourceBundle;
+
+import com.edulink.gui.models.event.Event;
+import com.edulink.gui.models.reservation.Reservation;
+import com.edulink.gui.services.event.EventService;
+import com.edulink.gui.services.ml.MLService;
+import com.edulink.gui.services.reservation.ReservationService;
+import com.edulink.gui.util.EduAlert;
+import com.edulink.gui.util.SessionManager;
+
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class EventController implements Initializable {
 
@@ -477,6 +492,18 @@ public class EventController implements Initializable {
         } else {
             eventService.updateEvent(result);
             EduAlert.show(EduAlert.AlertType.SUCCESS, "Succès", "Événement mis à jour !");
+        }
+
+        // Prédiction ML avant création
+        if (!result.isOnline() || result.getMaxCapacity() > 0) {
+            int score = MLService.predictEventSuccess(result);
+            result.setPredictedScore(score);
+            
+            boolean confirm = EduAlert.confirm(
+                "🤖 Prédiction IA",
+                MLService.getPredictionMessage(score) + "\n\nVoulez-vous quand même créer cet événement ?"
+            );
+            if (!confirm) return;
         }
         handleCloseForm();
         loadData();

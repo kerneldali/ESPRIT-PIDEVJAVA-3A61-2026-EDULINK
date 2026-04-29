@@ -20,7 +20,7 @@ public class MyConnection {
     public static String getLastError() { return lastError; }
 
     private MyConnection() {
-        String simplifiedUrl = "jdbc:mysql://127.0.0.1:3307/edulinkpi?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+        String simplifiedUrl = "jdbc:mysql://127.0.0.1:3306/edulinkpi?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
         System.out.println("🔄 Attempting to connect to: " + simplifiedUrl);
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
