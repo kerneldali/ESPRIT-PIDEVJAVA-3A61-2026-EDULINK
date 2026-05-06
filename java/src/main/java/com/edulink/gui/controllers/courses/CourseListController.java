@@ -14,6 +14,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.Scene;
 
 import java.io.IOException;
 import java.net.URL;
@@ -211,8 +212,18 @@ public class CourseListController implements Initializable {
             Parent root = loader.load();
             CourseDetailsController controller = loader.getController();
             controller.setCourse(c);
-            StackPane contentArea = (StackPane) rootPane.getScene().lookup("#contentArea");
-            if (contentArea != null) contentArea.getChildren().setAll(root);
+            Scene scene = rootPane.getScene();
+            if (scene != null) {
+                StackPane contentArea = (StackPane) scene.lookup("#contentArea");
+                if (contentArea != null) {
+                    contentArea.getChildren().setAll(root);
+                    System.out.println("✅ Navigation to CourseDetails successful");
+                } else {
+                    System.err.println("❌ Could not find #contentArea in the scene!");
+                }
+            } else {
+                System.err.println("❌ Could not find scene for navigation!");
+            }
         } catch (IOException e) { e.printStackTrace(); }
     }
 

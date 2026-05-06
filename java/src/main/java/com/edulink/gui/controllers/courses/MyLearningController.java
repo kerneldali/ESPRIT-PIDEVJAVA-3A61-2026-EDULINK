@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
+import javafx.scene.Scene;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
@@ -146,13 +147,32 @@ public class MyLearningController implements Initializable {
         viewBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-border-color: #ffffff22; -fx-border-radius: 5; -fx-background-radius: 5; -fx-cursor: hand;");
         viewBtn.setOnAction(evt -> {
             try {
+                System.out.println("🔄 Navigating to Course: " + c.getTitle());
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/courses/CourseDetails.fxml"));
                 Parent root = loader.load();
+                
                 CourseDetailsController controller = loader.getController();
                 controller.setCourse(c);
-                StackPane contentArea = (StackPane) cardContainer.getScene().lookup("#contentArea");
-                if (contentArea != null) contentArea.getChildren().setAll(root);
+                
+                // Safer lookup: try from cardContainer first, then from the scene if available
+                Scene scene = cardContainer.getScene();
+                if (scene == null && cardContainer.getParent() != null) {
+                    scene = cardContainer.getParent().getScene();
+                }
+                
+                if (scene != null) {
+                    StackPane contentArea = (StackPane) scene.lookup("#contentArea");
+                    if (contentArea != null) {
+                        contentArea.getChildren().setAll(root);
+                        System.out.println("✅ Navigation from MyLearning successful");
+                    } else {
+                        System.err.println("❌ MyLearning: Could not find #contentArea");
+                    }
+                } else {
+                    System.err.println("❌ MyLearning: Scene is null, cannot navigate");
+                }
             } catch (Exception ex) {
+                System.err.println("❌ Navigation Error: " + ex.getMessage());
                 ex.printStackTrace();
             }
         });
@@ -165,50 +185,43 @@ public class MyLearningController implements Initializable {
 
     private void generateCertificate(Course currentCourse) {
         com.edulink.gui.models.User student = com.edulink.gui.util.SessionManager.getCurrentUser();
-        if (student == null) return;
-
+        String studentName = (student != null) ? student.getFullName() : "Valued Student";
+        
         com.edulink.gui.services.PdfExportService exporter = new com.edulink.gui.services.PdfExportService();
 
-        // Format Selection Dialog
-        ButtonType pdfBtn = new ButtonType("🎓 Professional PDF", ButtonBar.ButtonData.OK_DONE);
-        ButtonType pngBtn = new ButtonType("🖼️ High-Res Image (PNG)", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        // Premium Choice Dialog
+        int choice = com.edulink.gui.util.EduAlert.showCertificateChoice(studentName);
+        if (choice == 0) return; // User cancelled
 
-        Alert alert = new Alert(Alert.AlertType.NONE);
-        alert.setTitle("Elite Certification");
-        alert.setHeaderText("Congratulations, " + student.getFullName() + "!");
-        alert.setContentText("Your achievement is verified. How would you like to save your certificate?");
-        alert.getButtonTypes().setAll(pdfBtn, pngBtn, cancelBtn);
-        alert.initOwner(cardContainer.getScene().getWindow());
+        boolean isPdf = (choice == 1);
+        
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Save Certificate");
+        fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
 
-        java.util.Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() != cancelBtn) {
-            boolean isPdf = result.get() == pdfBtn;
-            
-            FileChooser fc = new FileChooser();
-            fc.setTitle("Save Certificate");
-            fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
+        File file = fc.showSaveDialog(cardContainer.getScene().getWindow());
+        if (file != null) {
+            try {
+                // Create dummy user if session is null for the exporter
+                com.edulink.gui.models.User targetUser = (student != null) ? student : new com.edulink.gui.models.User();
+                if (student == null) targetUser.setFullName("Valued Student");
 
-            File file = fc.showSaveDialog(cardContainer.getScene().getWindow());
-            if (file != null) {
-                try {
-                    if (isPdf) {
-                        exporter.exportCertificate(student, currentCourse, file);
-                    } else {
-                        exporter.exportCertificateAsImage(student, currentCourse, file);
-                    }
-                    
-                    EduAlert.show(EduAlert.AlertType.SUCCESS, "Export Success", 
-                        "Your certificate has been saved to:\n" + file.getAbsolutePath());
-                    
-                    if (System.getProperty("os.name").toLowerCase().contains("win")) {
-                        new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", file.getAbsolutePath()).start();
-                    }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", ex.getMessage());
+                if (isPdf) {
+                    exporter.exportCertificate(targetUser, currentCourse, file);
+                } else {
+                    exporter.exportCertificateAsImage(targetUser, currentCourse, file);
                 }
+                
+                EduAlert.show(EduAlert.AlertType.SUCCESS, "Export Success", 
+                    "Your certificate has been saved to:\n" + file.getAbsolutePath());
+                
+                if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                    new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", file.getAbsolutePath()).start();
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", ex.getMessage());
             }
         }
     }

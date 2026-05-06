@@ -30,7 +30,9 @@ public class TfIdfRecommender {
         int idx = 0;
         for (Matiere m : matieres) {
             StringBuilder sb = new StringBuilder();
-            sb.append(m.getName()).append(" ");
+            // Weighting: Repeat the category name 3 times to boost its relevance
+            sb.append(m.getName()).append(" ").append(m.getName()).append(" ").append(m.getName()).append(" ");
+            if (m.getDescription() != null) sb.append(m.getDescription()).append(" ");
             
             // Get courses for this matiere
             List<Course> courses = allCourses.stream()
@@ -38,7 +40,8 @@ public class TfIdfRecommender {
                 .collect(Collectors.toList());
 
             for (Course c : courses) {
-                sb.append(c.getTitle()).append(" ");
+                // Boost course titles too
+                sb.append(c.getTitle()).append(" ").append(c.getTitle()).append(" ");
                 if (c.getDescription() != null) sb.append(c.getDescription()).append(" ");
             }
 
@@ -47,6 +50,7 @@ public class TfIdfRecommender {
         }
 
         List<String> queryTokens = tokenize(query);
+        if (queryTokens.isEmpty()) return new ArrayList<>();
         
         // Build vocabulary and IDF
         Set<String> vocab = new HashSet<>();
@@ -54,14 +58,14 @@ public class TfIdfRecommender {
         vocab.addAll(queryTokens);
 
         Map<String, Double> idf = new HashMap<>();
-        int N = documents.size() + 1; // +1 for the query itself
+        int N = documents.size();
         for (String term : vocab) {
             int df = 0;
             for (List<String> doc : documents) {
                 if (doc.contains(term)) df++;
             }
-            if (queryTokens.contains(term)) df++;
-            idf.put(term, Math.log((double) N / (1 + df)));
+            // Use smoothing for IDF calculation
+            idf.put(term, Math.log((double) (N + 1) / (df + 1)) + 1.0);
         }
 
         // Vectorize query
@@ -71,11 +75,14 @@ public class TfIdfRecommender {
         for (int i = 0; i < documents.size(); i++) {
             Map<String, Double> docVec = buildVector(documents.get(i), idf);
             double sim = cosineSimilarity(queryVec, docVec);
-            results.add(new MatchResult(docIndexMap.get(i), sim));
+            if (sim > 0.05) { // Threshold to avoid irrelevant matches
+                results.add(new MatchResult(docIndexMap.get(i), sim));
+            }
         }
 
+        // Sort by score descending and take top 3
         results.sort((a, b) -> Double.compare(b.score, a.score));
-        return results;
+        return results.stream().limit(3).collect(Collectors.toList());
     }
 
     private static List<String> tokenize(String text) {
