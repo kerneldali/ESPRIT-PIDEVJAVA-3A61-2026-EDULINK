@@ -111,7 +111,12 @@ public class PdfExportService {
         
         // Seal Image
         try {
-            String sealPath = "src/main/resources/images/certificate_seal.png";
+            String sealPath = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile("src/main/resources/images/certificate_seal.png").getAbsolutePath();
+            // Also try java classpath resources
+            if (!new java.io.File(sealPath).exists()) {
+                java.net.URL sealUrl = getClass().getResource("/images/certificate_seal.png");
+                if (sealUrl != null) sealPath = new java.io.File(sealUrl.toURI()).getAbsolutePath();
+            }
             com.itextpdf.layout.element.Image seal = new com.itextpdf.layout.element.Image(
                 com.itextpdf.io.image.ImageDataFactory.create(sealPath))
                 .setWidth(110).setHeight(110);
@@ -200,7 +205,10 @@ public class PdfExportService {
         
         // Draw Seal if exists
         try {
-            java.io.File sealFile = new java.io.File("java/src/main/resources/images/certificate_seal.png");
+            java.io.File sealFile = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile("java/src/main/resources/images/certificate_seal.png");
+            if (!sealFile.exists()) {
+                sealFile = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile("src/main/resources/images/certificate_seal.png");
+            }
             if (sealFile.exists()) {
                 java.awt.Image sealImg = javax.imageio.ImageIO.read(sealFile);
                 g2.drawImage(sealImg, 80, 560, 140, 140, null);

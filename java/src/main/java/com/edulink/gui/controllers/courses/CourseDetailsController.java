@@ -233,13 +233,7 @@ public class CourseDetailsController implements Initializable {
             }
             
             // Resolve relative path if needed
-            File file = new File(path);
-            if (!file.exists() && !file.isAbsolute() && !path.startsWith("http")) {
-                File relFile = new File(System.getProperty("user.dir"), path);
-                if (relFile.exists()) {
-                    file = relFile;
-                }
-            }
+            File file = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(path);
 
             try {
                 if (file.exists()) {
@@ -413,16 +407,7 @@ public class CourseDetailsController implements Initializable {
         java.io.File sourceFile = new java.io.File(sourcePath);
         if (!sourceFile.exists() || !sourceFile.isAbsolute()) return sourcePath;
         
-        java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/pdfs");
-        if (!destDir.exists() && new java.io.File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
-            destDir = new java.io.File(System.getProperty("user.dir"), "java/src/main/resources/pdfs");
-        } else if (!destDir.exists()) {
-            destDir = new java.io.File("src/main/resources/pdfs");
-        }
-        
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
+        java.io.File destDir = com.edulink.gui.util.ResourcePathResolver.getPdfsDir();
         
         java.io.File destFile = new java.io.File(destDir, sourceFile.getName());
         int counter = 1;
@@ -438,13 +423,13 @@ public class CourseDetailsController implements Initializable {
         if (!destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
             try {
                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                return "src/main/resources/pdfs/" + destFile.getName();
+                return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
             } catch (Exception e) {
                 System.err.println("Failed to copy file: " + e.getMessage());
                 return sourcePath;
             }
         }
-        return "src/main/resources/pdfs/" + destFile.getName();
+        return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
     }
 
     private String getCourseContext() {
