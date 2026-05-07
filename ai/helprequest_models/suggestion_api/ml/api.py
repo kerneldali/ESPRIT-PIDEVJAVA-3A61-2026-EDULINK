@@ -218,94 +218,244 @@ def smart_match():
 
 # ─── ENDPOINT 5: Local Help Request Classification ──────────────────────────
 
-# Category keyword corpus — each category has representative terms
+# Category keyword corpus — keys MUST match Java's category names exactly
 CATEGORY_CORPUS = {
-    'Math': 'math algebra calculus geometry trigonometry equation integral derivative matrix probability statistics linear quadratic polynomial fraction decimal percentage arithmetic logarithm',
-    'Physics': 'physics force energy momentum velocity acceleration gravity wave optics thermodynamics electricity magnetism quantum mechanics relativity circuit voltage resistance',
-    'Chemistry': 'chemistry atom molecule element reaction bond compound acid base organic inorganic periodic table electron proton neutron mole stoichiometry chemical equation oxidation',
-    'Biology': 'biology cell dna rna genetics evolution organism plant animal ecosystem photosynthesis mitosis meiosis protein enzyme bacteria virus anatomy physiology ecology',
-    'Computer Science': 'programming code algorithm data structure python java javascript html css database sql api software development function variable loop array object class inheritance recursion sorting web application',
-    'Languages': 'language grammar vocabulary writing essay reading comprehension literature poetry translation conjugation tense verb noun adjective sentence paragraph composition spelling pronunciation',
-    'History': 'history war revolution empire civilization ancient medieval modern century dynasty king queen president government politics treaty independence colony nation state',
-    'Geography': 'geography map continent ocean river mountain climate population country region city landscape environment natural resources topography latitude longitude border territory',
-    'Philosophy': 'philosophy ethics logic argument reason morality existence consciousness metaphysics epistemology aesthetics political philosophy free will determinism truth knowledge belief',
-    'Economics': 'economics market supply demand price inflation gdp trade finance investment banking monetary fiscal policy microeconomics macroeconomics budget tax revenue profit cost',
+    'Mathematics': (
+        'math maths mathematics algebra calculus geometry trigonometry equation integral derivative matrix '
+        'probability statistics linear quadratic polynomial fraction decimal percentage arithmetic '
+        'logarithm differential vector determinant eigenvalue limit series convergence permutation '
+        'combination number theory proof theorem lemma axiom set function domain range interval '
+        'exponent root radical binomial factorial coordinate plane graph parabola hyperbola ellipse '
+        'sine cosine tangent radian complex number imaginary unit modulus argument polar form '
+        'fourier laplace transform differential equation ordinary partial boundary value'
+    ),
+    'Programming': (
+        'programming code algorithm data structure python java javascript typescript html css '
+        'database sql api software development function variable loop array object class inheritance '
+        'recursion sorting searching binary tree graph linked list stack queue hash map '
+        'web application backend frontend framework django flask spring react angular vue '
+        'git version control debugging error exception null pointer segfault compile runtime '
+        'pointer memory heap stack overflow concurrency thread asynchronous async await '
+        'machine learning neural network deep learning tensorflow pytorch keras '
+        'operating system process scheduler file system network socket protocol '
+        'object oriented functional programming design pattern singleton factory observer'
+    ),
+    'Physics': (
+        'physics force energy momentum velocity acceleration gravity wave optics thermodynamics '
+        'electricity magnetism quantum mechanics relativity circuit voltage resistance capacitor '
+        'inductor electromagnetic field potential kinetic gravitational nuclear fission fusion '
+        'particle photon electron proton neutron boson fermion entropy enthalpy pressure volume '
+        'fluid dynamics buoyancy torque angular momentum moment of inertia centripetal '
+        'doppler effect interference diffraction polarization refraction reflection '
+        'coulomb faraday maxwell newton einstein planck heisenberg schrodinger'
+    ),
+    'Chemistry': (
+        'chemistry atom molecule element reaction bond compound acid base organic inorganic '
+        'periodic table electron proton neutron mole stoichiometry chemical equation oxidation '
+        'reduction redox valence shell orbital hybridization isomer polymer catalyst equilibrium '
+        'pH concentration molarity solution solubility precipitation titration electrolysis '
+        'thermochemistry enthalpy entropy gibbs free energy activation energy kinetics '
+        'functional group alkane alkene alkyne benzene ester ether ketone aldehyde alcohol amine'
+    ),
+    'Biology': (
+        'biology cell dna rna genetics evolution organism plant animal ecosystem photosynthesis '
+        'mitosis meiosis protein enzyme bacteria virus anatomy physiology ecology '
+        'chromosome gene allele mutation natural selection adaptation biodiversity '
+        'nervous system brain neuron synapse hormone endocrine immune system antibody '
+        'respiration digestion circulation heart blood vessel muscle bone tissue organ '
+        'microscope hypothesis experiment scientific method taxonomy kingdom phylum class order family genus species'
+    ),
+    'Language': (
+        'language grammar vocabulary writing essay reading comprehension literature poetry '
+        'translation conjugation tense verb noun adjective sentence paragraph composition '
+        'spelling pronunciation syntax morphology phonology semantics pragmatics discourse '
+        'fiction non-fiction novel short story narrative descriptive persuasive expository '
+        'thesis statement argument citation bibliography references citation apa mla '
+        'french english arabic spanish german italian portuguese latin greek punctuation'
+    ),
+    'History': (
+        'history war revolution empire civilization ancient medieval modern century dynasty '
+        'king queen president government politics treaty independence colony nation state '
+        'world war cold war colonialism imperialism renaissance enlightenment reformation '
+        'industrial revolution french revolution american revolution roman greek egyptian '
+        'ottoman byzantine mongol persian byzantine crusades feudalism monarchy democracy'
+    ),
+    'Data Science': (
+        'data science statistics regression classification clustering machine learning '
+        'neural network deep learning dataset feature engineering model training validation '
+        'cross validation overfitting underfitting bias variance pandas numpy matplotlib '
+        'jupyter notebook r python scipy sklearn tensorflow pytorch visualization '
+        'data cleaning preprocessing normalization standardization hypothesis test p-value '
+        'confidence interval correlation coefficient principal component analysis pca '
+        'natural language processing nlp text mining sentiment analysis word embedding '
+        'random forest gradient boosting xgboost support vector machine svm k-means '
+        'time series forecasting anomaly detection recommender system'
+    ),
+    'General': (
+        'help question problem understand explain learn study homework assignment project '
+        'review practice exercise solve approach method strategy tips guidance advice '
+        'concept idea topic subject area field introduction beginner overview summary'
+    ),
 }
 
 # Difficulty indicators
 DIFFICULTY_KEYWORDS = {
-    'Hard': ['advanced', 'complex', 'difficult', 'prove', 'derive', 'analyze', 'research', 'thesis', 'optimization', 'abstract', 'theorem'],
-    'Easy': ['basic', 'simple', 'introduction', 'beginner', 'elementary', 'easy', 'help', 'understand', 'explain', 'what is', 'definition'],
+    'Hard': [
+        'advanced', 'complex', 'difficult', 'prove', 'derive', 'analyze', 'research',
+        'thesis', 'optimization', 'abstract', 'theorem', 'graduate', 'university',
+        'challenging', 'sophisticated', 'rigorous', 'formal proof', 'derivation',
+    ],
+    'Easy': [
+        'basic', 'simple', 'introduction', 'beginner', 'elementary', 'easy',
+        'understand', 'explain', 'what is', 'definition', 'overview', 'fundamentals',
+        'getting started', 'first time', 'never learned', 'can you help',
+    ],
 }
+
+# Subject-specific keyword boosters: if ANY term matches, add a bonus to that category score
+KEYWORD_BOOSTERS = {
+    'Mathematics': [
+        'integral', 'derivative', 'calculus', 'algebra', 'geometry', 'trigonometry',
+        'equation', 'matrix', 'determinant', 'eigenvalue', 'vector', 'probability',
+        'statistics', 'theorem', 'proof', 'differential', 'polynomial', 'logarithm',
+        'arithmetic', 'factorial', 'permutation', 'combination', 'limit', 'series',
+        'convergence', 'fourier', 'laplace', 'linear algebra', 'number theory',
+        'sin', 'cos', 'tan', 'angle', 'triangle', 'circle', 'parabola', 'hyperbola',
+        'math', 'maths', 'mathematical',
+    ],
+    'Programming': [
+        'code', 'coding', 'program', 'algorithm', 'function', 'loop', 'array',
+        'class', 'object', 'inheritance', 'recursion', 'pointer', 'compile', 'debug',
+        'python', 'java', 'javascript', 'c++', 'html', 'css', 'sql', 'api',
+        'framework', 'library', 'github', 'git', 'bug', 'error', 'exception',
+        'stack overflow', 'runtime', 'async', 'thread', 'database', 'backend', 'frontend',
+    ],
+    'Physics': [
+        'physics', 'force', 'energy', 'momentum', 'velocity', 'acceleration', 'gravity',
+        'wave', 'optics', 'thermodynamics', 'electricity', 'magnetism', 'quantum',
+        'relativity', 'circuit', 'voltage', 'resistance', 'newton', 'einstein', 'photon',
+        'kinetic', 'potential', 'friction', 'buoyancy', 'torque', 'electromagnetic',
+        'newton law', 'laws of motion', 'mass acceleration',
+    ],
+    'Chemistry': [
+        'chemistry', 'atom', 'molecule', 'reaction', 'bond', 'compound', 'acid',
+        'base', 'organic', 'inorganic', 'periodic', 'mole', 'stoichiometry',
+        'oxidation', 'reduction', 'redox', 'catalyst', 'equilibrium', 'titration',
+        'alkane', 'alkene', 'benzene', 'ester', 'polymer', 'enthalpy', 'nucleophilic',
+        'sn1', 'sn2', 'substitution', 'organic chemistry',
+    ],
+    'Biology': [
+        'biology', 'cell', 'dna', 'rna', 'genetics', 'evolution', 'organism',
+        'photosynthesis', 'mitosis', 'meiosis', 'protein', 'enzyme', 'bacteria',
+        'virus', 'anatomy', 'physiology', 'ecology', 'chromosome', 'gene', 'mutation',
+        'neuron', 'hormone', 'immune', 'respiration', 'digestion', 'replication',
+        'eukaryotic', 'prokaryotic', 'ecosystem', 'taxonomy', 'species',
+        'dna replication', 'cell division', 'polymerase',
+    ],
+    'History': [
+        'history', 'war', 'revolution', 'empire', 'civilization', 'ancient', 'medieval',
+        'century', 'dynasty', 'king', 'queen', 'president', 'government', 'treaty',
+        'independence', 'colony', 'fascism', 'versailles', 'napoleon', 'renaissance',
+        'enlightenment', 'colonialism', 'feudalism', 'monarchy', 'democracy', 'crusades',
+        'world war', 'cold war', 'world war ii', 'historical',
+    ],
+    'Language': [
+        'grammar', 'vocabulary', 'conjugation', 'tense', 'verb', 'noun', 'adjective',
+        'sentence', 'paragraph', 'composition', 'spelling', 'pronunciation', 'syntax',
+        'literature', 'poetry', 'essay', 'translation', 'subjunctive', 'participle',
+        'french verb', 'arabic grammar', 'spanish grammar', 'german grammar',
+    ],
+    'Data Science': [
+        'machine learning', 'neural network', 'deep learning', 'dataset', 'pandas',
+        'numpy', 'matplotlib', 'sklearn', 'tensorflow', 'pytorch', 'regression',
+        'classification', 'clustering', 'model training', 'overfitting', 'accuracy',
+        'data science', 'data analysis', 'visualization', 'feature', 'prediction',
+        'nlp', 'sentiment', 'text mining', 'random forest', 'xgboost', 'pca',
+    ],
+}
+
+# Minimum TF-IDF score a category must already have before a booster is applied.
+# Set to 0.0 to allow keyword boosters to fully override TF-IDF for short inputs (like "maths")
+BOOSTER_MIN_FLOOR = 0.0
+BOOSTER_WEIGHT    = 0.20   # bonus added when a booster keyword matches AND floor is met
 
 
 @app.route('/classify', methods=['POST'])
 def classify():
     """
-    Classifies a help request into category + difficulty using TF-IDF.
+    Classifies a help request into category + difficulty using TF-IDF + keyword boosting.
 
     Input:  {"title": "...", "description": "..."}
-    Output: {"category": "Math", "difficulty": "Medium", "confidence": 0.82, "source": "LOCAL_ML"}
+    Output: {"category": "Mathematics", "difficulty": "MEDIUM", "confidence": 0.82, "source": "LOCAL_ML"}
     """
     data = request.get_json(silent=True)
     if not data:
         return jsonify({'error': 'Missing JSON body'}), 400
 
-    title = data.get('title', '').strip()
+    title       = data.get('title', '').strip()
     description = data.get('description', '').strip()
-    text = f"{title} {description}".strip()
+    # Title is weighted 2× — more signal-rich than description
+    text = f"{title} {title} {description}".strip()
 
     if not text:
-        return jsonify({'category': 'General', 'difficulty': 'Medium', 'confidence': 0.0, 'source': 'LOCAL_ML'})
+        return jsonify({'category': 'General', 'difficulty': 'MEDIUM', 'confidence': 0.0, 'source': 'LOCAL_ML'})
 
-    # Build corpus: the input text + all category descriptions
-    categories = list(CATEGORY_CORPUS.keys())
+    categories   = list(CATEGORY_CORPUS.keys())
     corpus_texts = list(CATEGORY_CORPUS.values())
-    all_texts = [text] + corpus_texts
+    all_texts    = [text] + corpus_texts
 
     try:
         vectorizer = TfidfVectorizer(
             stop_words='english',
-            max_features=3000,
+            max_features=5000,
             ngram_range=(1, 2),
             min_df=1,
+            sublinear_tf=True,
         )
-        tfidf_matrix = vectorizer.fit_transform(all_texts)
-
-        # Cosine similarity between input text and each category corpus
-        input_vec = tfidf_matrix[0:1]
+        tfidf_matrix  = vectorizer.fit_transform(all_texts)
+        input_vec     = tfidf_matrix[0:1]
         category_vecs = tfidf_matrix[1:]
-        similarities = cosine_similarity(input_vec, category_vecs)[0]
+        similarities  = cosine_similarity(input_vec, category_vecs)[0].tolist()
 
-        best_idx = int(np.argmax(similarities))
+        # ── Keyword-booster pass ────────────────────────────────────────────
+        text_lower = text.lower()
+        for cat, keywords in KEYWORD_BOOSTERS.items():
+            if cat in categories:
+                idx = categories.index(cat)
+                # Only boost if TF-IDF already sees some signal for this category
+                if similarities[idx] >= BOOSTER_MIN_FLOOR:
+                    for kw in keywords:
+                        if kw in text_lower:
+                            similarities[idx] = min(1.0, similarities[idx] + BOOSTER_WEIGHT)
+                            break   # one boost per category is enough
+
+        best_idx   = int(np.argmax(similarities))
         best_score = float(similarities[best_idx])
 
-        # If confidence is too low, default to General
-        if best_score < 0.05:
-            category = 'General'
+        if best_score < 0.03:
+            category   = 'General'
             confidence = 0.0
         else:
-            category = categories[best_idx]
+            category   = categories[best_idx]
             confidence = round(best_score, 4)
 
-        # Determine difficulty
-        text_lower = text.lower()
-        difficulty = 'Medium'
+        # ── Difficulty detection ────────────────────────────────────────────
+        difficulty = 'MEDIUM'
         for word in DIFFICULTY_KEYWORDS['Hard']:
             if word in text_lower:
-                difficulty = 'Hard'
+                difficulty = 'HARD'
                 break
-        if difficulty == 'Medium':
+        if difficulty == 'MEDIUM':
             for word in DIFFICULTY_KEYWORDS['Easy']:
                 if word in text_lower:
-                    difficulty = 'Easy'
+                    difficulty = 'EASY'
                     break
 
         return jsonify({
-            'category': category,
+            'category':   category,
             'difficulty': difficulty,
             'confidence': confidence,
-            'source': 'LOCAL_ML',
+            'source':     'LOCAL_ML',
         })
 
     except Exception as e:

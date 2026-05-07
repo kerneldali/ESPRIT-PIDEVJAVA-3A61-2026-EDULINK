@@ -20,32 +20,31 @@ public class AiClassificationService {
 
     private static final String[] DIFFICULTIES = {"EASY", "MEDIUM", "HARD"};
 
-    private static final String LOCAL_CLASS_URL = "http://localhost:8000/predict";
+    private static final String LOCAL_CLASS_URL = "http://localhost:5000/classify";
 
     /**
      * Returns a two-element array: [category, difficulty].
      * Uses local Educational Model first, falls back to Groq.
      */
     public String[] classify(String title, String description) {
-        // 1. Try Local Classification API
+        // 1. Try Local Classification API (port 5000 /classify)
         try {
-            String jsonBody = String.format("{\"challenge_title\": \"%s\", \"challenge_goal\": \"%s\"}", 
-                title.replace("\"", "'"), description.replace("\"", "'"));
+            String jsonBody = String.format(
+                "{\"title\": \"%s\", \"description\": \"%s\"}",
+                title.replace("\"", "'").replace("\n", " "),
+                description.replace("\"", "'").replace("\n", " ")
+            );
             String localResp = post(LOCAL_CLASS_URL, jsonBody);
-            
-            if (localResp != null && localResp.contains("\"predicted_category\"")) {
+
+            if (localResp != null && localResp.contains("\"category\"")) {
                 JsonNode node = mapper.readTree(localResp);
-                String cat = node.path("predicted_category").asText("");
-                
-                if (!cat.isEmpty()) {
-                    // Try to match with our list to normalize capitalization
-                    for (String c : CATEGORIES) {
-                        if (c.equalsIgnoreCase(cat)) {
-                            return new String[]{c, "MEDIUM"};
-                        }
-                    }
-                    // If no match, return the raw category from the model
-                    return new String[]{cat, "MEDIUM"};
+                String cat  = node.path("category").asText("");
+                String diff = node.path("difficulty").asText("MEDIUM").toUpperCase();
+
+                if (!cat.isEmpty() && !cat.equals("error")) {
+                    cat  = isValidCategory(cat)   ? cat  : "General";
+                    diff = isValidDifficulty(diff) ? diff : "MEDIUM";
+                    return new String[]{cat, diff};
                 }
             }
         } catch (Exception e) {

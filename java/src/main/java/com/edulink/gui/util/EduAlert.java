@@ -75,6 +75,61 @@ public class EduAlert {
         return result[0];
     }
 
+    /**
+     * Shows a themed dialog to choose between PDF and PNG certificate.
+     * Returns 1 for PDF, 2 for PNG, 0 for Cancel.
+     */
+    public static int showCertificateChoice(String studentName) {
+        final int[] result = {0};
+        Stage dialog = new Stage();
+        dialog.initModality(Modality.APPLICATION_MODAL);
+        dialog.initStyle(StageStyle.UNDECORATED);
+        dialog.setResizable(false);
+
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(35));
+        root.setStyle("-fx-background-color: #16162a; -fx-border-color: #f59e0b55; -fx-border-width: 1.5; -fx-border-radius: 15; -fx-background-radius: 15;");
+        root.setPrefWidth(450);
+
+        Label iconLabel = new Label("🎓");
+        iconLabel.setStyle("-fx-font-size: 44px;");
+
+        Label titleLabel = new Label("Elite Certification");
+        titleLabel.setStyle("-fx-font-weight: bold; -fx-text-fill: white; -fx-font-size: 22px;");
+
+        Label msgLabel = new Label("Congratulations, " + studentName + "!\nHow would you like to export your achievement?");
+        msgLabel.setStyle("-fx-text-fill: #a0a0ab; -fx-font-size: 14px;");
+        msgLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        msgLabel.setWrapText(true);
+
+        VBox buttons = new VBox(12);
+        buttons.setAlignment(Pos.CENTER);
+
+        Button pdfBtn = new Button("📄  Download Professional PDF");
+        pdfBtn.setMaxWidth(Double.MAX_VALUE);
+        pdfBtn.setStyle("-fx-background-color: #f59e0b; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12 25; -fx-background-radius: 8; -fx-cursor: hand; -fx-font-size: 14px;");
+        pdfBtn.setOnAction(e -> { result[0] = 1; dialog.close(); });
+
+        Button pngBtn = new Button("🖼️  Save as High-Res Image (PNG)");
+        pngBtn.setMaxWidth(Double.MAX_VALUE);
+        pngBtn.setStyle("-fx-background-color: #1a1a2e; -fx-text-fill: #f59e0b; -fx-border-color: #f59e0b; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12 25; -fx-cursor: hand; -fx-font-size: 14px;");
+        pngBtn.setOnAction(e -> { result[0] = 2; dialog.close(); });
+
+        Button cancelBtn = new Button("Maybe Later");
+        cancelBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-cursor: hand; -fx-font-size: 12px;");
+        cancelBtn.setOnAction(e -> { result[0] = 0; dialog.close(); });
+
+        buttons.getChildren().addAll(pdfBtn, pngBtn, cancelBtn);
+        root.getChildren().addAll(iconLabel, titleLabel, msgLabel, buttons);
+
+        Scene scene = new Scene(root);
+        scene.setFill(javafx.scene.paint.Color.TRANSPARENT);
+        dialog.setScene(scene);
+        dialog.showAndWait();
+        return result[0];
+    }
+
     private static Stage createStage(AlertType type, String title, String message) {
         Stage dialog = new Stage();
         dialog.initModality(Modality.APPLICATION_MODAL);

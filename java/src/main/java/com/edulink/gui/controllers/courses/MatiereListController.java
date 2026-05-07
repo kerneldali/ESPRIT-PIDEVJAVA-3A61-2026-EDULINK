@@ -117,11 +117,14 @@ public class MatiereListController implements Initializable {
         imageBox.setStyle("-fx-background-color: #2a2a40; -fx-background-radius: 10 10 0 0;");
         if (m.getImageUrl() != null && !m.getImageUrl().isEmpty()) {
             try {
-                ImageView img = new ImageView(new Image(new File(m.getImageUrl()).toURI().toString()));
-                img.setFitHeight(120);
-                img.setFitWidth(280);
-                img.setPreserveRatio(false);
-                imageBox.getChildren().add(img);
+                java.io.File imgFile = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(m.getImageUrl());
+                if (imgFile != null && imgFile.exists()) {
+                    ImageView img = new ImageView(new Image(imgFile.toURI().toString()));
+                    img.setFitHeight(120);
+                    img.setFitWidth(280);
+                    img.setPreserveRatio(false);
+                    imageBox.getChildren().add(img);
+                }
             } catch (Exception e) { /* ignore */ }
         }
 

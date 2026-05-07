@@ -11,7 +11,10 @@ import com.edulink.gui.services.GroqService;
 public class ToxicityService {
 
     private final GroqService groq = new GroqService();
-    private static final String LOCAL_API_URL = "http://localhost:5001/analyze";
+    /** Real toxicity ML model: TF-IDF + LogisticRegression trained on Jigsaw dataset */
+    private static final String LOCAL_TOXICITY_URL = "http://localhost:5000/predict";
+    /** Kept for sentiment analytics used by SentimentService (different concern) */
+    private static final String LOCAL_SENTIMENT_URL = "http://localhost:5001/analyze";
 
     // ─── Category enum ────────────────────────────────────────────────────────
     public enum ToxicCategory {
@@ -87,27 +90,32 @@ public class ToxicityService {
         ToxicityResult quickResult = quickscreen(text);
         if (quickResult.isToxic) return quickResult;
 
-        // 2. Local VADER sentiment API
+        // 2. Real ML Toxicity model (TF-IDF + LogReg on Jigsaw dataset)
         try {
             String body = "{\"text\": \"" + escape(text) + "\"}";
-            String resp = post(LOCAL_API_URL, body, 2000);
-            if (resp != null
-                && (resp.contains("\"sentiment\":\"negative\"")
-                    || resp.contains("\"sentiment\": \"negative\""))) {
-                // Escalate to Groq for category + severity classification
-                return classifyWithGroq(text);
+            String resp = post(LOCAL_TOXICITY_URL, body, 2000);
+            if (resp != null && (resp.contains("\"is_toxic\":true")
+                    || resp.contains("\"is_toxic\": true"))) {
+                // ML model detected toxicity — escalate to Groq for category + severity
+                return classifyWithGroq(text, true);
+            }
+            // ML model said clean — trust it and skip Groq (saves latency + API cost)
+            if (resp != null && (resp.contains("\"is_toxic\":false")
+                    || resp.contains("\"is_toxic\": false"))) {
+                return clean();
             }
         } catch (Exception e) {
-            System.err.println("[ToxicityService] Local API failed: " + e.getMessage());
+            System.err.println("[ToxicityService] ML API unavailable: " + e.getMessage()
+                + " — falling back to Groq full scan");
         }
 
-        // 3. Groq full classification
-        return classifyWithGroq(text);
+        // 3. Groq full classification (fallback when ML API is down)
+        return classifyWithGroq(text, false);
     }
 
     // ─── Groq full classification ─────────────────────────────────────────────
 
-    private ToxicityResult classifyWithGroq(String text) {
+    private ToxicityResult classifyWithGroq(String text, boolean mlDetected) {
         try {
             String prompt = """
                 You are an expert content moderation AI. Analyze the following text for safety.
@@ -128,13 +136,15 @@ public class ToxicityService {
                 """.formatted(text.replace("\"", "'").replace("\n", " "));
 
             String resp = groq.ask(prompt);
-            if (resp == null || resp.isBlank()) return clean();
+            if (resp == null || resp.isBlank()) {
+                return mlDetected ? new ToxicityResult(true, "Flagged by ML safety model", ToxicCategory.HARASSMENT, Severity.MEDIUM) : clean();
+            }
 
             // Parse JSON fields
-            boolean toxic       = parseBoolean(resp, "toxic", false);
+            boolean toxic       = parseBoolean(resp, "toxic", mlDetected);
             String catStr       = parseField(resp, "category", "CLEAN").toUpperCase().trim();
             String sevStr       = parseField(resp, "severity", "NONE").toUpperCase().trim();
-            String reason       = parseField(resp, "reason", "");
+            String reason       = parseField(resp, "reason", "Flagged by AI");
             // language is informational — logged but not stored in result
 
             ToxicCategory cat = safeCategory(catStr);
@@ -147,7 +157,7 @@ public class ToxicityService {
 
         } catch (Exception e) {
             System.err.println("[ToxicityService] Groq error: " + e.getMessage());
-            return clean();
+            return mlDetected ? new ToxicityResult(true, "Flagged by ML safety model", ToxicCategory.HARASSMENT, Severity.MEDIUM) : clean();
         }
     }
 

@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class SuggestedRepliesService {
 
     private final GroqService groq = new GroqService();
-    private static final String LOCAL_SUGGEST_URL = "http://localhost:5004/predict";
+    private static final String LOCAL_SUGGEST_URL = "http://localhost:5000/suggest-replies";
 
     /**
      * Returns up to 3 short role-aware suggested replies.
@@ -31,20 +31,35 @@ public class SuggestedRepliesService {
             return defaultSuggestions(isTutor);
         }
 
-        // 1. Try Local Educational Model
+        // 1. Try Local Neural Suggestion Model (port 5000 /suggest-replies)
         try {
-            String lastMsg = recentMessages.get(recentMessages.size() - 1).getContent();
-            String body = "{\"challenge_title\": \"" + safeStr(sessionTopic) + "\","
-                        + "\"challenge_goal\": \"" + safeStr(lastMsg) + "\"}";
-            String resp = post(LOCAL_SUGGEST_URL, body, 1500);
-            if (resp != null && resp.contains("\"generated_tasks\"")) {
-                String tasksPart = resp.substring(resp.indexOf("[") + 1, resp.indexOf("]"));
-                List<String> tasks = Arrays.stream(tasksPart.split(","))
-                    .map(s -> s.replace("\"", "").trim())
-                    .filter(s -> !s.isBlank() && s.length() > 5)
-                    .limit(3)
-                    .collect(Collectors.toList());
-                if (!tasks.isEmpty()) return tasks;
+            // Build JSON array of recent messages (last 8)
+            int from = Math.max(0, recentMessages.size() - 8);
+            StringBuilder msgsJson = new StringBuilder("[");
+            for (int i = from; i < recentMessages.size(); i++) {
+                ChatMessage m = recentMessages.get(i);
+                String sender = m.getSenderName() != null ? m.getSenderName() : "User";
+                String content = safeStr(m.getContent());
+                msgsJson.append("\"").append(sender).append(": ").append(content).append("\"");
+                if (i < recentMessages.size() - 1) msgsJson.append(",");
+            }
+            msgsJson.append("]");
+            String body = "{\"messages\": " + msgsJson + "}";
+
+            String resp = post(LOCAL_SUGGEST_URL, body, 2000);
+            if (resp != null && resp.contains("\"suggestions\"")) {
+                // Parse suggestions array from JSON
+                int arrStart = resp.indexOf('[', resp.indexOf("suggestions"));
+                int arrEnd   = resp.indexOf(']', arrStart);
+                if (arrStart >= 0 && arrEnd > arrStart) {
+                    String inner = resp.substring(arrStart + 1, arrEnd);
+                    List<String> suggestions = Arrays.stream(inner.split(",(?=\\s*\")"))
+                        .map(s -> s.replaceAll("^\"|\"$|^\\s+\"", "").replace("\\\"", "\"").trim())
+                        .filter(s -> !s.isBlank() && s.length() > 5)
+                        .limit(3)
+                        .collect(Collectors.toList());
+                    if (!suggestions.isEmpty()) return suggestions;
+                }
             }
         } catch (Exception e) {
             System.err.println("[SuggestedReplies] Local API failed: " + e.getMessage());

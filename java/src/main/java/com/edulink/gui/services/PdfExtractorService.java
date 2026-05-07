@@ -11,13 +11,7 @@ public class PdfExtractorService {
         StringBuilder text = new StringBuilder();
         try {
             System.out.println("Extracting text from: " + filePath);
-            File file = new File(filePath);
-            if (!file.exists() && !file.isAbsolute() && !filePath.startsWith("http")) {
-                File relFile = new File(System.getProperty("user.dir"), filePath);
-                if (relFile.exists()) {
-                    file = relFile;
-                }
-            }
+            File file = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(filePath);
 
             if (file.exists()) {
                 try (PdfDocument pdfDoc = new PdfDocument(new PdfReader(file))) {

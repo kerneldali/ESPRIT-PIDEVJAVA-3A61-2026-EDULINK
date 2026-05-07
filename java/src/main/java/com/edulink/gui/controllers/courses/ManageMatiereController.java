@@ -112,11 +112,14 @@ public class ManageMatiereController implements Initializable {
         imageBox.setStyle("-fx-background-color: #2a2a40; -fx-background-radius: 10 10 0 0;");
         if (m.getImageUrl() != null && !m.getImageUrl().isEmpty()) {
             try {
-                ImageView img = new ImageView(new Image(new File(m.getImageUrl()).toURI().toString()));
-                img.setFitHeight(120);
-                img.setFitWidth(300);
-                img.setPreserveRatio(false);
-                imageBox.getChildren().add(img);
+                java.io.File imgFile = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(m.getImageUrl());
+                if (imgFile != null && imgFile.exists()) {
+                    ImageView img = new ImageView(new Image(imgFile.toURI().toString()));
+                    img.setFitHeight(120);
+                    img.setFitWidth(300);
+                    img.setPreserveRatio(false);
+                    imageBox.getChildren().add(img);
+                }
             } catch (Exception e) { /* image not found */ }
         }
 
@@ -229,7 +232,7 @@ public class ManageMatiereController implements Initializable {
             String existingImg = currentEditableMatiere != null ? currentEditableMatiere.getImageUrl() : null;
             if (existingImg == null || existingImg.isEmpty()) {
                 String newImg = generateMatiereImage(result.getName(), result.getDescription());
-                result.setImageUrl(newImg != null ? newImg : "src/main/resources/images/default_category.jpg"); // Fallback placeholder
+                result.setImageUrl(newImg != null ? newImg : com.edulink.gui.util.ResourcePathResolver.categoryImageStoredPath("default_category.jpg")); // Fallback placeholder
             }
 
             javafx.application.Platform.runLater(() -> {
@@ -274,19 +277,13 @@ public class ManageMatiereController implements Initializable {
             java.net.URL url = java.net.URI.create(urlStr).toURL();
             java.io.InputStream in = url.openStream();
             
-            java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/images/categories");
-            if (!destDir.exists() && new java.io.File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
-                destDir = new java.io.File(System.getProperty("user.dir"), "java/src/main/resources/images/categories");
-            } else if (!destDir.exists()) {
-                destDir = new java.io.File("src/main/resources/images/categories");
-            }
-            if (!destDir.exists()) destDir.mkdirs();
+            java.io.File destDir = com.edulink.gui.util.ResourcePathResolver.getCategoryImagesDir();
             
             String filename = "cat_" + System.currentTimeMillis() + ".jpg";
             java.io.File destFile = new java.io.File(destDir, filename);
             
             java.nio.file.Files.copy(in, destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            return "src/main/resources/images/categories/" + filename;
+            return com.edulink.gui.util.ResourcePathResolver.categoryImageStoredPath(filename);
         } catch (Exception e) {
             System.err.println("Failed to generate image: " + e.getMessage());
             return null;

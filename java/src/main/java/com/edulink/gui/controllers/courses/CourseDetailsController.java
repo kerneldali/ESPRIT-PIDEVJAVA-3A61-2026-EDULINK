@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
@@ -137,10 +138,12 @@ public class CourseDetailsController implements Initializable {
         }
     }
 
+
+
     private void loadResources() {
         resourcesContainer.getChildren().clear();
         List<Resource> resources = resourceService.findByCourse(currentCourse.getId())
-                .stream().filter(r -> "ACCEPTED".equalsIgnoreCase(r.getStatus())).toList();
+                .stream().filter(r -> "ACCEPTED".equalsIgnoreCase(r.getStatus()) || "ACTIVE".equalsIgnoreCase(r.getStatus())).toList();
 
         if (resources.isEmpty()) {
             Label empty = new Label("No resources available yet.");
@@ -230,13 +233,7 @@ public class CourseDetailsController implements Initializable {
             }
             
             // Resolve relative path if needed
-            File file = new File(path);
-            if (!file.exists() && !file.isAbsolute() && !path.startsWith("http")) {
-                File relFile = new File(System.getProperty("user.dir"), path);
-                if (relFile.exists()) {
-                    file = relFile;
-                }
-            }
+            File file = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(path);
 
             try {
                 if (file.exists()) {
@@ -270,36 +267,33 @@ public class CourseDetailsController implements Initializable {
         }
 
         com.edulink.gui.models.User student = com.edulink.gui.util.SessionManager.getCurrentUser();
+        String studentName = (student != null) ? student.getFullName() : "Valued Student";
         com.edulink.gui.services.PdfExportService exporter = new com.edulink.gui.services.PdfExportService();
 
-        // Format Selection Dialog
-        ButtonType pdfBtn = new ButtonType("🎓 Professional PDF", ButtonBar.ButtonData.OK_DONE);
-        ButtonType pngBtn = new ButtonType("🖼️ High-Res Image (PNG)", ButtonBar.ButtonData.OK_DONE);
-        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        // Premium Choice Dialog
+        int choice = com.edulink.gui.util.EduAlert.showCertificateChoice(studentName);
+        if (choice == 0) return; // User cancelled
 
-        Alert alert = new Alert(Alert.AlertType.NONE);
-        alert.setTitle("Elite Certification");
-        alert.setHeaderText("Congratulations, " + student.getFullName() + "!");
-        alert.setContentText("Your achievement is verified. How would you like to save your certificate?");
-        alert.getButtonTypes().setAll(pdfBtn, pngBtn, cancelBtn);
-        alert.initOwner(rootPane.getScene().getWindow());
+        boolean isPdf = (choice == 1);
+        
+        FileChooser fc = new FileChooser();
+        fc.setTitle("Save Certificate");
+        fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
+        fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
 
-        java.util.Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() != cancelBtn) {
-            boolean isPdf = result.get() == pdfBtn;
-            
-            FileChooser fc = new FileChooser();
-            fc.setTitle("Save Certificate");
-            fc.setInitialFileName("Certificate_" + currentCourse.getTitle().replace(" ", "_") + (isPdf ? ".pdf" : ".png"));
-            fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(isPdf ? "PDF Document" : "PNG Image", isPdf ? "*.pdf" : "*.png"));
-
-            File file = fc.showSaveDialog(rootPane.getScene().getWindow());
-            if (file != null) {
+        File file = fc.showSaveDialog(rootPane.getScene().getWindow());
+        if (file != null) {
                 try {
+                    // Create dummy user if session is null for the exporter
+                    com.edulink.gui.models.User targetUser = (student != null) ? student : new com.edulink.gui.models.User();
+                    if (student == null) {
+                        targetUser.setFullName("Valued Student");
+                    }
+
                     if (isPdf) {
-                        exporter.exportCertificate(student, currentCourse, file);
+                        exporter.exportCertificate(targetUser, currentCourse, file);
                     } else {
-                        exporter.exportCertificateAsImage(student, currentCourse, file);
+                        exporter.exportCertificateAsImage(targetUser, currentCourse, file);
                     }
                     
                     EduAlert.show(EduAlert.AlertType.SUCCESS, "Export Success", 
@@ -313,7 +307,6 @@ public class CourseDetailsController implements Initializable {
                     EduAlert.show(EduAlert.AlertType.ERROR, "Export Error", ex.getMessage());
                 }
             }
-        }
     }
 
     @FXML
@@ -414,16 +407,7 @@ public class CourseDetailsController implements Initializable {
         java.io.File sourceFile = new java.io.File(sourcePath);
         if (!sourceFile.exists() || !sourceFile.isAbsolute()) return sourcePath;
         
-        java.io.File destDir = new java.io.File(System.getProperty("user.dir"), "src/main/resources/pdfs");
-        if (!destDir.exists() && new java.io.File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
-            destDir = new java.io.File(System.getProperty("user.dir"), "java/src/main/resources/pdfs");
-        } else if (!destDir.exists()) {
-            destDir = new java.io.File("src/main/resources/pdfs");
-        }
-        
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
+        java.io.File destDir = com.edulink.gui.util.ResourcePathResolver.getPdfsDir();
         
         java.io.File destFile = new java.io.File(destDir, sourceFile.getName());
         int counter = 1;
@@ -439,13 +423,13 @@ public class CourseDetailsController implements Initializable {
         if (!destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
             try {
                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                return "src/main/resources/pdfs/" + destFile.getName();
+                return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
             } catch (Exception e) {
                 System.err.println("Failed to copy file: " + e.getMessage());
                 return sourcePath;
             }
         }
-        return "src/main/resources/pdfs/" + destFile.getName();
+        return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
     }
 
     private String getCourseContext() {
@@ -516,7 +500,7 @@ public class CourseDetailsController implements Initializable {
         dialog.setScene(new javafx.scene.Scene(root, 650, 550));
         dialog.show();
         
-        String finalContent = content.length() > 20000 ? content.substring(0, 20000) : content;
+        String finalContent = content.length() > 4000 ? content.substring(0, 4000) : content;
         
         new Thread(() -> {
             com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
@@ -631,7 +615,7 @@ public class CourseDetailsController implements Initializable {
         dialog.setScene(new javafx.scene.Scene(root));
         dialog.show();
         
-        String finalContent = content.length() > 20000 ? content.substring(0, 20000) : content;
+        String finalContent = content.length() > 4000 ? content.substring(0, 4000) : content;
         
         new Thread(() -> {
             com.edulink.gui.services.GroqService groq = new com.edulink.gui.services.GroqService();
@@ -684,8 +668,8 @@ public class CourseDetailsController implements Initializable {
             String context = getCourseContext();
             if (context.trim().isEmpty()) {
                 context = "[No readable PDF resources found for this course. Please rely on general knowledge regarding the course topic.]";
-            } else if (context.length() > 20000) {
-                context = context.substring(0, 20000);
+            } else if (context.length() > 4000) {
+                context = context.substring(0, 4000);
             }
             final String finalContext = context;
             

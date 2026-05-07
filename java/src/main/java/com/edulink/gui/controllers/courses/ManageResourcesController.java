@@ -231,16 +231,7 @@ public class ManageResourcesController implements Initializable {
         File sourceFile = new File(sourcePath);
         if (!sourceFile.exists() || !sourceFile.isAbsolute()) return sourcePath; // already relative or invalid
         
-        File destDir = new File(System.getProperty("user.dir"), "src/main/resources/pdfs");
-        if (!destDir.exists() && new File(System.getProperty("user.dir"), "java/src/main/resources").exists()) {
-            destDir = new File(System.getProperty("user.dir"), "java/src/main/resources/pdfs");
-        } else if (!destDir.exists()) {
-            destDir = new File("src/main/resources/pdfs");
-        }
-        
-        if (!destDir.exists()) {
-            destDir.mkdirs();
-        }
+        File destDir = com.edulink.gui.util.ResourcePathResolver.getPdfsDir();
         
         File destFile = new File(destDir, sourceFile.getName());
         int counter = 1;
@@ -256,13 +247,13 @@ public class ManageResourcesController implements Initializable {
         if (!destFile.getAbsolutePath().equals(sourceFile.getAbsolutePath())) {
             try {
                 java.nio.file.Files.copy(sourceFile.toPath(), destFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-                return "src/main/resources/pdfs/" + destFile.getName();
+                return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
             } catch (Exception e) {
                 e.printStackTrace();
                 return sourcePath;
             }
         }
-        return "src/main/resources/pdfs/" + destFile.getName();
+        return com.edulink.gui.util.ResourcePathResolver.pdfStoredPath(destFile.getName());
     }
 
     /**

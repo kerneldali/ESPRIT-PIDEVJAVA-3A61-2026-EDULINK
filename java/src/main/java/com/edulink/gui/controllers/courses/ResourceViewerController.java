@@ -36,7 +36,7 @@ public class ResourceViewerController {
     }
 
     private void loadVideoHtml(String path) {
-        String source = path.startsWith("http") ? path : new File(path).toURI().toString();
+        String source = path.startsWith("http") ? path : com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(path).toURI().toString();
         String html = "<!DOCTYPE html><html><head><style>" +
                 "body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }" +
                 "video { width: 100%; height: 100%; object-fit: contain; }" +
@@ -71,7 +71,7 @@ public class ResourceViewerController {
                 webView.getEngine().load(path);
             }
         } else {
-            File f = new File(path);
+            File f = com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(path);
             if (f.exists()) {
                 try {
                     // Method: Inject Base64 PDF into an internal viewer
@@ -113,7 +113,7 @@ public class ResourceViewerController {
     }
 
     private void loadGenericWeb(String path) {
-        String url = path.startsWith("http") ? path : new File(path).toURI().toString();
+        String url = path.startsWith("http") ? path : com.edulink.gui.util.ResourcePathResolver.resolveResourceFile(path).toURI().toString();
         webView.getEngine().load(url);
     }
 
