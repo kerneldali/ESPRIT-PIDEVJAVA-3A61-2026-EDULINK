@@ -41,6 +41,7 @@ public class AdminWalletManagementController implements Initializable {
     @FXML private VBox emptyPrompt;
     
     private UserService userService;
+    private com.edulink.gui.services.EduTokenService tokenService = new com.edulink.gui.services.EduTokenService();
     private ObservableList<User> userList;
     private FilteredList<User> filteredData;
     private User selectedUser;
@@ -168,6 +169,41 @@ public class AdminWalletManagementController implements Initializable {
             formStatusLabel.setStyle("-fx-text-fill: #ef4444;");
             formStatusLabel.setText("Error executing transaction.");
             e.printStackTrace();
+        }
+    }
+    
+    @FXML
+    public void handleMintTokens() {
+        if (selectedUser == null) return;
+        
+        try {
+            double amount = Double.parseDouble(actionAmountField.getText());
+            if (amount <= 0) {
+                formStatusLabel.setText("Amount must be greater than 0");
+                return;
+            }
+            
+            String userEthAddress = selectedUser.getEthWalletAddress();
+            if (userEthAddress == null || !userEthAddress.startsWith("0x")) {
+                formStatusLabel.setStyle("-fx-text-fill: #ef4444;");
+                formStatusLabel.setText("Selected user has no valid wallet address.");
+                return;
+            }
+            
+            formStatusLabel.setText("Processing mint on Sepolia...");
+            String txHash = tokenService.adminMint(userEthAddress, (long) amount);
+            
+            if (txHash != null) {
+                formStatusLabel.setStyle("-fx-text-fill: #10b981;");
+                formStatusLabel.setText("✓ Success! Minted " + amount + " EDU tokens.");
+                actionAmountField.clear();
+            } else {
+                formStatusLabel.setStyle("-fx-text-fill: #ef4444;");
+                formStatusLabel.setText("Blockchain transaction failed.");
+            }
+        } catch (Exception e) {
+            formStatusLabel.setStyle("-fx-text-fill: #ef4444;");
+            formStatusLabel.setText("Minting failed.");
         }
     }
 }

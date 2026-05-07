@@ -54,8 +54,10 @@
 
             <!-- Difficulty -->
             <Label text="Difficulty" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-            <ComboBox fx:id="difficultyCombo" maxWidth="1.7976931348623157E308"
-                      GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <HBox spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="5">
+                <ComboBox fx:id="difficultyCombo" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                <Button text="🧠 AI Suggest" onAction="#handleAiSuggest" style="-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+            </HBox>
 
             <!-- Is Ticket -->
             <Label text="Is Ticket?" styleClass="form-label" GridPane.columnIndex="0" GridPane.rowIndex="6"/>

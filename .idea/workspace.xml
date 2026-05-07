@@ -6,6 +6,10 @@
   <component name="ChangeListManager">
     <list default="true" id="3358d61d-ab45-4274-b008-586262bf4775" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/java/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/controllers/assistance/ChatController.java" beforeDir="false" afterPath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/controllers/assistance/ChatController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/services/EduTokenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/services/EduTokenService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/services/GroqService.java" beforeDir="false" afterPath="$PROJECT_DIR$/java/src/main/java/com/edulink/gui/services/GroqService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -42,10 +46,12 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "yassine-zariat-gestion__event",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "mohamed-ali",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/zaria/OneDrive/Bureau/PI JAVA/ESPRIT-PIDEVJAVA-3A61-2026-EDULINK",
+    "last_opened_file_path": "C:/Users/dali/Desktop/piweb-desktop",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -54,19 +60,6 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager">
-    <configuration default="true" type="JetRunConfigurationType">
-      <module name="ESPRIT-PIDEVJAVA-3A61-2026-EDULINK" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration default="true" type="KotlinStandaloneScriptRunConfigurationType">
-      <module name="ESPRIT-PIDEVJAVA-3A61-2026-EDULINK" />
-      <option name="filePath" />
-      <method v="2" />
-    </configuration>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -85,6 +78,7 @@
       <workItem from="1776265859730" duration="1553000" />
       <workItem from="1775899206341" duration="577000" />
       <workItem from="1776389188548" duration="20000" />
+      <workItem from="1777220547505" duration="45000" />
     </task>
     <servers />
   </component>

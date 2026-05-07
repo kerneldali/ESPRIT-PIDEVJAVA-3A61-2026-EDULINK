@@ -9,6 +9,9 @@ public class Note {
     private String title;
     private String content;
     private String tags;
+    private String sentiment;
+    private String aiCategorySuggestion;
+    private String audioPath;
     private Timestamp createdAt;
 
     public Note() {
@@ -81,6 +84,15 @@ public class Note {
     public void setTags(String tags) {
         this.tags = tags;
     }
+    
+    public String getSentiment() { return sentiment; }
+    public void setSentiment(String sentiment) { this.sentiment = sentiment; }
+    
+    public String getAiCategorySuggestion() { return aiCategorySuggestion; }
+    public void setAiCategorySuggestion(String aiCategorySuggestion) { this.aiCategorySuggestion = aiCategorySuggestion; }
+    
+    public String getAudioPath() { return audioPath; }
+    public void setAudioPath(String audioPath) { this.audioPath = audioPath; }
 
     public Timestamp getCreatedAt() {
         return createdAt;

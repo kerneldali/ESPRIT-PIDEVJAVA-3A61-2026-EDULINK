@@ -5,6 +5,7 @@ import com.edulink.gui.models.User;
 import com.edulink.gui.util.MyConnection;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,6 +116,45 @@ public class UserService implements IService<User> {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void setOtp(String email, String otp) {
+        String qry = "UPDATE user SET reset_otp = ? WHERE email = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, otp);
+            pstm.setString(2, email);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        String qry = "SELECT id FROM user WHERE email = ? AND reset_otp = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, email);
+            pstm.setString(2, otp);
+            ResultSet rs = pstm.executeQuery();
+            if (rs.next()) {
+                // clear OTP
+                setOtp(email, null);
+                return true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public void updatePassword(String email, String newPassword) {
+        String qry = "UPDATE user SET password = ? WHERE email = ?";
+        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+            pstm.setString(1, newPassword);
+            pstm.setString(2, email);
+            pstm.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void updateXp(int userId, int amountToAdd) {
@@ -272,6 +312,12 @@ public class UserService implements IService<User> {
         } catch (SQLException e) {
             u.setXp(0);
         }
+
+        try {
+            u.setEthWalletAddress(rs.getString("eth_wallet_address"));
+            u.setEthPrivateKey(rs.getString("eth_private_key"));
+            u.setFaceHash(rs.getString("face_hash"));
+        } catch (SQLException ignored) {}
         
         try {
             Timestamp ts = rs.getTimestamp("last_reminded_at");

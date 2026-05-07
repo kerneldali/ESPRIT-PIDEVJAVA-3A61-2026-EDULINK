@@ -14,6 +14,7 @@
         <Button text="⬅ Back" onAction="#handleBack" styleClass="secondary-button" />
         <Label fx:id="notebookTitleLabel" styleClass="page-title" text="Notebook: Loading..." />
         <Region HBox.hgrow="ALWAYS"/>
+        <Button text="📅 Weekly AI Summary" onAction="#handleWeeklySummary" styleClass="secondary-button" />
         <Button text="➕ New Note" onAction="#handleNewNote" styleClass="primary-button" />
     </HBox>
 

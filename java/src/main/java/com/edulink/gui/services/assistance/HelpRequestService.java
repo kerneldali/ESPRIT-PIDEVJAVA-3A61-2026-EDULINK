@@ -17,6 +17,23 @@ public class HelpRequestService implements IService<HelpRequest> {
 
     public HelpRequestService() {
         cnx = MyConnection.getInstance().getCnx();
+        ensureStudentIdColumnExists();
+    }
+
+    private void ensureStudentIdColumnExists() {
+        if (cnx == null) return;
+        try (Statement st = cnx.createStatement()) {
+            try {
+                st.executeQuery("SELECT student_id FROM help_request LIMIT 1").close();
+            } catch (SQLException e) {
+                // Column missing, add it
+                System.out.println("[HelpRequestService] Adding missing student_id column...");
+                st.execute("ALTER TABLE help_request ADD COLUMN student_id INT DEFAULT 1");
+                // Also update existing ones to a default user if possible
+            }
+        } catch (SQLException e) {
+            System.err.println("[HelpRequestService] Schema fix failed: " + e.getMessage());
+        }
     }
 
     public boolean isConnected() {
@@ -26,9 +43,13 @@ public class HelpRequestService implements IService<HelpRequest> {
     @Override
     public void add(HelpRequest req) {
         if (cnx == null) return;
-        String sql = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, difficulty, close_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, difficulty, close_reason, student_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
-            // Use RETURN_GENERATED_KEYS to get the ID back immediately
+            if (req.getStudentId() == null || req.getStudentId() <= 0) {
+                com.edulink.gui.models.User current = com.edulink.gui.util.SessionManager.getCurrentUser();
+                if (current != null) req.setStudentId(current.getId());
+            }
+            
             PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, req.getTitle());
             ps.setString(2, req.getDescription());
@@ -39,6 +60,7 @@ public class HelpRequestService implements IService<HelpRequest> {
             ps.setString(7, req.getCategory());
             ps.setString(8, req.getDifficulty());
             ps.setString(9, req.getCloseReason());
+            ps.setInt(10, req.getStudentId() != null ? req.getStudentId() : 1);
             
             ps.executeUpdate();
             
@@ -56,8 +78,13 @@ public class HelpRequestService implements IService<HelpRequest> {
     @Override
     public void add2(HelpRequest req) {
         if (cnx == null) return;
-        String sql = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, difficulty, close_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO help_request (title, description, status, bounty, is_ticket, created_at, category, difficulty, close_reason, student_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
+            if (req.getStudentId() == null || req.getStudentId() <= 0) {
+                com.edulink.gui.models.User current = com.edulink.gui.util.SessionManager.getCurrentUser();
+                if (current != null) req.setStudentId(current.getId());
+            }
+            
             PreparedStatement ps = cnx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, req.getTitle());
             ps.setString(2, req.getDescription());
@@ -68,6 +95,7 @@ public class HelpRequestService implements IService<HelpRequest> {
             ps.setString(7, req.getCategory());
             ps.setString(8, req.getDifficulty());
             ps.setString(9, req.getCloseReason());
+            ps.setInt(10, req.getStudentId() != null ? req.getStudentId() : 1);
             
             ps.executeUpdate();
             
@@ -188,6 +216,40 @@ public class HelpRequestService implements IService<HelpRequest> {
         return stats;
     }
 
+    public HelpRequest getById(int id) {
+        if (cnx == null) return null;
+        String sql = "SELECT * FROM help_request WHERE id = ?";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql);
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) return mapResultSetToHelpRequest(rs);
+        } catch (SQLException e) {
+            System.err.println("Error fetching HelpRequest by ID: " + e.getMessage());
+        }
+        return null;
+    }
+
+    public List<HelpRequest> search(String keyword) {
+        List<HelpRequest> list = new ArrayList<>();
+        if (cnx == null) return list;
+        String sql = "SELECT * FROM help_request WHERE title LIKE ? OR description LIKE ? OR category LIKE ? ORDER BY id DESC";
+        try {
+            PreparedStatement ps = cnx.prepareStatement(sql);
+            String pattern = "%" + keyword + "%";
+            ps.setString(1, pattern);
+            ps.setString(2, pattern);
+            ps.setString(3, pattern);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(mapResultSetToHelpRequest(rs));
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching HelpRequests: " + e.getMessage());
+        }
+        return list;
+    }
+
     private HelpRequest mapResultSetToHelpRequest(ResultSet rs) throws SQLException {
         HelpRequest req = new HelpRequest();
         req.setId(rs.getInt("id"));
@@ -200,6 +262,11 @@ public class HelpRequestService implements IService<HelpRequest> {
         req.setCategory(rs.getString("category"));
         req.setDifficulty(rs.getString("difficulty"));
         req.setCloseReason(rs.getString("close_reason"));
+        
+        // Map student_id safely
+        int sId = rs.getInt("student_id");
+        if (!rs.wasNull()) req.setStudentId(sId);
+        
         return req;
     }
 }

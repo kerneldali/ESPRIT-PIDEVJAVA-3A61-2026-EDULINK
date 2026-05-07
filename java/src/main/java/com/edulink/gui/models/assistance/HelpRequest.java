@@ -15,6 +15,9 @@ public class HelpRequest {
     private String category;
     private String difficulty;
     private String closeReason;
+    private Integer tutorId;          // tutor who accepted this request
+    private String jitsiRoomId;       // live video room tied to the session
+    private String sessionSummary;    // AI-generated summary after session closes
 
     public HelpRequest() {
         this.status = "OPEN";
@@ -58,4 +61,13 @@ public class HelpRequest {
     
     public String getCloseReason() { return closeReason; }
     public void setCloseReason(String closeReason) { this.closeReason = closeReason; }
+
+    public Integer getTutorId() { return tutorId; }
+    public void setTutorId(Integer tutorId) { this.tutorId = tutorId; }
+
+    public String getJitsiRoomId() { return jitsiRoomId; }
+    public void setJitsiRoomId(String jitsiRoomId) { this.jitsiRoomId = jitsiRoomId; }
+
+    public String getSessionSummary() { return sessionSummary; }
+    public void setSessionSummary(String sessionSummary) { this.sessionSummary = sessionSummary; }
 }

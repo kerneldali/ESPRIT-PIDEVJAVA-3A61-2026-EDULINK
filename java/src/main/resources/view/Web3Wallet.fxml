@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml" 
+            fx:controller="com.edulink.gui.controllers.UserWalletController" 
+            stylesheets="@../styles/style.css">
+    
+    <center>
+        <VBox spacing="20" alignment="TOP_CENTER" styleClass="card" maxWidth="600">
+            <padding><Insets top="40" right="40" bottom="40" left="40"/></padding>
+            
+            <Label text="Web3 Token Wallet" style="-fx-font-size: 28px; -fx-font-weight: bold;"/>
+            <Label text="Manage your EduTokens (EDU) on the Sepolia Testnet" style="-fx-text-fill: gray;"/>
+            
+            <HBox spacing="10" alignment="CENTER">
+                <Label text="Balance:" style="-fx-font-size: 18px; -fx-font-weight: bold;"/>
+                <Label fx:id="balanceLabel" text="0.00 EDU" style="-fx-font-size: 24px; -fx-text-fill: #10b981; -fx-font-weight: bold;"/>
+                <Button text="↻ Refresh" onAction="#handleRefreshBalance" styleClass="secondary-button"/>
+            </HBox>
+            
+            <Separator/>
+            
+            <VBox spacing="10">
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="Wallet Setup" style="-fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="✨ Generate New Wallet" onAction="#handleGenerateWallet" style="-fx-background-color: #8b5cf6; -fx-text-fill: white; -fx-font-weight: bold;"/>
+                </HBox>
+                <TextField fx:id="ethAddressField" promptText="Your ETH Address (0x...)"/>
+                <PasswordField fx:id="privateKeyField" promptText="Your Private Key (For local signing only)"/>
+            </VBox>
+            
+            <HBox spacing="20">
+                <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: #f8fafc; -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8;">
+                    <Label text="Buy EDU Tokens" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="buyAmountField" promptText="Amount in ETH (e.g., 0.01)"/>
+                    <Button text="Buy Tokens" onAction="#handleBuyTokens" styleClass="primary-button" maxWidth="Infinity"/>
+                </VBox>
+                
+                <VBox spacing="10" HBox.hgrow="ALWAYS" style="-fx-background-color: #f8fafc; -fx-padding: 15; -fx-border-radius: 8; -fx-background-radius: 8;">
+                    <Label text="Send Tokens" style="-fx-font-weight: bold;"/>
+                    <TextField fx:id="sendAddressField" promptText="Recipient ETH Address (0x...)"/>
+                    <TextField fx:id="sendAmountField" promptText="Amount in EDU"/>
+                    <Button text="Send Tokens" onAction="#handleSendTokens" styleClass="primary-button" maxWidth="Infinity"/>
+                </VBox>
+            </HBox>
+            
+            <VBox spacing="10" VBox.vgrow="ALWAYS">
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Transaction History" style="-fx-font-weight: bold;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Hyperlink text="View on Etherscan" onAction="#handleViewOnEtherscan" style="-fx-text-fill: #3b82f6;"/>
+                </HBox>
+                <ListView fx:id="transactionListView" prefHeight="150" style="-fx-background-radius: 8; -fx-border-radius: 8;"/>
+            </VBox>
+            
+            <Label fx:id="statusLabel" text="Status: Ready" style="-fx-text-fill: #3b82f6; -fx-font-weight: bold;"/>
+        </VBox>
+    </center>
+</BorderPane>
