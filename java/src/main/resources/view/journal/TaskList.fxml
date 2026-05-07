@@ -13,16 +13,35 @@
     <HBox spacing="15" alignment="CENTER_LEFT" styleClass="action-bar">
         <Label styleClass="page-title" text="✅ Daily Tasks" />
         <Region HBox.hgrow="ALWAYS"/>
-        <Button text="🔃 Sort: Incomplete First" onAction="#handleSortTasks" styleClass="secondary-button" />
-        <TextField fx:id="newTaskField" promptText="Enter a new task..." prefWidth="300" onAction="#handleAddTask" />
-        <Button text="➕ Add" onAction="#handleAddTask" styleClass="primary-button" />
+        <Button fx:id="sortBtn" text="⬇ Sort: Done First" onAction="#handleSort"
+                style="-fx-background-color: #10b981; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8;" />
+        <TextField fx:id="newTaskField" promptText="Enter a new task..." prefWidth="260" onAction="#handleAddTask" />
+        <Button fx:id="voiceTaskBtn" text="🎙 Voice" onAction="#handleVoiceTask"
+                style="-fx-background-color: #6366f1; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 16; -fx-background-radius: 8;" />
+        <Label fx:id="voiceTaskStatus" text="" style="-fx-text-fill: #6366f1;" />
     </HBox>
 
-    <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" styleClass="cards-scroll">
-        <VBox fx:id="tasksContainer" spacing="10">
-            <padding>
-                <Insets top="10" right="10" bottom="10" left="10"/>
-            </padding>
+    <HBox spacing="15" alignment="CENTER_LEFT" styleClass="action-bar" style="-fx-background-color: #f8f0ff; -fx-padding: 15; -fx-background-radius: 10;">
+        <Label styleClass="page-title" text="⏰ Set Reminder" style="-fx-text-fill: #8e44ad;" />
+        <TextField fx:id="reminderTitleField" promptText="Reminder Title..." prefWidth="200" />
+        <DatePicker fx:id="reminderDateField" promptText="Date" />
+        <TextField fx:id="reminderTimeField" promptText="Time (HH:mm)" prefWidth="100" />
+        <Button text="🔔 Set" onAction="#handleAddReminder" style="-fx-background-color: #8e44ad; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 8 20;" />
+    </HBox>
+
+    <HBox spacing="20" VBox.vgrow="ALWAYS">
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="Your Tasks" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+            <ScrollPane fitToWidth="true" styleClass="cards-scroll" VBox.vgrow="ALWAYS">
+                <VBox fx:id="tasksContainer" spacing="10" />
+            </ScrollPane>
         </VBox>
-    </ScrollPane>
+        
+        <VBox spacing="10" HBox.hgrow="ALWAYS">
+            <Label text="Active Reminders" style="-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: #8e44ad;" />
+            <ScrollPane fitToWidth="true" styleClass="cards-scroll" VBox.vgrow="ALWAYS">
+                <VBox fx:id="remindersContainer" spacing="10" />
+            </ScrollPane>
+        </VBox>
+    </HBox>
 </VBox>
