@@ -137,8 +137,73 @@ def health():
     return jsonify({"status": "ok", "service": "edulink-sentiment-api"}), 200
 
 
+import math
+
+def sentence_similarity(sent1, sent2):
+    # Calculate similarity between two sentences using simple word overlap
+    words1 = [w.lower() for w in sent1.split() if len(w) > 3]
+    words2 = [w.lower() for w in sent2.split() if len(w) > 3]
+    if not words1 or not words2:
+        return 0.0
+    intersection = len(set(words1).intersection(set(words2)))
+    # Normalize by the log length to avoid long sentence bias
+    return intersection / (math.log(len(words1)) + math.log(len(words2)) + 1e-5)
+
+@app.route('/summarize', methods=['POST'])
+def summarize():
+    data = request.json
+    text = data.get('text', '')
+    if not text:
+        return jsonify({"summary": "Not enough content to summarize."})
+    
+    import re
+    # Split text into sentences
+    sentences = [s.strip() for s in re.split(r'[.!?]+', text) if len(s.strip()) > 10]
+    
+    if len(sentences) <= 3:
+        return jsonify({"summary": " ".join(sentences) + "."})
+        
+    # Build similarity matrix
+    n = len(sentences)
+    sim_matrix = [[0.0 for _ in range(n)] for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                sim_matrix[i][j] = sentence_similarity(sentences[i], sentences[j])
+                
+    # TextRank (PageRank)
+    d = 0.85
+    scores = [1.0] * n
+    for _ in range(10): # 10 iterations
+        new_scores = [0.0] * n
+        for i in range(n):
+            sum_links = 0.0
+            for j in range(n):
+                if i != j:
+                    out_links = sum(sim_matrix[j])
+                    if out_links > 0:
+                        sum_links += sim_matrix[j][i] / out_links * scores[j]
+            new_scores[i] = (1 - d) + d * sum_links
+        scores = new_scores
+        
+    # Get top 3 sentences
+    ranked_sentences = sorted(((scores[i], s) for i, s in enumerate(sentences)), reverse=True)
+    top_n = min(3, len(ranked_sentences))
+    
+    # Re-order the top sentences to match original order in text
+    summary_sentences = []
+    for i in range(n):
+        for j in range(top_n):
+            if ranked_sentences[j][1] == sentences[i]:
+                summary_sentences.append(sentences[i])
+                break
+                
+    summary = ". ".join(summary_sentences) + "."
+    return jsonify({"summary": summary})
+
+
 if __name__ == "__main__":
-    print("🧠 EduLink Sentiment API starting on port 5001...")
+    print("EduLink Sentiment API starting on port 5001...")
     print("   Endpoint: POST http://localhost:5001/analyze")
     print("   Health:   GET  http://localhost:5001/health")
     app.run(host="0.0.0.0", port=5001, debug=False)

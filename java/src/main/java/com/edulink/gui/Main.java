@@ -28,9 +28,9 @@ public class Main extends Application {
 
             FXMLLoader fxmlLoader = new FXMLLoader(fxmlUrl);
             Parent root = fxmlLoader.load();
-            
+
             Scene scene = new Scene(root, 1100, 750); // Slightly larger for pro look
-            
+
             // Check if CSS exists
             URL cssUrl = Main.class.getResource("/styles/style.css");
             if (cssUrl != null) {
@@ -38,11 +38,11 @@ public class Main extends Application {
             } else {
                 System.err.println("Warning: /styles/style.css not found.");
             }
-            
+
             stage.setTitle("EduLink - Modern Learning Platform");
             stage.setScene(scene);
             stage.show();
-            
+
         } catch (Exception e) {
             System.err.println("CRITICAL ERROR during startup:");
             e.printStackTrace();
@@ -66,6 +66,7 @@ public class Main extends Application {
 
     public static void main(String[] args) {
         try {
+            com.edulink.gui.util.TaskReminderScheduler.start();
             launch(args);
         } catch (Exception e) {
             System.err.println("Fatal error starting application:");

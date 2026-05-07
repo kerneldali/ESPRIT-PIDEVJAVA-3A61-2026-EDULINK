@@ -18,4 +18,8 @@ Write-Host "Starting Classification API (Port 8000)..." -ForegroundColor Yellow
 # Note: uses same dependencies as suggestion_api
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$basePath\classification_api'; pip install fastapi uvicorn pydantic edge-tts scikit-learn; python app.py" -WindowStyle Normal
 
+# 4. STT API (Port 5003)
+Write-Host "Starting STT API (Port 5003)..." -ForegroundColor Yellow
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$basePath\toxicity_api'; pip install requests flask; python app_stt.py" -WindowStyle Normal
+
 Write-Host "✅ All AI services triggered. Keep the terminal windows open!" -ForegroundColor Green
