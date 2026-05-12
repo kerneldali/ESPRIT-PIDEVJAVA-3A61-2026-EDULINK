@@ -43,7 +43,7 @@ public class NoteService implements IService<Note> {
     @Override
     public void add2(Note n) {
         String qry = "INSERT INTO note (notebook_id, category_id, title, content, tags, sentiment, ai_category_suggestion, audio_path) VALUES (?,?,?,?,?,?,?,?)";
-        try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
+        try (PreparedStatement pstm = cnx.prepareStatement(qry, java.sql.Statement.RETURN_GENERATED_KEYS)) {
             pstm.setInt(1, n.getNotebookId());
             if (n.getCategoryId() > 0)
                 pstm.setInt(2, n.getCategoryId());
@@ -56,7 +56,13 @@ public class NoteService implements IService<Note> {
             pstm.setString(7, n.getAiCategorySuggestion());
             pstm.setString(8, n.getAudioPath());
             pstm.executeUpdate();
-            System.out.println("✅ Note added (add2): " + n.getTitle());
+
+            ResultSet generatedKeys = pstm.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                n.setId(generatedKeys.getInt(1));
+            }
+
+            System.out.println("✅ Note added (add2) id=" + n.getId() + ": " + n.getTitle());
         } catch (SQLException e) {
             System.err.println("❌ Error adding note2: " + e.getMessage());
             e.printStackTrace();

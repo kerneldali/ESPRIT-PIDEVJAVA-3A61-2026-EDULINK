@@ -1,5 +1,6 @@
 package com.edulink.gui.services;
 
+import com.edulink.gui.util.GroqConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -10,10 +11,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.UUID;
 
 public class STTService {
-    private static final String PYTHON_STT_URL = "http://localhost:5003/transcribe";
+    private static final String GROQ_STT_URL = "https://api.groq.com/openai/v1/audio/transcriptions";
     private AudioFormat format;
     private TargetDataLine line;
     private File currentAudioFile;
@@ -69,46 +71,65 @@ public class STTService {
             return "Recording was too short or microphone is not capturing audio. Please try again.";
         }
 
-        System.out.println("STT: sending " + currentAudioFile.length() + " bytes to transcription service");
-        return transcribeWithPython(currentAudioFile);
+        System.out.println("STT: sending " + currentAudioFile.length() + " bytes to Groq Whisper API");
+        return transcribeWithGroq(currentAudioFile);
     }
 
-    private String transcribeWithPython(File audioFile) throws IOException {
-        String boundary = "---" + UUID.randomUUID().toString();
+    private String transcribeWithGroq(File audioFile) throws IOException {
+        String boundary = "----EduLinkBoundary" + UUID.randomUUID().toString();
         byte[] fileBytes = Files.readAllBytes(audioFile.toPath());
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(bos, "UTF-8"), true);
 
-        writer.append("--").append(boundary).append("\r\n");
-        writer.append("Content-Disposition: form-data; name=\"file\"; filename=\"").append(audioFile.getName())
-                .append("\"\r\n");
-        writer.append("Content-Type: audio/wav\r\n\r\n");
-        writer.flush();
+        // -- file part --
+        bos.write(("--" + boundary + "\r\n").getBytes());
+        bos.write(("Content-Disposition: form-data; name=\"file\"; filename=\"" + audioFile.getName() + "\"\r\n").getBytes());
+        bos.write(("Content-Type: audio/wav\r\n\r\n").getBytes());
         bos.write(fileBytes);
-        writer.append("\r\n");
-        writer.append("--").append(boundary).append("--\r\n");
-        writer.flush();
+        bos.write(("\r\n").getBytes());
 
-        HttpClient client = HttpClient.newHttpClient();
+        // -- model part --
+        bos.write(("--" + boundary + "\r\n").getBytes());
+        bos.write(("Content-Disposition: form-data; name=\"model\"\r\n\r\n").getBytes());
+        bos.write(("whisper-large-v3-turbo\r\n").getBytes());
+
+        // -- language part (optional, helps accuracy) --
+        bos.write(("--" + boundary + "\r\n").getBytes());
+        bos.write(("Content-Disposition: form-data; name=\"language\"\r\n\r\n").getBytes());
+        bos.write(("en\r\n").getBytes());
+
+        // -- closing boundary --
+        bos.write(("--" + boundary + "--\r\n").getBytes());
+
+        HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(15))
+                .build();
+
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(PYTHON_STT_URL))
+                .uri(URI.create(GROQ_STT_URL))
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
+                .header("Authorization", "Bearer " + GroqConfig.mahdi_api_key)
+                .timeout(Duration.ofSeconds(30))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(bos.toByteArray()))
                 .build();
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            System.out.println("🎙 Groq STT response status: " + response.statusCode());
+
             if (response.statusCode() == 200) {
                 ObjectMapper mapper = new ObjectMapper();
                 JsonNode root = mapper.readTree(response.body());
-                return root.path("text").asText().trim();
+                String text = root.path("text").asText().trim();
+                System.out.println("🎙 Transcribed text: " + text);
+                return text.isEmpty() ? "Could not understand the audio. Please try again." : text;
             } else {
-                return "STT Error (" + response.statusCode() + "): " + response.body();
+                System.err.println("❌ Groq STT error: " + response.body());
+                return "Speech-to-text error (" + response.statusCode() + "): " + response.body();
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return "STT Interrupted";
+            return "Speech-to-text was interrupted.";
         } finally {
             if (audioFile.exists())
                 audioFile.delete();

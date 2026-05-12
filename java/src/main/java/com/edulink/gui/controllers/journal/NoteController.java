@@ -6,12 +6,15 @@ import com.edulink.gui.models.journal.Notebook;
 import com.edulink.gui.services.journal.NoteCategoryService;
 import com.edulink.gui.services.journal.NoteService;
 import com.edulink.gui.services.GeminiService;
+import com.edulink.gui.services.GroqService;
 import com.edulink.gui.services.STTService;
 import com.edulink.gui.services.SentimentMLService;
 import com.edulink.gui.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
@@ -20,6 +23,9 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.layout.HBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +38,7 @@ public class NoteController {
     private NoteService noteService = new NoteService();
     private NoteCategoryService categoryService = new NoteCategoryService();
     private GeminiService geminiService = new GeminiService();
+    private GroqService groqService = new GroqService();
     private STTService sttService = new STTService();
     private SentimentMLService sentimentMLService = new SentimentMLService();
     private Notebook currentNotebook;
@@ -278,22 +285,6 @@ public class NoteController {
                 res.setNotebookId(currentNotebook.getId());
                 res.setCategoryId(catCombo.getValue() != null ? catCombo.getValue().getId() : 0);
                 res.setTags("");
-
-                // ML Sentiment Detection
-                String sentiment = sentimentMLService.predictSentiment(res.getContent());
-                res.setSentiment(sentiment != null ? sentiment.toUpperCase() : "NEUTRAL");
-
-                if ("NEGATIVE".equalsIgnoreCase(sentiment)) {
-                    Platform.runLater(() -> {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("EduLink Support");
-                        alert.setHeaderText("We are here for you! ❤️");
-                        alert.setContentText(
-                                "It seems you're having a tough time. Remember that you are capable, strong, and things will get better. Keep your head up!");
-                        alert.show();
-                    });
-                }
-
                 return res;
             }
             return null;
@@ -301,12 +292,121 @@ public class NoteController {
 
         Optional<Note> result = dialog.showAndWait();
         result.ifPresent(n -> {
+            // Save the note immediately (no blocking on sentiment)
             if (existingNote == null)
                 noteService.add2(n);
             else
                 noteService.edit(n);
             loadData();
+
+            // Run sentiment analysis in background thread so UI never freezes
+            new Thread(() -> {
+                try {
+                    String sentiment = sentimentMLService.predictSentiment(n.getContent());
+                    n.setSentiment(sentiment != null ? sentiment.toUpperCase() : "NEUTRAL");
+                    noteService.edit(n);
+
+                    System.out.println("🧠 Sentiment detected: " + n.getSentiment() + " for note: " + n.getTitle());
+
+                    if ("NEGATIVE".equalsIgnoreCase(sentiment)) {
+                        // Generate personalized encouragement using Groq AI
+                        String encouragement = groqService.generateResponse(
+                                "You are a warm, caring educational counselor at EduLink. A student just wrote a journal note that expresses negative feelings. "
+                                        + "Your job is to write a short, heartfelt encouragement message (3-5 sentences). "
+                                        + "Be empathetic, acknowledge their feelings, and remind them of their strength. "
+                                        + "Do NOT repeat their text back. Do NOT be generic. Be specific and compassionate. "
+                                        + "End with a positive, uplifting thought. Use a warm and friendly tone.",
+                                "The student wrote: " + n.getContent());
+
+                        Platform.runLater(() -> {
+                            loadData(); // Refresh to show sentiment badge
+                            showEncouragementDialog(encouragement, n.getTitle());
+                        });
+                    } else {
+                        Platform.runLater(this::loadData);
+                    }
+                } catch (Exception ex) {
+                    System.err.println("⚠️ Sentiment analysis failed (note was still saved): " + ex.getMessage());
+                    n.setSentiment("NEUTRAL");
+                    noteService.edit(n);
+                    Platform.runLater(this::loadData);
+                }
+            }).start();
         });
+    }
+
+    private void showEncouragementDialog(String message, String noteTitle) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("EduLink Cares About You");
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(20));
+        content.setAlignment(Pos.CENTER);
+        content.setStyle(
+                "-fx-background-color: linear-gradient(to bottom, #1a1a2e, #16213e, #0f3460);"
+                        + "-fx-background-radius: 12;");
+
+        // Heart emoji header
+        Label heartEmoji = new Label("💜");
+        heartEmoji.setStyle("-fx-font-size: 48px;");
+
+        // Title
+        Label titleLabel = new Label("We're Here for You!");
+        titleLabel.setFont(Font.font("System", FontWeight.BOLD, 22));
+        titleLabel.setStyle("-fx-text-fill: #e0aaff;");
+
+        // Subtitle referencing the note
+        Label subtitleLabel = new Label("We noticed your note \"" + noteTitle + "\" may reflect some tough feelings.");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.setStyle("-fx-text-fill: #b8c0cc; -fx-font-size: 13px;");
+        subtitleLabel.setMaxWidth(420);
+
+        // Separator
+        Region separator = new Region();
+        separator.setPrefHeight(1);
+        separator.setMaxWidth(300);
+        separator.setStyle("-fx-background-color: linear-gradient(to right, transparent, #bb86fc, transparent);");
+
+        // AI-generated encouragement message
+        TextArea messageArea = new TextArea(message);
+        messageArea.setWrapText(true);
+        messageArea.setEditable(false);
+        messageArea.setPrefHeight(150);
+        messageArea.setPrefWidth(440);
+        messageArea.setStyle(
+                "-fx-control-inner-background: #1e2a3a;"
+                        + "-fx-text-fill: #e8e8e8;"
+                        + "-fx-font-size: 14px;"
+                        + "-fx-border-color: #bb86fc;"
+                        + "-fx-border-radius: 8;"
+                        + "-fx-background-radius: 8;");
+
+        // Footer
+        Label footerLabel = new Label("🌟 Remember: Every great student has tough days. You've got this! 🌟");
+        footerLabel.setWrapText(true);
+        footerLabel.setStyle("-fx-text-fill: #ffd166; -fx-font-size: 12px; -fx-font-style: italic;");
+        footerLabel.setMaxWidth(420);
+
+        content.getChildren().addAll(heartEmoji, titleLabel, subtitleLabel, separator, messageArea, footerLabel);
+
+        dialog.getDialogPane().setContent(content);
+        dialog.getDialogPane().setPrefWidth(500);
+        dialog.getDialogPane().setStyle(
+                "-fx-background-color: #1a1a2e;");
+
+        // Style the OK button
+        Button okButton = (Button) dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.setText("Thank You 💪");
+        okButton.setStyle(
+                "-fx-background-color: linear-gradient(to right, #bb86fc, #8338ec);"
+                        + "-fx-text-fill: white;"
+                        + "-fx-font-size: 14px;"
+                        + "-fx-font-weight: bold;"
+                        + "-fx-padding: 10 30;"
+                        + "-fx-background-radius: 20;");
+
+        dialog.showAndWait();
     }
 
     private void showAlert(String title, String content) {
