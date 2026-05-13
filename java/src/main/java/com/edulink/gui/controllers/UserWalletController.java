@@ -73,12 +73,13 @@ public class UserWalletController implements Initializable {
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
                 alert.setTitle("🎉 Welcome Gift!");
                 alert.setHeaderText("Congratulations on joining the Web3 economy!");
-                alert.setContentText("A joining gift of 1000 EDU tokens has been minted and sent to your new wallet address. \n\nIt may take a moment to appear on-chain, but your database balance is updated immediately!");
+                alert.setContentText("A joining gift of 1000 EDU tokens has been minted and sent to your new wallet address. \n\nIt may take up to 15 seconds to appear on-chain, but you will see it in your pending balance!");
                 alert.showAndWait();
             });
 
-            statusLabel.setText("✨ Wallet generated and saved to your profile!");
-            handleRefreshBalance();
+            statusLabel.setText("✨ Wallet generated! Bonus is pending network confirmation...");
+            balanceLabel.setText("1000.00 EDU (Pending...)");
+            transactionListView.getItems().add(0, "🎁 MINT: 1000 EDU [Status: PENDING NETWORK CONFIRMATION]");
         } else {
             statusLabel.setText("❌ Wallet generation failed.");
         }
@@ -93,7 +94,13 @@ public class UserWalletController implements Initializable {
             Platform.runLater(() -> {
                 transactionListView.getItems().clear();
                 for (var tx : history) {
-                    transactionListView.getItems().add(tx.txType + ": " + tx.txHash.substring(0, 10) + " (" + tx.amount + " EDU)");
+                    String hashStr = (tx.txHash != null && tx.txHash.length() > 14) ? tx.txHash.substring(0, 14) + "..." : tx.txHash;
+                    String icon = tx.txType.equals("MINT") ? "🎁" : tx.txType.equals("TRANSFER") ? "💸" : "🔄";
+                    // If it's a very recent transaction (less than 30 seconds ago), we can tag it as pending
+                    boolean isRecent = (System.currentTimeMillis() - tx.createdAt.getTime()) < 30000;
+                    String status = isRecent ? "[PENDING/MINING]" : "[CONFIRMED]";
+                    
+                    transactionListView.getItems().add(icon + " " + tx.txType + " | Hash: " + hashStr + " | Amount: " + tx.amount + " EDU " + status);
                 }
             });
         }).start();

@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 public class HelpRequestListController implements Initializable {
 
@@ -31,6 +34,7 @@ public class HelpRequestListController implements Initializable {
     private HelpRequestService service = new HelpRequestService();
     private HelpSessionService sessionService = new HelpSessionService();
     private List<HelpRequest> allRequestsCache = new java.util.ArrayList<>();
+    private Timeline pollingTimeline;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -44,6 +48,35 @@ public class HelpRequestListController implements Initializable {
         filterCombo.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         loadData();
+        startPolling();
+    }
+
+    private void startPolling() {
+        pollingTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            if (cardsContainer.getScene() != null && cardsContainer.getScene().getWindow().isShowing()) {
+                int oldSize = allRequestsCache.size();
+                List<HelpRequest> freshData = service.getAll();
+                // Simple hash check or size check to prevent flickering. Ideally check IDs.
+                if (freshData.size() != oldSize || !sameItems(freshData, allRequestsCache)) {
+                    allRequestsCache = freshData;
+                    applyFilters();
+                }
+            } else {
+                // If scene is gone, stop the timeline to prevent memory leaks
+                pollingTimeline.stop();
+            }
+        }));
+        pollingTimeline.setCycleCount(Timeline.INDEFINITE);
+        pollingTimeline.play();
+    }
+
+    private boolean sameItems(List<HelpRequest> list1, List<HelpRequest> list2) {
+        if (list1.size() != list2.size()) return false;
+        for (int i = 0; i < list1.size(); i++) {
+            if (list1.get(i).getId() != list2.get(i).getId()) return false;
+            if (!safeStr(list1.get(i).getStatus()).equals(safeStr(list2.get(i).getStatus()))) return false;
+        }
+        return true;
     }
 
     @FXML

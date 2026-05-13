@@ -1,0 +1,585 @@
+{% extends 'base.html.twig' %}
+
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 0 1rem;">
+    
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <div>
+            <h1 style="margin: 0; font-size: 2.5rem; background: var(--brand-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Marketplace</h1>
+            <p style="color: var(--text-secondary); margin-top: 0.5rem;">Explore categories and courses or manage your content.</p>
+        </div>
+        <button onclick="triggerAiPrompt()" class="btn" style="display: flex; align-items: center; gap: 8px; background: rgba(139, 92, 246, 0.1); border: 2px solid var(--brand-main); color: var(--brand-main); font-weight: 700; border-radius: 12px; padding: 12px 24px; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+            <i data-lucide="sparkles" style="width: 20px; height: 20px;"></i> AI Recommend for Me
+        </button>
+    </div>
+
+   <!-- Tabs -->
+    <div class="tabs" style="display: flex; gap: 2rem; margin-bottom: 2.5rem; border-bottom: 2px solid #ecf0f1;">
+        <button class="tab-btn active" onclick="switchTab('browse-categories')" style="padding: 10px 0; background: none; border: none; border-bottom: 3px solid transparent; font-size: 1.1rem; color: #7f8c8d; cursor: pointer; font-weight: 600; transition: all 0.2s;">Browse Categories</button>
+        <button class="tab-btn" onclick="switchTab('my-learning')" style="padding: 10px 0; background: none; border: none; border-bottom: 3px solid transparent; font-size: 1.1rem; color: #7f8c8d; cursor: pointer; font-weight: 600; transition: all 0.2s;">My Learning</button>
+        <button class="tab-btn" onclick="switchTab('creator-studio')" style="padding: 10px 0; background: none; border: none; border-bottom: 3px solid transparent; font-size: 1.1rem; color: #7f8c8d; cursor: pointer; font-weight: 600; transition: all 0.2s;">Creator Studio</button>
+    </div>
+
+    <!-- TAB 1: BROWSE CATEGORIES -->
+    <section id="browse-categories" class="tab-content">
+        <!-- AI RECOMMENDATIONS SECTION -->
+        <div id="ai-recommendations" style="display: none; margin-bottom: 3rem; background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(168, 85, 247, 0.05)); padding: 2rem; border-radius: 20px; border: 1px solid rgba(99, 102, 241, 0.1); position: relative; overflow: hidden;">
+            <div style="position: absolute; top: -10px; right: -10px; opacity: 0.1;">
+                <i data-lucide="sparkles" style="width: 100px; height: 100px; color: var(--brand-main);"></i>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem;">
+                <div style="background: var(--brand-gradient); padding: 8px; border-radius: 10px; color: white;">
+                    <i data-lucide="zap" style="width: 20px; height: 20px;"></i>
+                </div>
+                <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-main);">AI Suggested for You</h2>
+            </div>
+            <div id="rec-loading" style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 10px;">
+                <!-- Skeletons -->
+                {% for i in 1..3 %}
+                <div style="min-width: 280px; height: 120px; background: rgba(255,255,255,0.3); border-radius: 12px; animation: pulse 1.5s infinite;"></div>
+                {% endfor %}
+            </div>
+            <div id="rec-list" style="display: none; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <!-- Recommended courses will appear here -->
+            </div>
+        </div>
+        {% if selectedCategory %}
+            {# Browsing courses in a category #}
+            <div style="margin-bottom: 2rem;">
+                <a href="{{ path('app_student_courses') }}" style="color: var(--text-secondary); text-decoration: none;">← Back to Categories</a>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin-top: 0.5rem;">{{ selectedCategory.name }}</h2>
+                    <a href="{{ path('app_creator_course_new') }}?category={{ selectedCategory.id }}" class="btn info" style="text-decoration: none;">+ Create Course in Category</a>
+                </div>
+            </div>
+
+            {# Search and Filter for Courses #}
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; border: 2px solid var(--border); box-shadow: var(--shadow-sm);">
+                <form method="get" style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+                    <input type="hidden" name="category" value="{{ selectedCategory.id }}">
+                    
+                    <div style="flex: 1 1 300px; position: relative;">
+                        <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+                        <input type="text" name="q" placeholder="Search courses..." value="{{ searchQuery ?? '' }}" style="width: 100%; padding: 12px 12px 12px 40px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-main); color: var(--text-main); font-size: 0.95rem; outline: none; transition: border-color 0.2s;">
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex: 2; align-items: center; justify-content: flex-end;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-main); padding: 5px 12px; border: 1px solid var(--border); border-radius: 10px;">
+                            <i data-lucide="filter" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                            <select name="level" style="border: none; background: none; color: var(--text-main); font-weight: 500; cursor: pointer; height: 32px; outline: none;">
+                                <option value="">All Levels</option>
+                                <option value="Beginner" {{ currentLevel == 'Beginner' ? 'selected' : '' }}>Beginner</option>
+                                <option value="Intermediate" {{ currentLevel == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
+                                <option value="Advanced" {{ currentLevel == 'Advanced' ? 'selected' : '' }}>Advanced</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-main); padding: 5px 12px; border: 1px solid var(--border); border-radius: 10px;">
+                            <i data-lucide="sort-asc" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                            <select name="sort" style="border: none; background: none; color: var(--text-main); font-weight: 500; cursor: pointer; height: 32px; outline: none;">
+                                <option value="newest" {{ currentSort == 'newest' ? 'selected' : '' }}>Newest First</option>
+                                <option value="reward_high" {{ currentSort == 'reward_high' ? 'selected' : '' }}>XP: High to Low</option>
+                                <option value="reward_low" {{ currentSort == 'reward_low' ? 'selected' : '' }}>XP: Low to High</option>
+                                <option value="price_high" {{ currentSort == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
+                                <option value="price_low" {{ currentSort == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
+                                <option value="alpha_asc" {{ currentSort == 'alpha_asc' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn brand" style="padding: 10px 24px;">Search</button>
+                        {% if searchQuery or currentLevel or currentSort != 'newest' %}
+                            <a href="{{ path('app_student_courses', {'category': selectedCategory.id}) }}" class="btn secondary" style="padding: 10px 15px; text-decoration: none;">Clear Filters</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+
+            {# Courses Grid #}
+            {% if pagination is not empty %}
+                <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
+                    {% for cours in pagination %}
+                        <div class="card" style="display: flex; flex-direction: column;">
+                            <h3 style="margin: 0 0 0.5rem 0;">{{ cours.title }}</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; flex: 1; margin-bottom: 1rem;">{{ cours.description|slice(0, 100) }}...</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                <span class="badge" style="background: var(--info); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">{{ cours.level }}</span>
+                                <span style="color: var(--success); font-weight: 600;">+{{ cours.xp }} XP</span>
+                            </div>
+                            <div style="margin-top: auto;">
+                                <a href="{{ path('app_student_course_detail', {'id': cours.id}) }}" class="btn brand" style="width: 100%; text-align: center; text-decoration: none; padding: 10px; display: block;">View Course</a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="navigation" style="margin-top: 2rem; display: flex; justify-content: center;">
+                    {{ knp_pagination_render(pagination) }}
+                </div>
+            {% else %}
+                <p style="text-align: center; color: var(--text-muted); padding: 3rem;">No courses in this category yet.</p>
+            {% endif %}
+
+        {% else %}
+            {# Browsing categories #}
+            
+
+            <div style="margin-bottom: 2.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 2rem;">All Categories</h2>
+                        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Choose a category to explore courses or use search to find a specific topic.</p>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; border: 2px solid var(--border); margin-bottom: 2rem; box-shadow: var(--shadow-sm);">
+                    <form method="get" style="display: flex; gap: 2rem; flex-wrap: wrap; align-items: center;">
+                        <div style="flex: 1 1 300px; position: relative;">
+                            <i data-lucide="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 18px; height: 18px;"></i>
+                            <input type="text" name="q" value="{{ searchQuery ?? '' }}" placeholder="Search categories..." style="width: 100%; padding: 12px 12px 12px 40px; background: var(--bg-main); border: 1px solid var(--border); border-radius: 10px; color: var(--text-main); font-size: 0.95rem; outline: none;">
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; flex: 2; align-items: center; justify-content: flex-end;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; background: var(--bg-main); padding: 5px 12px; border: 1px solid var(--border); border-radius: 10px;">
+                                <i data-lucide="sort-asc" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+                                <select name="sort" style="border: none; background: none; color: var(--text-main); font-weight: 500; cursor: pointer; height: 32px; outline: none;">
+                                    <option value="alpha_asc" {{ currentSort == 'alpha_asc' ? 'selected' : '' }}>Alphabetical (A-Z)</option>
+                                    <option value="newest" {{ currentSort == 'newest' ? 'selected' : '' }}>Newest First</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn brand" style="padding: 10px 24px;">Search</button>
+                            {% if searchQuery or currentSort != 'alpha_asc' %}
+                                <a href="{{ path('app_student_courses') }}" class="btn secondary" style="padding: 10px 15px; text-decoration: none;">Clear Filters</a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if searchQuery and pagination is not empty %}
+                <div style="margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">Course Results for "{{ searchQuery }}"</h3>
+                    <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
+                        {% for cours in pagination %}
+                            <div class="card" style="display: flex; flex-direction: column; border: 2px solid var(--border);">
+                                <h3 style="margin: 0 0 0.5rem 0;">{{ cours.title }}</h3>
+                                <p style="color: var(--text-secondary); font-size: 0.9rem; flex: 1; margin-bottom: 1rem;">{{ cours.description|slice(0, 100) }}...</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                    <span class="badge" style="background: var(--info); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">{{ cours.level }}</span>
+                                    <span style="color: var(--success); font-weight: 600;">{{ cours.xp }} XP</span>
+                                </div>
+                                <div style="margin-top: auto;">
+                                    <a href="{{ path('app_student_course_detail', {'id': cours.id}) }}" class="btn brand" style="width: 100%; text-align: center; text-decoration: none; padding: 10px; display: block;">View Course</a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="navigation" style="margin-top: 2rem;">
+                        <div class="pagination">
+                            {{ knp_pagination_render(pagination) }}
+                        </div>
+                    </div>
+                    <hr style="margin: 3rem 0; border: 0; border-top: 1px solid var(--border);">
+                </div>
+            {% endif %}
+
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-main);">{% if searchQuery %}Category Results{% else %}All Categories{% endif %}</h3>
+            <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem;">
+                {% for matiere in matieres %}
+                    <a href="{{ path('app_student_courses', {'category': matiere.id}) }}" class="card marketplace-card" style="text-decoration: none; color: inherit; padding: 0; overflow: hidden; transition: transform 0.2s; cursor: pointer; border: 2px solid var(--border);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <div style="height: 160px; background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.2)), url('{{ matiere.imageUrl ?: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800' }}'); background-size: cover; background-position: center;">
+                            {% if not matiere.imageUrl %}
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; background: rgba(0,0,0,0.2);">
+                                    <i data-lucide="book-open" style="width: 48px; height: 48px; opacity: 0.8;"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div style="padding: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h3 style="margin: 0; font-size: 1.25rem;">{{ matiere.name }}</h3>
+                                <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: var(--info); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">
+                                    {{ matiere.cours|length }}
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+
+            {% if not selectedCategory and not searchQuery %}
+                <div class="navigation" style="margin-top: 2rem;">
+                    <div class="pagination">
+                        {{ knp_pagination_render(matieres) }}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if pagination.getTotalItemCount == 0 and matieres|length == 0 %}
+                <div style="text-align: center; padding: 3rem; background: var(--bg-card); border-radius: 12px; margin-top: 1rem;">
+                    <i data-lucide="search-x" style="width: 48px; height: 48px; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+                    <p style="color: var(--text-secondary);">No courses found matching your criteria.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    <!-- TAB 2: MY LEARNING -->
+    <section id="my-learning" class="tab-content" style="display: none;">
+        <h2 style="margin-bottom: 1.5rem;">My Enrolled Courses</h2>
+        <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2rem;">
+            {% for enrollment in myEnrollments %}
+                <div class="card learning-card" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border: 2px solid var(--border);">
+                    <div style="height: 140px; background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url('{{ enrollment.cours.matiere.imageUrl ?: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800' }}'); background-size: cover; background-position: center; border-bottom: 2px solid var(--border);">
+                        {% if not enrollment.cours.matiere.imageUrl %}
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; background: rgba(0,0,0,0.1);">
+                                <i data-lucide="book-open" style="width: 48px; height: 48px; opacity: 0.8;"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column;">
+                        <h3 style="margin: 0 0 0.5rem 0;">{{ enrollment.cours.title }}</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <span style="color: var(--text-secondary); font-size: 0.9rem;">{{ enrollment.cours.matiere.name }}</span>
+                            <span style="color: var(--success); font-weight: 700; font-size: 0.9rem;">+{{ enrollment.cours.xp }} XP</span>
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="background: var(--border-light); height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="background: var(--success); height: 100%; width: {{ enrollment.progress }}%;"></div>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">Progress: {{ enrollment.progress }}%</p>
+                        </div>
+                        {% if enrollment.progress == 100 %}
+                            <div style="display: flex; gap: 10px; align-items: center; justify-content: center; width: 100%; flex-wrap: wrap;">
+                                <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9rem; flex: 1; text-align: center; border: 1px solid rgba(16, 185, 129, 0.2); white-space: nowrap;">
+                                    <i data-lucide="check-circle" style="width: 16px; height: 16px; margin-right: 5px;"></i> Completed
+                                </span>
+                                <a href="{{ path('app_student_course_certificate', {'id': enrollment.cours.id}) }}" class="btn brand" style="padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Download Certificate">
+                                    <i data-lucide="printer" style="width: 20px; height: 20px; margin-right: 5px;"></i> Cert
+                                </a>
+                                <a href="{{ path('app_student_course_detail', {'id': enrollment.cours.id}) }}" class="btn secondary" style="padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; justify-content: center;" title="Review Course">
+                                    <i data-lucide="eye" style="width: 20px; height: 20px;"></i>
+                                </a>
+                            </div>
+                        {% else %}
+                            <a href="{{ path('app_student_course_detail', {'id': enrollment.cours.id}) }}" class="btn" style="width: 100%; background: var(--brand-gradient); color: white; padding: 10px; font-size: 0.95rem; text-decoration: none; border-radius: 10px; font-weight: 600; text-align: center; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2); display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i data-lucide="play-circle" style="width: 18px; height: 18px;"></i> Continue Learning
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <p style="text-align: center; color: var(--text-muted); padding: 3rem;">You haven't enrolled in any courses yet.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- TAB 3: CREATOR STUDIO (same as before) -->
+    <section id="creator-studio" class="tab-content" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h2 style="margin: 0;">My Created Content</h2>
+            <div style="display: flex; gap: 10px;">
+                <a href="{{ path('app_creator_matiere_new') }}" class="btn" style="text-decoration: none; background: var(--brand-main); color: white;">+ Propose Category</a>
+            </div>
+        </div>
+        
+        <!-- My Courses -->
+        <h3 style="margin-bottom: 1rem; color: var(--text-secondary);">My Courses</h3>
+        {% if myCreatedCourses is not empty %}
+            <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 3rem;">
+                {% for course in myCreatedCourses %}
+                    <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                        <div style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                                <h4 style="margin: 0;">{{ course.title }}</h4>
+                                {% if course.status == 'PENDING' %}
+                                    <span class="badge" style="background: var(--warning); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem;">Pending</span>
+                                {% elseif course.status == 'APPROVED' %}
+                                    <span class="badge" style="background: var(--success); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.7rem;">Approved</span>
+                                {% endif %}
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; flex: 1;">{{ course.description|slice(0, 80) }}...</p>
+                            <a href="{{ path('app_creator_course_manage', {'id': course.id}) }}" class="btn" style="width: fit-content; background: var(--brand-gradient); color: white; padding: 8px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.9rem; align-self: flex-start;">Manage</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">You haven't created any courses yet.</p>
+        {% endif %}
+
+        <!-- My Categories -->
+        <h3 style="margin-bottom: 1rem; color: var(--text-secondary);">My Proposed Categories</h3>
+        {% if myCreatedMatieres is not empty %}
+            <div style="margin-bottom: 3rem;">
+                {% for matiere in myCreatedMatieres %}
+                    <div class="card" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 8px; background: url('{{ matiere.imageUrl ?: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=400' }}'); background-size: cover; background-position: center; border: 1px solid var(--border);"></div>
+                            <span style="font-weight: 600;">{{ matiere.name }}</span>
+                        </div>
+                        {% if matiere.status == 'PENDING' %}
+                            <span class="badge" style="background: var(--warning); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">Pending Approval</span>
+                        {% elseif matiere.status == 'APPROVED' %}
+                            <span class="badge" style="background: var(--success); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">Approved</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted); margin-bottom: 2rem;">You haven't proposed any categories yet.</p>
+        {% endif %}
+
+        <!-- My Resources -->
+        <h3 style="margin-bottom: 1rem; color: var(--text-secondary);">My Proposed Resources</h3>
+        {% if myCreatedResources is not empty %}
+            <div>
+                {% for resource in myCreatedResources %}
+                    <div class="card" style="padding: 1rem; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">{{ resource.title ?? resource.url|slice(0, 50) }}</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ resource.cours.title }}</div>
+                        </div>
+                        <span class="badge" style="background: var(--info); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; margin-right: 10px;">{{ resource.type }}</span>
+                        {% if resource.status == 'PENDING' %}
+                            <span class="badge" style="background: var(--warning); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">Pending</span>
+                        {% elseif resource.status == 'APPROVED' %}
+                            <span class="badge" style="background: var(--success); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem;">Approved</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color: var(--text-muted);">You haven't proposed any resources yet.</p>
+        {% endif %}
+    </section>
+
+</div>
+
+<script>
+    function switchTab(id) {
+        // Hide all sections
+        document.querySelectorAll('.tab-content').forEach(s => s.style.display = 'none');
+        // Show target
+        document.getElementById(id).style.display = 'block';
+        
+        // Update button styles
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.style.color = 'var(--text-muted)';
+            b.style.borderBottomColor = 'transparent';
+        });
+        
+        // Activate clicked button
+        const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(b => b.getAttribute('onclick').includes(id));
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+            activeBtn.style.color = 'var(--text-main)';
+            activeBtn.style.borderBottomColor = 'var(--brand-main)';
+        }
+    }
+
+    // Initialize first tab or selected category tab
+    document.addEventListener('DOMContentLoaded', () => {
+        {% if selectedCategory %}
+            switchTab('browse-categories');
+        {% elseif currentTab == 'my-learning' %}
+            switchTab('my-learning');
+        {% elseif currentTab == 'creator-studio' %}
+            switchTab('creator-studio');
+        {% else %}
+            switchTab('browse-categories');
+            loadAiRecommendations();
+        {% endif %}
+
+        // Catch Flash Messages for SweetAlert
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                showToast('{{ label == 'error' ? 'error' : 'success' }}', '{{ message|e('js') }}');
+                {% if label == 'success' and ('enrolled' in message|lower or 'completed' in message|lower) %}
+                    triggerConfetti();
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    });
+
+    function triggerAiPrompt() {
+        if (!window.Swal) return loadAiRecommendations();
+
+        // Switch to browse tab first to ensure visibility
+        switchTab('browse-categories');
+        const browseTabBtn = document.querySelector('button[onclick*="browse-categories"]');
+        if (browseTabBtn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            browseTabBtn.classList.add('active');
+        }
+
+        Swal.fire({
+            title: 'EduLink Career Discovery',
+            html: `
+                <div style="text-align: left; padding: 10px;">
+                    <p style="margin-bottom: 0.8rem; font-weight: 600; color: var(--text-main);">Tell us about your career goals:</p>
+                    <textarea id="swal-career" class="swal2-textarea" 
+                        placeholder="e.g. Master React, become a Data Scientist, or learn PHP..." 
+                        style="width: 100%; margin: 0; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); height: 100px; padding: 12px; font-family: inherit; font-size: 0.95rem;"></textarea>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1.5rem; border: 2px dashed var(--border); border-radius: 12px; text-align: center;">
+                        <p style="margin-bottom: 0.8rem; font-weight: 600; color: var(--text-main);">Or upload your CV (PDF)</p>
+                        <input type="file" id="swal-cv" accept="application/pdf" style="font-size: 0.85rem; color: var(--text-secondary);">
+                        <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">We'll analyze your skills to find the perfect courses.</p>
+                    </div>
+                </div>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Predict My Courses',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: '#8b5cf6',
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            preConfirm: () => {
+                const career = document.getElementById('swal-career').value;
+                const cv = document.getElementById('swal-cv').files[0];
+                if (!career && !cv) {
+                    Swal.showValidationMessage('Please provide either a description or a CV');
+                    return false;
+                }
+                return { career, cv };
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                loadAiRecommendations(result.value.career, result.value.cv);
+            }
+        });
+    }
+
+    async function loadAiRecommendations(careerQuery = '', cvFile = null) {
+        const loading = document.getElementById('rec-loading');
+        const list = document.getElementById('rec-list');
+        const container = document.getElementById('ai-recommendations');
+
+        container.style.display = 'block';
+        loading.style.display = 'flex';
+        list.style.display = 'none';
+        
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        try {
+            const formData = new FormData();
+            formData.append('career_description', careerQuery || 'Show me top courses for my profile');
+            if (cvFile) {
+                formData.append('cv_file', cvFile);
+            }
+
+            const response = await fetch('{{ path('student_api_recommendations') }}', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.courses && data.courses.length > 0) {
+                list.innerHTML = '';
+                data.courses.forEach(c => {
+                    const card = document.createElement('a');
+                    card.href = c.url;
+                    card.className = 'card';
+                    card.style.cssText = `
+                        text-decoration: none; 
+                        color: inherit; 
+                        padding: 0; 
+                        overflow: hidden; 
+                        display: flex; 
+                        flex-direction: column;
+                        border: 1px solid rgba(99, 102, 241, 0.2);
+                        transition: all 0.3s ease;
+                        height: 100%;
+                    `;
+                    card.innerHTML = `
+                        <div style="height: 120px; background: url('${c.image}'); background-size: cover; background-position: center; border-bottom: 1px solid var(--border);"></div>
+                        <div style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <span style="font-size: 0.7rem; background: rgba(139, 92, 246, 0.1); color: var(--brand-main); padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase;">${c.category}</span>
+                                <span style="font-size: 0.75rem; color: var(--success); font-weight: 800;">+${c.xp} XP</span>
+                            </div>
+                            <h4 style="margin: 0 0 0.5rem; font-size: 1.1rem; color: var(--text-main); line-height: 1.3; font-weight: 700;">${c.title}</h4>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary); flex: 1;">${c.description}</p>
+                            <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 0.8rem; display: flex; align-items: center; gap: 8px; color: var(--brand-main); font-weight: 600; font-size: 0.9rem;">
+                                Start Learning <i data-lucide="chevron-right" style="width: 16px;"></i>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+                loading.style.display = 'none';
+                list.style.display = 'grid';
+                if (window.lucide) lucide.createIcons();
+
+                if (careerQuery || cvFile) {
+                    Swal.fire({
+                        title: 'Career Match Success!',
+                        text: `We found up to 10 premium courses matching your ${cvFile ? 'CV and ' : ''}profile.`,
+                        icon: 'success',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        background: 'var(--bg-card)',
+                        color: 'var(--text-main)'
+                    });
+                }
+            } else {
+                container.style.display = 'none';
+            }
+        } catch (e) {
+            container.style.display = 'none';
+            console.error('Rec Error:', e);
+        }
+    }
+
+    // Real-time AJAX Polling
+    setInterval(() => {
+        fetch(window.location.href)
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update Browse Categories Grid
+                const newBrowseGrid = doc.querySelector('#browse-categories .grid');
+                const currentBrowseGrid = document.querySelector('#browse-categories .grid');
+                if (newBrowseGrid && currentBrowseGrid && newBrowseGrid.innerHTML !== currentBrowseGrid.innerHTML) {
+                    currentBrowseGrid.innerHTML = newBrowseGrid.innerHTML;
+                }
+
+                // Update My Learning Grid
+                const newMyLearningGrid = doc.querySelector('#my-learning .grid');
+                const currentMyLearningGrid = document.querySelector('#my-learning .grid');
+                if (newMyLearningGrid && currentMyLearningGrid && newMyLearningGrid.innerHTML !== currentMyLearningGrid.innerHTML) {
+                    currentMyLearningGrid.innerHTML = newMyLearningGrid.innerHTML;
+                }
+                
+                // Update Creator Studio Grids
+                const newCreatorGrids = doc.querySelectorAll('#creator-studio .grid');
+                const currentCreatorGrids = document.querySelectorAll('#creator-studio .grid');
+                if (newCreatorGrids.length === currentCreatorGrids.length) {
+                    for(let i=0; i<newCreatorGrids.length; i++) {
+                        if (newCreatorGrids[i].innerHTML !== currentCreatorGrids[i].innerHTML) {
+                            currentCreatorGrids[i].innerHTML = newCreatorGrids[i].innerHTML;
+                        }
+                    }
+                }
+            })
+            .catch(err => console.error('Polling error:', err));
+    }, 5000);
+</script>
+
+<style>
+    @keyframes pulse {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 1; }
+    }
+    
+    .tab-btn:hover {
+        color: var(--brand-main) !important;
+    }
+    
+    .card:hover {
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
