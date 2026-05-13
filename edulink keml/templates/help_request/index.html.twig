@@ -1,0 +1,254 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Help Board - EduLink{% endblock %}
+
+{% block content %}
+<style>
+    .hb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-xl); flex-wrap: wrap; gap: var(--space-md); }
+    .hb-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-main); margin: 0; }
+    .hb-header p { color: var(--text-muted); font-size: 0.9rem; margin: 4px 0 0; }
+    .hb-actions { display: flex; gap: var(--space-sm); }
+
+    /* Tabs */
+    .hb-tabs { display: flex; gap: 4px; margin-bottom: var(--space-xl); border-bottom: 1px solid var(--border); padding-bottom: 0; }
+    .hb-tab { padding: 10px 20px; border: none; background: none; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; gap: 6px; }
+    .hb-tab:hover { color: var(--text-main); }
+    .hb-tab.active { color: var(--brand-main); border-bottom-color: var(--brand-main); }
+
+    /* Tab content */
+    .hb-tab-content { display: none; }
+    .hb-tab-content.active { display: block; }
+
+    /* Filter card */
+    .hb-filters { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: var(--space-lg); margin-bottom: var(--space-xl); box-shadow: var(--shadow-sm); }
+    .hb-filter-row { display: flex; gap: var(--space-md); flex-wrap: wrap; align-items: flex-end; }
+    .hb-filter-row .f-group { flex: 1; min-width: 160px; }
+    .hb-filter-row .f-group label { display: none; }
+    .hb-filter-row input, .hb-filter-row select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-main); color: var(--text-main); font-size: 0.88rem; font-family: inherit; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+    .hb-filter-row input:focus, .hb-filter-row select:focus { border-color: var(--brand-main); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+    .hb-filter-row .f-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .icon-prefix { position: relative; }
+    .icon-prefix i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; pointer-events: none; }
+    .icon-prefix input { padding-left: 36px; }
+
+    /* Cards grid */
+    .hb-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-lg); }
+
+    .hb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: var(--space-lg); transition: all 0.2s; display: flex; flex-direction: column; }
+    .hb-card:hover { border-color: var(--brand-main); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .hb-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md); }
+    .bounty-badge { background: var(--brand-gradient); color: white; padding: 3px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; }
+    .time-badge { color: var(--text-muted); font-size: 0.75rem; }
+    .hb-card h4 { margin: 0 0 var(--space-sm); font-size: 1rem; font-weight: 700; }
+    .hb-card h4 a { color: var(--text-main); text-decoration: none; transition: color 0.2s; }
+    .hb-card h4 a:hover { color: var(--brand-main); }
+    .hb-card-desc { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; flex: 1; }
+    .hb-card-author { display: flex; align-items: center; gap: 8px; margin-top: var(--space-md); }
+    .author-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--brand-gradient); display: flex; align-items: center; justify-content: center; color: white; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+    .author-name { color: var(--text-muted); font-size: 0.8rem; }
+    .hb-card-footer { margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--border); }
+    .hb-card-actions { display: flex; gap: 8px; }
+    .hb-card-actions form { flex: 1; }
+    .btn-offer { width: 100%; }
+
+    /* Status badges */
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+    .status-open { background: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .status-progress { background: rgba(245, 158, 11, 0.12); color: var(--warning); }
+    .status-closed { background: rgba(148, 163, 184, 0.12); color: var(--text-muted); }
+    .status-reason { background: rgba(59, 130, 246, 0.12); color: var(--info); margin-left: 4px; }
+
+    /* Empty state */
+    .hb-empty { text-align: center; padding: var(--space-2xl, 48px); color: var(--text-muted); }
+    .hb-empty i { font-size: 2.5rem; display: block; margin-bottom: var(--space-md); opacity: 0.3; }
+    .hb-empty h4 { color: var(--text-muted); margin: 0 0 var(--space-sm); }
+</style>
+
+{# ======================== HEADER ======================== #}
+<div class="hb-header">
+    <div>
+        <h1><i class="ri-question-answer-line" style="color: var(--brand-accent);"></i> Help Board</h1>
+        <p>Find peers who need your help or post a request.</p>
+    </div>
+    <div class="hb-actions">
+        <a href="{{ path('app_community_feed') }}" class="btn secondary">
+            <i class="ri-community-line"></i> Community Feed
+        </a>
+        <a href="{{ path('app_help_request_new') }}" class="btn">
+            <i class="ri-add-line"></i> Ask for Help
+        </a>
+    </div>
+</div>
+
+{# ======================== TABS ======================== #}
+<div class="hb-tabs">
+    <button class="hb-tab active" onclick="switchTab('openRequests', this)">
+        <i class="ri-question-line"></i> Open Requests
+    </button>
+    <button class="hb-tab" onclick="switchTab('myRequests', this)">
+        <i class="ri-history-line"></i> My Requests (History)
+    </button>
+</div>
+
+{# ======================== OPEN REQUESTS TAB ======================== #}
+<div class="hb-tab-content active" id="openRequests">
+    {# FILTERS #}
+    <div class="hb-filters">
+        <form method="get" action="{{ path('app_help_request_index') }}" class="hb-filter-row">
+            <div class="f-group icon-prefix">
+                <i class="ri-search-line"></i>
+                <input type="text" name="search" placeholder="Search title or description..." value="{{ filters.search }}">
+            </div>
+            <div class="f-group icon-prefix">
+                <i class="ri-coins-line"></i>
+                <input type="number" name="min_bounty" placeholder="Min Bounty" min="0" value="{{ filters.min_bounty }}">
+            </div>
+            <div class="f-group">
+                <select name="sort">
+                    <option value="newest" {{ filters.sort == 'newest' ? 'selected' : '' }}>Newest First</option>
+                    <option value="oldest" {{ filters.sort == 'oldest' ? 'selected' : '' }}>Oldest First</option>
+                    <option value="bounty_high" {{ filters.sort == 'bounty_high' ? 'selected' : '' }}>Highest Bounty</option>
+                    <option value="bounty_low" {{ filters.sort == 'bounty_low' ? 'selected' : '' }}>Lowest Bounty</option>
+                </select>
+            </div>
+            <div class="f-actions">
+                <button type="submit" class="btn">Filter</button>
+                {% if filters.search or filters.min_bounty or filters.sort != 'newest' %}
+                    <a href="{{ path('app_help_request_index') }}" class="btn secondary">Reset</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <div class="hb-grid">
+        {% for request in help_requests %}
+            <div class="hb-card">
+                <div class="hb-card-top">
+                    <span class="bounty-badge">{{ request.bounty }} Points</span>
+                    <span class="time-badge">{{ request.createdAt|date('M d, H:i') }}</span>
+                </div>
+                <h4>
+                    <a href="{{ path('app_help_request_show', {'id': request.id}) }}">{{ request.title }}</a>
+                </h4>
+                <p class="hb-card-desc">{{ request.description }}</p>
+                <div class="hb-card-author">
+                    <div class="author-avatar">{{ (request.student.fullName ?? 'U')|first }}</div>
+                    <span class="author-name">{{ request.student.fullName ?? 'Unknown Student' }}</span>
+                </div>
+                <div class="hb-card-footer">
+                    {% if app.user != request.student %}
+                        <form action="{{ path('app_help_request_join', {'id': request.id}) }}" method="post">
+                            <input type="hidden" name="_token" value="{{ csrf_token('join_help_' ~ request.id) }}">
+                            <button type="submit" class="btn secondary btn-offer">
+                                <i class="ri-hand-heart-line"></i> Offer Help
+                            </button>
+                        </form>
+                    {% else %}
+                        <div class="hb-card-actions">
+                            <a href="{{ path('app_help_request_edit', {'id': request.id}) }}" class="btn warning" style="flex:1;justify-content:center;padding:8px 14px;font-size:0.82rem;">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            <form action="{{ path('app_help_request_delete', {'id': request.id}) }}" method="post" onsubmit="return confirm('Delete this request?');" style="flex:1;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_help_' ~ request.id) }}">
+                                <button type="submit" class="btn danger" style="width:100%;padding:8px 14px;font-size:0.82rem;">
+                                    <i class="ri-delete-bin-line"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="hb-empty" style="grid-column: 1 / -1;">
+                <i class="ri-search-line"></i>
+                <h4>No open requests found</h4>
+                <p>Be the first to ask for help!</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ======================== MY REQUESTS TAB ======================== #}
+<div class="hb-tab-content" id="myRequests">
+    <div class="hb-grid">
+        {% for request in my_requests %}
+            <div class="hb-card">
+                <div class="hb-card-top">
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <span class="status-badge {{ request.status == 'OPEN' ? 'status-open' : (request.status == 'IN_PROGRESS' ? 'status-progress' : 'status-closed') }}">
+                            {{ request.status }}
+                        </span>
+                        {% if request.closeReason %}
+                            <span class="status-badge status-reason">{{ request.closeReason }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="bounty-badge">{{ request.bounty }} Pts</span>
+                </div>
+                <h4>
+                    <a href="{{ path('app_help_request_show', {'id': request.id}) }}">{{ request.title }}</a>
+                </h4>
+                <small style="color: var(--text-muted);">{{ request.createdAt|date('M d, Y H:i') }}</small>
+                <div class="hb-card-footer" style="margin-top:auto;">
+                    {% if request.session %}
+                        <a href="{{ path('app_help_request_chat', {'id': request.session.id}) }}" class="btn secondary btn-offer" style="font-size:0.82rem;">
+                            <i class="ri-chat-3-line"></i> Open Chat
+                        </a>
+                    {% elseif request.status == 'OPEN' %}
+                        <div class="hb-card-actions">
+                            <a href="{{ path('app_help_request_edit', {'id': request.id}) }}" class="btn warning" style="flex:1;justify-content:center;padding:8px 14px;font-size:0.82rem;">
+                                <i class="ri-edit-line"></i> Edit
+                            </a>
+                            <form action="{{ path('app_help_request_delete', {'id': request.id}) }}" method="post" onsubmit="return confirm('Delete?');" style="flex:1;">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_help_' ~ request.id) }}">
+                                <button type="submit" class="btn danger" style="width:100%;padding:8px 14px;font-size:0.82rem;">
+                                    <i class="ri-delete-bin-line"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="hb-empty" style="grid-column: 1 / -1;">
+                <i class="ri-history-line"></i>
+                <h4>No requests yet</h4>
+                <p>Your help request history will appear here.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.hb-tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.hb-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+}
+
+// Real-time AJAX Polling
+setInterval(() => {
+    fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update Open Requests Grid
+            const newOpenGrid = doc.querySelector('#openRequests .hb-grid');
+            const currentOpenGrid = document.querySelector('#openRequests .hb-grid');
+            if (newOpenGrid && currentOpenGrid && newOpenGrid.innerHTML !== currentOpenGrid.innerHTML) {
+                currentOpenGrid.innerHTML = newOpenGrid.innerHTML;
+            }
+
+            // Update My Requests Grid
+            const newMyGrid = doc.querySelector('#myRequests .hb-grid');
+            const currentMyGrid = document.querySelector('#myRequests .hb-grid');
+            if (newMyGrid && currentMyGrid && newMyGrid.innerHTML !== currentMyGrid.innerHTML) {
+                currentMyGrid.innerHTML = newMyGrid.innerHTML;
+            }
+        })
+        .catch(err => console.error('Polling error:', err));
+}, 5000);
+</script>
+{% endblock %}
