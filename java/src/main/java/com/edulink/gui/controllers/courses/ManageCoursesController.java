@@ -234,7 +234,7 @@ public class ManageCoursesController implements Initializable {
         } catch (NumberFormatException e) {
             result.setXp(0);
         }
-        result.setStatus("ACCEPTED");
+        result.setStatus("APPROVED");
         if (currentEditableCourse == null) {
             result.setMatiereId(filteredMatiere.getId());
             result.setAuthorId(1);

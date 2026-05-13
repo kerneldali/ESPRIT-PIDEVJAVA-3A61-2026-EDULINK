@@ -73,7 +73,7 @@ public class CourseListController implements Initializable {
         String level = levelFilterCombo.getValue();
 
         java.util.List<Course> filtered = new java.util.ArrayList<>(allCourses.stream()
-                .filter(c -> "ACCEPTED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus()))
+                .filter(c -> "APPROVED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus()))
                 .filter(c -> c.getTitle() != null && c.getTitle().toLowerCase().contains(query))
                 .filter(c -> "All Levels".equals(level) || level.equals(c.getLevel()))
                 .toList());
@@ -284,7 +284,7 @@ public class CourseListController implements Initializable {
             p.setAuthorId(1);
         }
         
-        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
+        p.setStatus(isAdmin ? "APPROVED" : "PENDING");
 
         courseService.add2(p);
         

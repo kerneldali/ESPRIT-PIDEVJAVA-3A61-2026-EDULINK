@@ -80,7 +80,7 @@ public class MatiereListController implements Initializable {
     private void applyFilters() {
         String query = searchField.getText() == null ? "" : searchField.getText().toLowerCase();
         java.util.List<Matiere> filtered = new java.util.ArrayList<>(allMatieres.stream()
-                .filter(m -> "ACCEPTED".equalsIgnoreCase(m.getStatus()))
+                .filter(m -> "APPROVED".equalsIgnoreCase(m.getStatus()))
                 .filter(m -> m.getName() != null && m.getName().toLowerCase().contains(query))
                 .toList());
 
@@ -192,7 +192,7 @@ public class MatiereListController implements Initializable {
             p.setCreatorId(1);
         }
         
-        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
+        p.setStatus(isAdmin ? "APPROVED" : "PENDING");
         p.setCreatedAt(LocalDateTime.now());
 
         new MatiereService().add2(p);
