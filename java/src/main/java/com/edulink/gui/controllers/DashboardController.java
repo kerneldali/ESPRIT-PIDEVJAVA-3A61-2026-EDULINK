@@ -210,6 +210,8 @@ public class DashboardController implements Initializable {
     @FXML
     public void handleExit() {
         try {
+            // Stop background token refresh before clearing session
+            com.edulink.gui.util.TokenRefreshScheduler.stop();
             com.edulink.gui.util.SessionManager.clearSession();
             Parent login = FXMLLoader.load(getClass().getResource("/view/Login.fxml"));
             Main.getPrimaryStage().getScene().setRoot(login);

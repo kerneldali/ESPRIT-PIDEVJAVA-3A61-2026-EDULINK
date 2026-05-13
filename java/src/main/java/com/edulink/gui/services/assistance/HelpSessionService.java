@@ -320,29 +320,51 @@ public class HelpSessionService {
         try (PreparedStatement ps = cnx.prepareStatement(sql)) {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
-            if (rs.next()) return rs.getInt("wallet_balance") >= amount;
+            if (rs.next()) {
+                // wallet_balance is DOUBLE in DB — must use getDouble() to avoid truncation.
+                // Using getInt() would make 49.9 EDU fail a bounty check of 49, causing
+                // false "Not enough tokens" errors.
+                double balance = rs.getDouble("wallet_balance");
+                System.out.println("[HelpSession] Balance check — userId:" + userId
+                    + " balance:" + balance + " needed:" + amount);
+                return balance >= amount;
+            }
         } catch (SQLException e) {
             System.err.println("[HelpSession] balance check error: " + e.getMessage());
         }
         return false;
     }
 
-    /** Adjusts wallet_balance and logs the transaction */
+    /**
+     * Adjusts wallet_balance and logs the transaction.
+     * Uses DOUBLE arithmetic to stay consistent with the DB column type.
+     * Synchronizes the in-memory SessionManager user if this is the current user.
+     */
     private void adjustWallet(int userId, int delta, String type, int sessionId) {
         if (cnx == null) return;
         try {
-            // Update balance
+            // Update balance — use DOUBLE arithmetic to avoid integer truncation
             PreparedStatement ps = cnx.prepareStatement(
-                "UPDATE user SET wallet_balance = GREATEST(0, wallet_balance + ?) WHERE id = ?");
-            ps.setInt(1, delta);
+                "UPDATE user SET wallet_balance = GREATEST(0.0, wallet_balance + ?) WHERE id = ?");
+            ps.setDouble(1, (double) delta);
             ps.setInt(2, userId);
-            ps.executeUpdate();
+            int rows = ps.executeUpdate();
+            System.out.println("[HelpSession] adjustWallet userId:" + userId
+                + " delta:" + delta + " type:" + type + " rows:" + rows);
 
-            // Log transaction
+            // Sync in-memory session if this is the currently logged-in user
+            com.edulink.gui.models.User currentUser = com.edulink.gui.util.SessionManager.getCurrentUser();
+            if (currentUser != null && currentUser.getId() == userId) {
+                double newBalance = Math.max(0, currentUser.getWalletBalance() + delta);
+                currentUser.setWalletBalance(newBalance);
+                System.out.println("[HelpSession] Session wallet synced → " + newBalance);
+            }
+
+            // Log transaction — include 'note' column which exists in DB schema
             PreparedStatement log = cnx.prepareStatement(
                 "INSERT INTO token_transaction (from_user_id, to_user_id, amount, tx_type, note) VALUES (?,?,?,?,?)");
-            log.setObject(1, delta < 0 ? userId  : null);
-            log.setObject(2, delta > 0 ? userId  : null);
+            log.setObject(1, delta < 0 ? userId : null);
+            log.setObject(2, delta > 0 ? userId : null);
             log.setInt(3, Math.abs(delta));
             log.setString(4, type);
             log.setString(5, "session #" + sessionId);

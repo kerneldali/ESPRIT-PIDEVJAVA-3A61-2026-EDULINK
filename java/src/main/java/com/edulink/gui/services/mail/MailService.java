@@ -12,8 +12,9 @@ import java.util.Properties;
 
 public class MailService {
 
-    private static final String FROM_EMAIL = "eya.makhlouf.isic@gmail.com";
-    private static final String APP_PASSWORD = "baunvjikeeyfhqfy";
+    private static final String FROM_EMAIL   = "kerneldali@gmail.com";
+    private static final String APP_PASSWORD = "siwr vxfx jfrz bdcr";
+
 
     private static Session createSession() {
         Properties props = new Properties();
