@@ -1,0 +1,293 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Wallet - EduLink{% endblock %}
+
+{% block content %}
+<style>
+    .wallet-container { max-width: 1000px; margin: 0 auto; padding: 2rem 0; }
+    .wallet-card { 
+        background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        border-radius: 24px; padding: 3rem; color: white; position: relative; overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+        margin-bottom: 2rem;
+    }
+    .wallet-card::before {
+        content: ""; position: absolute; top: -50%; right: -20%; width: 300px; height: 300px;
+        background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+        border-radius: 50%;
+    }
+    .balance-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; margin-bottom: 0.5rem; display: block; }
+    .balance-value { font-size: 3.5rem; font-weight: 800; margin: 0; line-height: 1; }
+    .wallet-address-box { 
+        margin-top: 2rem; background: rgba(0,0,0,0.2); padding: 12px 20px; border-radius: 12px;
+        display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);
+    }
+    .address-text { font-family: 'Courier New', monospace; font-size: 0.95rem; opacity: 0.9; }
+    .copy-btn { background: none; border: none; color: white; cursor: pointer; opacity: 0.6; transition: opacity 0.2s; }
+    .copy-btn:hover { opacity: 1; }
+
+    .action-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+    .action-card { 
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 1.5rem;
+        display: flex; flex-direction: column; align-items: center; gap: 1rem; cursor: pointer; transition: all 0.2s;
+    }
+    .action-card:hover { transform: translateY(-5px); border-color: var(--brand-main); box-shadow: var(--shadow-md); }
+    .action-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    
+    .history-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 2rem; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .history-table { width: 100%; border-collapse: collapse; }
+    .history-table th { text-align: left; padding: 1rem; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+    .history-table td { padding: 1.2rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+    .type-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .type-mint { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .type-transfer { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .type-buy { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+
+    .status-sync { color: var(--brand-accent); font-size: 0.8rem; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
+    .empty-wallet { text-align: center; padding: 4rem; background: var(--bg-card); border-radius: 24px; border: 2px dashed var(--border); }
+</style>
+
+<div class="wallet-container">
+    <div class="header-section" style="margin-bottom: 2.5rem;">
+        <h1 style="font-size: 2.2rem; margin: 0;">Web3 <span style="color: var(--brand-main);">Wallet</span></h1>
+        <p style="color: var(--text-muted);">Manage your EDU tokens and track your contributions on the blockchain.</p>
+    </div>
+
+    {% if user.ethWalletAddress %}
+        <div class="wallet-card" data-aos="fade-up">
+            <span class="balance-label">Current Balance <span id="sync-status" class="status-sync" style="margin-left: 10px; display: none;">(Syncing...)</span></span>
+            <div style="display: flex; align-items: baseline; gap: 10px;">
+                <h2 class="balance-value" id="balance-display">{{ user.walletBalance|number_format(2) }}</h2>
+                <span style="font-size: 1.5rem; font-weight: 600; opacity: 0.8;">EDU</span>
+            </div>
+
+            <div class="wallet-address-box">
+                <div>
+                    <span style="font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; display: block; margin-bottom: 2px;">Your Public Address</span>
+                    <span class="address-text" id="wallet-address">{{ user.ethWalletAddress }}</span>
+                </div>
+                <button class="copy-btn" onclick="copyAddress()" title="Copy Address">
+                    <i class="ri-file-copy-line" style="font-size: 1.2rem;"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="action-grid" data-aos="fade-up" data-aos-delay="100">
+            <div class="action-card" onclick="openTransferModal()">
+                <div class="action-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i class="ri-send-plane-fill"></i></div>
+                <span style="font-weight: 600;">Transfer XP</span>
+            </div>
+            <div class="action-card" onclick="showBuyModal()">
+                <div class="action-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="ri-shopping-cart-fill"></i></div>
+                <span style="font-weight: 600;">Buy EDU</span>
+            </div>
+            <div class="action-card" onclick="window.open('https://sepolia.etherscan.io/address/{{ user.ethWalletAddress }}', '_blank')">
+                <div class="action-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="ri-external-link-line"></i></div>
+                <span style="font-weight: 600;">Etherscan</span>
+            </div>
+            <form action="{{ path('app_wallet_refresh') }}" method="post" id="refresh-form" style="display: none;"></form>
+            <div class="action-card" onclick="manualRefresh()">
+                <div class="action-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="ri-refresh-line"></i></div>
+                <span style="font-weight: 600;">Sync Ledger</span>
+            </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 3rem;">
+            <!-- History -->
+            <div class="history-card" data-aos="fade-up" data-aos-delay="200">
+                <div class="history-header">
+                    <h3 style="margin: 0;"><i class="ri-history-line"></i> On-Chain Activity</h3>
+                    <span style="font-size: 0.8rem; color: var(--text-muted);">Last 20 transactions</span>
+                </div>
+                
+                <div style="overflow-x: auto;">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Hash</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for tx in history %}
+                                <tr>
+                                    <td style="color: var(--text-muted);">{{ tx.created_at|date('M d, H:i') }}</td>
+                                    <td>
+                                        <span class="type-badge type-{{ tx.tx_type|lower }}">
+                                            {{ tx.tx_type }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="https://sepolia.etherscan.io/tx/{{ tx.tx_hash }}" target="_blank" style="color: var(--brand-main); text-decoration: none; font-family: monospace;">
+                                            {{ tx.tx_hash|slice(0, 10) }}...
+                                        </a>
+                                    </td>
+                                    <td style="font-weight: 700;">{{ tx.amount > 0 ? '+' : '' }}{{ tx.amount }} EDU</td>
+                                    <td>
+                                        <span style="color: #10b981; font-size: 0.8rem;"><i class="ri-checkbox-circle-fill"></i> Confirmed</span>
+                                    </td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                        No on-chain activity yet.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;" data-aos="fade-left" data-aos-delay="300">
+                <div class="card" style="padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border);">
+                    <h4 style="margin: 0 0 1.5rem; font-size: 1rem;">Spending Breakdown</h4>
+                    <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                        {% set totalSpentSafe = totalSpent > 0 ? totalSpent : 1 %}
+                        
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+                                <span>Courses</span>
+                                <span>{{ ((breakdown.COURSES / totalSpentSafe) * 100)|round }}%</span>
+                            </div>
+                            <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                                <div style="width: {{ ((breakdown.COURSES / totalSpentSafe) * 100)|round }}%; height: 100%; background: var(--brand-main);"></div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+                                <span>Events</span>
+                                <span>{{ ((breakdown.EVENTS / totalSpentSafe) * 100)|round }}%</span>
+                            </div>
+                            <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                                <div style="width: {{ ((breakdown.EVENTS / totalSpentSafe) * 100)|round }}%; height: 100%; background: #f59e0b;"></div>
+                            </div>
+                        </div>
+                         <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px;">
+                                <span>Transfers</span>
+                                <span>{{ ((breakdown.TRANSFERS / totalSpentSafe) * 100)|round }}%</span>
+                            </div>
+                            <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+                                <div style="width: {{ ((breakdown.TRANSFERS / totalSpentSafe) * 100)|round }}%; height: 100%; background: #ef4444;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 1.5rem; background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent);">
+                    <div style="color: #10b981; font-size: 1.5rem; margin-bottom: 0.5rem;"><i class="ri-line-chart-line"></i></div>
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #10b981;">+{{ totalEarned }}</div>
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.85rem;">Lifetime EDU Earned</p>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="empty-wallet" data-aos="zoom-in">
+            <div style="font-size: 4rem; color: var(--brand-main); margin-bottom: 1rem;"><i class="ri-wallet-3-line"></i></div>
+            <h2 style="margin-bottom: 1rem;">No Wallet Detected</h2>
+            <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 2rem;">
+                Generate your EduLink blockchain identity to start earning tokens for your academic contributions. 
+                You'll receive a <b>1,000 EDU</b> welcome bonus!
+            </p>
+            <form action="{{ path('app_wallet_generate') }}" method="post">
+                <button type="submit" class="btn" style="padding: 15px 40px; font-size: 1.1rem;">
+                    <i class="ri-flashlight-fill"></i> Generate My Wallet
+                </button>
+            </form>
+        </div>
+    {% endif %}
+</div>
+
+<!-- TRANSFER MODAL -->
+<div id="transferModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="width: 450px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 2.5rem; position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.5);">
+         <button onclick="document.getElementById('transferModal').style.display = 'none'" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+         
+         <h2 style="margin-top: 0; margin-bottom: 0.5rem;">Transfer XP</h2>
+         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Send points to another student instantly.</p>
+
+         {{ form_start(transferForm, {'attr': {'novalidate': 'novalidate'}}) }}
+         <div style="margin-bottom: 1.5rem;">
+             <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Recipient Email</label>
+             <div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-main); padding: 0 15px;">
+                 <i class="ri-mail-line" style="color: var(--text-muted);"></i>
+                 {{ form_widget(transferForm.recipientEmail, {'attr': {'style': 'width: 100%; padding: 14px; background: transparent; border: none; color: var(--text-main); outline: none; font-size: 0.95rem;'}}) }}
+             </div>
+             {{ form_errors(transferForm.recipientEmail) }}
+         </div>
+
+         <div style="margin-bottom: 2rem;">
+             <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Amount (Points)</label>
+             <div style="display: flex; align-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--bg-main); padding: 0 15px;">
+                 <i class="ri-copper-coin-line" style="color: var(--brand-main);"></i>
+                 {{ form_widget(transferForm.amount, {'attr': {'style': 'width: 100%; padding: 14px; background: transparent; border: none; color: var(--text-main); outline: none; font-size: 1.2rem; font-weight: 700;'}}) }}
+             </div>
+             <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 8px;">Available: <b>{{ user.walletBalance|number_format(0) }} PTS</b></div>
+             {{ form_errors(transferForm.amount) }}
+         </div>
+
+         <button type="submit" class="btn" style="width: 100%; padding: 14px; font-weight: 700;">Confirm Transfer</button>
+         {{ form_end(transferForm) }}
+    </div>
+</div>
+
+<script>
+function copyAddress() {
+    const address = document.getElementById('wallet-address').innerText;
+    navigator.clipboard.writeText(address);
+    Swal.fire({
+        icon: 'success', title: 'Address copied!', toast: true, position: 'top-end',
+        showConfirmButton: false, timer: 2000, background: 'var(--bg-card)', color: 'var(--text-main)'
+    });
+}
+
+function manualRefresh() {
+    const status = document.getElementById('sync-status');
+    const balanceText = document.getElementById('balance-display');
+    status.style.display = 'inline';
+
+    fetch('{{ path('app_wallet_refresh') }}', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            if (data.balance) {
+                balanceText.innerText = data.balance;
+            }
+            setTimeout(() => { status.style.display = 'none'; }, 1000);
+        })
+        .catch(() => { status.style.display = 'none'; });
+}
+
+function openTransferModal() {
+    document.getElementById('transferModal').style.display = 'flex';
+}
+
+function showBuyModal() {
+    Swal.fire({
+        title: 'Buy EDU Tokens',
+        text: 'Exchange your ETH for EDU tokens directly on-chain.',
+        input: 'number',
+        inputAttributes: { step: '0.01', min: '0.01' },
+        inputPlaceholder: 'Amount in ETH',
+        showCancelButton: true,
+        confirmButtonText: 'Buy with Metamask',
+        background: 'var(--bg-card)',
+        color: 'var(--text-main)'
+    });
+}
+
+// Auto-refresh balance every 30 seconds
+{% if user.ethWalletAddress %}
+    setInterval(manualRefresh, 30000);
+{% endif %}
+</script>
+{% endblock %}
