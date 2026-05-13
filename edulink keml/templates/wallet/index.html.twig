@@ -77,8 +77,12 @@
 
         <div class="action-grid" data-aos="fade-up" data-aos-delay="100">
             <div class="action-card" onclick="openTransferModal()">
-                <div class="action-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i class="ri-send-plane-fill"></i></div>
+                <div class="action-icon" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6;"><i class="ri-exchange-line"></i></div>
                 <span style="font-weight: 600;">Transfer XP</span>
+            </div>
+            <div class="action-card" onclick="showTransferModal()">
+                <div class="action-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class="ri-send-plane-fill"></i></div>
+                <span style="font-weight: 600;">Send EDU</span>
             </div>
             <div class="action-card" onclick="showBuyModal()">
                 <div class="action-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;"><i class="ri-shopping-cart-fill"></i></div>
@@ -271,19 +275,118 @@ function openTransferModal() {
     document.getElementById('transferModal').style.display = 'flex';
 }
 
-function showBuyModal() {
-    Swal.fire({
-        title: 'Buy EDU Tokens',
-        text: 'Exchange your ETH for EDU tokens directly on-chain.',
-        input: 'number',
-        inputAttributes: { step: '0.01', min: '0.01' },
-        inputPlaceholder: 'Amount in ETH',
+const EDU_CONTRACT_ADDRESS = "0x59A693aBAF46FF430C265888a26023B2f4308560";
+const EDU_ABI = [
+    "function transfer(address to, uint256 amount) public returns (bool)",
+    "function buyTokens() public payable",
+    "function balanceOf(address owner) view returns (uint256)"
+];
+
+async function showTransferModal() {
+    if (!window.ethereum) {
+        Swal.fire('Error', 'Metamask not found! Please install it to send EDU tokens on-chain.', 'error');
+        return;
+    }
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Send EDU Tokens (On-Chain)',
+        html: `
+            <div style="text-align: left;">
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Recipient ETH Address</label>
+                <input id="swal-addr" class="swal2-input" placeholder="0x...">
+                <label style="font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; display: block;">Amount in EDU</label>
+                <input id="swal-amt" class="swal2-input" type="number" placeholder="10.00">
+            </div>
+        `,
+        confirmButtonText: 'Sign & Send',
         showCancelButton: true,
-        confirmButtonText: 'Buy with Metamask',
+        background: 'var(--bg-card)',
+        color: 'var(--text-main)',
+        preConfirm: () => {
+            return {
+                address: document.getElementById('swal-addr').value,
+                amount: document.getElementById('swal-amt').value
+            }
+        }
+    });
+
+    if (formValues) {
+        try {
+            Swal.fire({ title: 'Connecting to Sepolia...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contract = new ethers.Contract(EDU_CONTRACT_ADDRESS, EDU_ABI, signer);
+
+            const amountWei = ethers.parseEther(formValues.amount);
+            
+            Swal.fire({ title: 'Awaiting Confirmation...', text: 'Please sign the transaction in Metamask', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            const tx = await contract.transfer(formValues.address, amountWei);
+            
+            Swal.fire({ title: 'Transaction Sent!', text: 'Mining in progress...', icon: 'info', footer: `<a href="https://sepolia.etherscan.io/tx/${tx.hash}" target="_blank">View on Etherscan</a>` });
+
+            // Notify backend
+            await fetch('{{ path('app_wallet_log_tx') }}', {
+                method: 'POST',
+                body: JSON.stringify({
+                    txHash: tx.hash,
+                    amount: formValues.amount,
+                    toAddress: formValues.address,
+                    type: 'TRANSFER'
+                })
+            });
+
+            await tx.wait();
+            Swal.fire('Success!', 'Tokens successfully transferred on the blockchain.', 'success');
+            manualRefresh();
+        } catch (err) {
+            Swal.fire('Error', err.message || 'Transaction failed', 'error');
+        }
+    }
+}
+
+async function showBuyModal() {
+    if (!window.ethereum) {
+        Swal.fire('Error', 'Metamask not found!', 'error');
+        return;
+    }
+
+    const { value: ethAmount } = await Swal.fire({
+        title: 'Buy EDU Tokens',
+        text: 'Enter ETH amount (e.g., 0.01)',
+        input: 'number',
+        inputAttributes: { step: '0.001', min: '0.001' },
+        showCancelButton: true,
+        confirmButtonText: 'Buy Now',
         background: 'var(--bg-card)',
         color: 'var(--text-main)'
     });
+
+    if (ethAmount) {
+        try {
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const contract = new ethers.Contract(EDU_CONTRACT_ADDRESS, EDU_ABI, signer);
+
+            const tx = await contract.buyTokens({ value: ethers.parseEther(ethAmount) });
+            
+            Swal.fire({ title: 'Purchase Sent!', text: 'Transaction Hash: ' + tx.hash, icon: 'info' });
+            
+            await fetch('{{ path('app_wallet_log_tx') }}', {
+                method: 'POST',
+                body: JSON.stringify({ txHash: tx.hash, amount: ethAmount * 1000, type: 'BUY' })
+            });
+
+            await tx.wait();
+            Swal.fire('Success!', 'Tokens bought and credited!', 'success');
+            manualRefresh();
+        } catch (err) {
+            Swal.fire('Error', err.message, 'error');
+        }
+    }
 }
+
 
 // Auto-refresh balance every 30 seconds
 {% if user.ethWalletAddress %}

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<head>
+    <title>{% block title %}EduLink{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Ethers.js for Web3 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+<link rel="stylesheet" href="{{ asset('assets/css/variables.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/layout.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/components.css') }}">
+<link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ asset('assets/css/admin.css') }}">
+
+<script>
+    (function() {
+        const theme = localStorage.getItem("theme") || "dark";
+        document.documentElement.className = theme + "-mode";
+        document.documentElement.setAttribute("data-theme", theme);
+    })();
+</script>
+
+</head>
+<body>
+
+{% if is_granted('ROLE_ADMIN') %}
+    <div style="background: var(--brand-main); color: white; text-align: center; padding: 8px; font-size: 0.85rem; font-weight: 600; z-index: 9999; position: relative;">
+        <i class="ri-admin-fill"></i> You are viewing the Student Frontend. 
+        <a href="{{ path('admin_dashboard') }}" style="color: white; text-decoration: underline; margin-left: 10px;">Return to Admin Backend</a>
+    </div>
+{% endif %}
+{% include 'components/topbar.html.twig' %}
+
+<div class="app">
+    {% include 'components/sidebar.html.twig' %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+<script src="{{ asset('assets/js/admin.js') }}"></script>
+<script src="{{ asset('assets/js/theme.js') }}"></script>
+<script>
+  lucide.createIcons();
+
+  // Flash Messages with SweetAlert2
+  {% for label, messages in app.flashes %}
+    {% for message in messages %}
+      Swal.fire({
+        icon: '{{ label == "error" ? "error" : (label == "warning" ? "warning" : "success") }}',
+        title: '{{ message|e("js") }}',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        background: 'var(--bg-card)',
+        color: 'var(--text-main)',
+        iconColor: '{{ label == "error" ? "#ef4444" : (label == "warning" ? "#f59e0b" : "#8b5cf6") }}',
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
+
+      {% if label == "success" %}
+        // Trigger confetti on success!
+        confetti({
+          particleCount: 150,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: ['#5B2A6E', '#B83280', '#E04F9A']
+        });
+      {% endif %}
+    {% endfor %}
+  {% endfor %}
+</script>
+    {% include 'components/chatbot.html.twig' %}
+    {% block javascripts %}{% endblock %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>try { AOS.init(); } catch(e) {}</script>
+</body>
+</html>

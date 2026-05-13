@@ -163,5 +163,36 @@ class WalletController extends AbstractController
         $this->addFlash('success', 'Wallet generated! 1000 EDU tokens have been credited to your account.');
         
         return $this->redirectToRoute('app_wallet_index');
+    #[Route('/log-tx', name: 'app_wallet_log_tx', methods: ['POST'])]
+    public function logTx(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) return new JsonResponse(['error' => 'Unauthorized'], 401);
+
+        $data = json_decode($request->getContent(), true);
+        $txHash = $data['txHash'] ?? null;
+        $amount = $data['amount'] ?? 0;
+        $toAddress = $data['toAddress'] ?? null;
+        $type = $data['type'] ?? 'TRANSFER';
+
+        if (!$txHash) return new JsonResponse(['error' => 'Missing hash'], 400);
+
+        // Resolve recipient ID if possible
+        $recipient = $this->entityManager->getRepository(User::class)->findOneBy(['ethWalletAddress' => $toAddress]);
+        $recipientId = $recipient ? $recipient->getId() : null;
+
+        $conn = $this->entityManager->getConnection();
+        $conn->insert('token_transaction', [
+            'from_user_id' => $user->getId(),
+            'to_user_id' => $recipientId,
+            'amount' => $amount,
+            'tx_hash' => $txHash,
+            'tx_type' => $type,
+            'note' => 'Web3 transaction confirmed via Metamask',
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return new JsonResponse(['status' => 'success']);
     }
 }
