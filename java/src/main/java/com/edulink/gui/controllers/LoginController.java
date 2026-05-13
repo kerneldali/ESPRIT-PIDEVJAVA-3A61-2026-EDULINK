@@ -258,23 +258,38 @@ public class LoginController {
         String otp = String.format("%04d", new java.util.Random().nextInt(10000));
         userService.setOtp(email, otp);
         
-        // Simulating email send due to potentially missing MailService properties locally,
-        // but normally this calls: com.edulink.gui.services.mail.MailService.sendOtpEmail(email, otp);
-        com.edulink.gui.services.mail.MailService.sendOtpEmail(email, otp);
+        // Disable button and show loading state
+        sendOtpBtn.setDisable(true);
+        sendOtpBtn.setText("Sending...");
+        resetErrorLabel.setStyle("-fx-text-fill: #f59e0b;");
+        resetErrorLabel.setText("⏳ Sending OTP to your email...");
         
-        resetErrorLabel.setStyle("-fx-text-fill: #10b981;");
-        resetErrorLabel.setText("OTP sent to your email!");
-        
-        resetEmailField.setDisable(true);
-        sendOtpBtn.setVisible(false);
-        sendOtpBtn.setManaged(false);
-        
-        otpField.setVisible(true);
-        otpField.setManaged(true);
-        newPasswordField.setVisible(true);
-        newPasswordField.setManaged(true);
-        verifyOtpBtn.setVisible(true);
-        verifyOtpBtn.setManaged(true);
+        // Send email in background thread to avoid freezing UI
+        new Thread(() -> {
+            boolean success = com.edulink.gui.services.mail.MailService.sendOtpEmail(email, otp);
+            javafx.application.Platform.runLater(() -> {
+                if (success) {
+                    resetErrorLabel.setStyle("-fx-text-fill: #10b981;");
+                    resetErrorLabel.setText("✅ OTP sent to your email!");
+                    
+                    resetEmailField.setDisable(true);
+                    sendOtpBtn.setVisible(false);
+                    sendOtpBtn.setManaged(false);
+                    
+                    otpField.setVisible(true);
+                    otpField.setManaged(true);
+                    newPasswordField.setVisible(true);
+                    newPasswordField.setManaged(true);
+                    verifyOtpBtn.setVisible(true);
+                    verifyOtpBtn.setManaged(true);
+                } else {
+                    resetErrorLabel.setStyle("-fx-text-fill: #ef4444;");
+                    resetErrorLabel.setText("❌ Failed to send OTP. Check your internet connection.");
+                    sendOtpBtn.setDisable(false);
+                    sendOtpBtn.setText("Send OTP");
+                }
+            });
+        }).start();
     }
     
     @FXML
