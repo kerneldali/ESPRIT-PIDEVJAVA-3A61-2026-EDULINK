@@ -181,7 +181,7 @@ public class ManageResourcesController implements Initializable {
         
         String savedPath = saveFileToProject(urlField.getText().trim());
         result.setUrl(savedPath);
-        result.setStatus("ACCEPTED");
+        result.setStatus("APPROVED");
         if (currentEditableResource == null && filteredCourse != null) {
             result.setCoursId(filteredCourse.getId());
             result.setAuthorId(1);

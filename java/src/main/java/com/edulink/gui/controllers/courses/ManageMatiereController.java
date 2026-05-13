@@ -217,7 +217,7 @@ public class ManageMatiereController implements Initializable {
         result.setName(nameField.getText().trim());
         result.setDescription(descField.getText().trim());
         
-        result.setStatus("ACCEPTED");
+        result.setStatus("APPROVED");
         
         boolean isNew = currentEditableMatiere == null;
         if (isNew) {

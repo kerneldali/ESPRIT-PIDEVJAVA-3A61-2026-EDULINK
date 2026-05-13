@@ -143,7 +143,7 @@ public class CourseDetailsController implements Initializable {
     private void loadResources() {
         resourcesContainer.getChildren().clear();
         List<Resource> resources = resourceService.findByCourse(currentCourse.getId())
-                .stream().filter(r -> "ACCEPTED".equalsIgnoreCase(r.getStatus()) || "ACTIVE".equalsIgnoreCase(r.getStatus())).toList();
+                .stream().filter(r -> "APPROVED".equalsIgnoreCase(r.getStatus()) || "ACTIVE".equalsIgnoreCase(r.getStatus())).toList();
 
         if (resources.isEmpty()) {
             Label empty = new Label("No resources available yet.");
@@ -384,7 +384,7 @@ public class CourseDetailsController implements Initializable {
             p.setAuthorId(1);
         }
         
-        p.setStatus(isAdmin ? "ACCEPTED" : "PENDING");
+        p.setStatus(isAdmin ? "APPROVED" : "PENDING");
 
         resourceService.add2(p);
         

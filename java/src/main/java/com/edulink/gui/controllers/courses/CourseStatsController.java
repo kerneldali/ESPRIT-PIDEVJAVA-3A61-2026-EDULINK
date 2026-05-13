@@ -27,7 +27,7 @@ public class CourseStatsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        statusComboFilter.setItems(FXCollections.observableArrayList("All Statuses", "ACTIVE", "ARCHIVED", "ACCEPTED", "PENDING"));
+        statusComboFilter.setItems(FXCollections.observableArrayList("All Statuses", "ACTIVE", "ARCHIVED", "APPROVED", "PENDING"));
         statusComboFilter.setValue("All Statuses");
 
         searchField.textProperty().addListener((obs, oldV, newV) -> filterData());
@@ -51,7 +51,7 @@ public class CourseStatsController implements Initializable {
             .filter(c -> (c.getTitle() != null && c.getTitle().toLowerCase().contains(query)))
             .filter(c -> {
                 if ("All Statuses".equals(status)) return true;
-                if ("ACTIVE".equals(status)) return "ACCEPTED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus());
+                if ("ACTIVE".equals(status)) return "APPROVED".equalsIgnoreCase(c.getStatus()) || "FORCE_ACTIVE".equalsIgnoreCase(c.getStatus());
                 if ("ARCHIVED".equals(status)) return "ARCHIVED".equalsIgnoreCase(c.getStatus()) || "FORCE_ARCHIVED".equalsIgnoreCase(c.getStatus());
                 return status.equalsIgnoreCase(c.getStatus());
             })
@@ -89,7 +89,7 @@ public class CourseStatsController implements Initializable {
         if (score > 100) score = 100;
 
         boolean needsAutoArchive = false;
-        if ("ACCEPTED".equals(c.getStatus()) && score < 25) {
+        if ("APPROVED".equals(c.getStatus()) && score < 25) {
             long daysPassed = java.time.temporal.ChronoUnit.DAYS.between(
                 c.getCreatedAt() != null ? c.getCreatedAt() : java.time.LocalDateTime.now(), 
                 java.time.LocalDateTime.now()

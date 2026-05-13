@@ -36,7 +36,7 @@ public class StudentSuggestionsController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        statusFilter.setItems(FXCollections.observableArrayList("ALL", "PENDING", "ACCEPTED", "REJECTED"));
+        statusFilter.setItems(FXCollections.observableArrayList("ALL", "PENDING", "APPROVED", "REJECTED"));
         statusFilter.setValue("ALL");
         statusFilter.valueProperty().addListener((obs, old, newVal) -> renderProposals());
 
@@ -173,7 +173,7 @@ public class StudentSuggestionsController implements Initializable {
     private Label createStatusBadge(String statusStr) {
         Label status = new Label(statusStr != null ? statusStr : "UNKNOWN");
         String color = "#f59e0b";
-        if ("ACCEPTED".equals(statusStr)) color = "#00d289";
+        if ("APPROVED".equals(statusStr)) color = "#00d289";
         else if ("REJECTED".equals(statusStr)) color = "#ef4444";
         status.setStyle("-fx-background-color: " + color + "33; -fx-text-fill: " + color + "; -fx-padding: 2 8; -fx-background-radius: 10; -fx-font-weight: bold; -fx-font-size: 10px;");
         return status;

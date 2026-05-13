@@ -243,7 +243,7 @@ public class HelpRequestFormController implements Initializable {
             }
             // For ScrollPane, skip to the ScrollPane itself (not its viewport skin node)
             javafx.scene.Parent p = n.getParent();
-            if (p instanceof javafx.scene.control.ScrollPane.ScrollPaneSkin ||
+            if ((p != null && p.getClass().getSimpleName().contains("ScrollPaneSkin")) ||
                 (p != null && p.getClass().getSimpleName().contains("Viewport"))) {
                 n = p.getParent();
             } else {

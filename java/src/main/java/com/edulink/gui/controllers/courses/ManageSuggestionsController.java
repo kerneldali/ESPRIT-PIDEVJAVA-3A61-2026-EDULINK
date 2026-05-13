@@ -26,7 +26,7 @@ public class ManageSuggestionsController implements Initializable {
         typeFilter.setItems(FXCollections.observableArrayList("ALL", "MATIERE", "COURSE", "RESOURCE"));
         typeFilter.setValue("ALL");
 
-        statusFilter.setItems(FXCollections.observableArrayList("ALL", "PENDING", "ACCEPTED", "REJECTED"));
+        statusFilter.setItems(FXCollections.observableArrayList("ALL", "PENDING", "APPROVED", "REJECTED"));
         statusFilter.setValue("ALL");
 
         typeFilter.valueProperty().addListener((obs, o, n) -> filterAndDisplay());
@@ -132,7 +132,7 @@ public class ManageSuggestionsController implements Initializable {
 
         Label status = new Label(p.getStatus() != null ? p.getStatus() : "UNKNOWN");
         if ("PENDING".equals(p.getStatus())) status.setStyle("-fx-text-fill: #f59e0b; -fx-font-weight: bold;");
-        else if ("ACCEPTED".equals(p.getStatus())) status.setStyle("-fx-text-fill: #00d289; -fx-font-weight: bold;");
+        else if ("APPROVED".equals(p.getStatus())) status.setStyle("-fx-text-fill: #00d289; -fx-font-weight: bold;");
         else status.setStyle("-fx-text-fill: #ef4444; -fx-font-weight: bold;");
 
         top.getChildren().addAll(title, typeBadge, spacer, status);
@@ -162,8 +162,8 @@ public class ManageSuggestionsController implements Initializable {
         Button acceptBtn = new Button("✅ Accept");
         acceptBtn.setStyle("-fx-background-color: #00d289; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand;");
         acceptBtn.setOnAction(e -> {
-            updateStatus(p, "ACCEPTED");
-            EduAlert.show(EduAlert.AlertType.SUCCESS, "Accepted", "Proposal '" + p.getTitle() + "' was marked as approved.");
+            updateStatus(p, "APPROVED");
+            EduAlert.show(EduAlert.AlertType.SUCCESS, "APPROVED", "Proposal '" + p.getTitle() + "' was marked as approved.");
             loadData();
         });
 

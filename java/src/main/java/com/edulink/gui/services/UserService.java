@@ -237,13 +237,33 @@ public class UserService implements IService<User> {
 
     public User authenticate(String email, String password) {
         if (cnx == null) return null;
-        String qry = "SELECT * FROM user WHERE email = ? AND password = ?";
+        // First retrieve the user by email alone
+        String qry = "SELECT * FROM user WHERE email = ?";
         try (PreparedStatement pstm = cnx.prepareStatement(qry)) {
             pstm.setString(1, email);
-            pstm.setString(2, password);
             ResultSet rs = pstm.executeQuery();
             if (rs.next()) {
-                return mapResultSetToUser(rs);
+                String storedHash = rs.getString("password");
+                boolean passwordMatches = false;
+                
+                if (storedHash != null && storedHash.startsWith("$2")) {
+                    // PHP (Symfony) uses $2y$ but Java's jBCrypt expects $2a$.
+                    // The algorithm is identical, so we safely convert the prefix.
+                    String javaHash = storedHash.replaceFirst("^\\$2y\\$", "\\$2a\\$");
+                    try {
+                        passwordMatches = org.mindrot.jbcrypt.BCrypt.checkpw(password, javaHash);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        passwordMatches = false;
+                    }
+                } else if (storedHash != null) {
+                    // Legacy fallback: plain text
+                    passwordMatches = storedHash.equals(password);
+                }
+                
+                if (passwordMatches) {
+                    return mapResultSetToUser(rs);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
