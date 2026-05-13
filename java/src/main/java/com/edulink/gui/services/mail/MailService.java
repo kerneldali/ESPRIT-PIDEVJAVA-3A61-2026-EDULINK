@@ -67,7 +67,7 @@ public class MailService {
     }
 
     // ─────────────────────────────────────────────────────
-    // OTP — Password Reset (uses javax.mail like the working reminder system)
+    // OTP — Password Reset (uses jakarta.mail like the working reminder system)
     // ─────────────────────────────────────────────────────
     public static boolean sendOtpEmail(String toEmail, String otp) {
         try {
@@ -80,17 +80,17 @@ public class MailService {
             final String username = FROM_EMAIL;
             final String password = APP_PASSWORD;
 
-            javax.mail.Session session = javax.mail.Session.getInstance(props,
-                    new javax.mail.Authenticator() {
-                        protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
-                            return new javax.mail.PasswordAuthentication(username, password);
+            jakarta.mail.Session session = jakarta.mail.Session.getInstance(props,
+                    new jakarta.mail.Authenticator() {
+                        protected jakarta.mail.PasswordAuthentication getPasswordAuthentication() {
+                            return new jakarta.mail.PasswordAuthentication(username, password);
                         }
                     });
 
-            javax.mail.Message message = new javax.mail.internet.MimeMessage(session);
-            message.setFrom(new javax.mail.internet.InternetAddress(username));
-            message.setRecipients(javax.mail.Message.RecipientType.TO,
-                    javax.mail.internet.InternetAddress.parse(toEmail));
+            jakarta.mail.Message message = new jakarta.mail.internet.MimeMessage(session);
+            message.setFrom(new jakarta.mail.internet.InternetAddress(username));
+            message.setRecipients(jakarta.mail.Message.RecipientType.TO,
+                    jakarta.mail.internet.InternetAddress.parse(toEmail));
             message.setSubject("EduLink - Password Reset Code");
 
             String html = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head>"
@@ -109,7 +109,7 @@ public class MailService {
                     + "</div></body></html>";
 
             message.setContent(html, "text/html; charset=utf-8");
-            javax.mail.Transport.send(message);
+            jakarta.mail.Transport.send(message);
             System.out.println("✅ OTP mail sent to: " + toEmail);
             return true;
         } catch (Exception e) {
