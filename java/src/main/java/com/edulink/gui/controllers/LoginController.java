@@ -144,6 +144,9 @@ public class LoginController {
             User user = userService.authenticate(email, password);
             if (user != null) {
                 com.edulink.gui.util.SessionManager.setCurrentUser(user);
+                // Start background token refresh so wallet balances stay current
+                // without forcing re-login when tokens change from either app.
+                com.edulink.gui.util.TokenRefreshScheduler.start(user.getId());
                 boolean isAdmin = user.hasRole("ROLE_ADMIN") || user.hasRole("ROLE_FACULTY");
                 launchDashboard(isAdmin);
             } else {
@@ -182,6 +185,8 @@ public class LoginController {
         faceIdService.startCamera(cameraFeed, cameraStatusLabel, (success) -> {
             if (success) {
                 com.edulink.gui.util.SessionManager.setCurrentUser(u);
+                // Start background token refresh for Face ID login too
+                com.edulink.gui.util.TokenRefreshScheduler.start(u.getId());
                 boolean isAdmin = u.hasRole("ROLE_ADMIN") || u.hasRole("ROLE_FACULTY");
                 launchDashboard(isAdmin);
             }

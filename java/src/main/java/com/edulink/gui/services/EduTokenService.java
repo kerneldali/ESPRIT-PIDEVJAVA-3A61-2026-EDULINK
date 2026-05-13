@@ -177,6 +177,7 @@ public class EduTokenService {
             
             List<TypeReference<?>> outputParameters = new ArrayList<>();
             outputParameters.add(new TypeReference<Uint256>() {});
+            @SuppressWarnings("unchecked")
             List<Type> results = FunctionReturnDecoder.decode(rawVal, (List) outputParameters);
             
             if (results.isEmpty()) {
@@ -228,6 +229,7 @@ public class EduTokenService {
             
             List<TypeReference<?>> outputParameters = new ArrayList<>();
             outputParameters.add(new TypeReference<Uint256>() {});
+            @SuppressWarnings("unchecked")
             List<Type> results = FunctionReturnDecoder.decode(call.getValue(), (List) outputParameters);
                 
             if (results.isEmpty()) return BigDecimal.ZERO;
@@ -342,16 +344,21 @@ public class EduTokenService {
     // ─────────────────────────────────────────────────────
     // DB — Transaction log
     // ─────────────────────────────────────────────────────
+    /**
+     * Records a token transaction in the database.
+     * NOTE: The token_transaction table has a 'note' column — it must be included
+     * in the INSERT or the statement may silently fail on strict DB configurations.
+     */
     private void logTransaction(String from, String to, long amount, String type, String txHash) {
         if (dbCnx == null) return;
-        try {
-            PreparedStatement ps = dbCnx.prepareStatement(
-                "INSERT INTO token_transaction (from_user_id, to_user_id, amount, tx_hash, tx_type) VALUES (?,?,?,?,?)");
+        try (PreparedStatement ps = dbCnx.prepareStatement(
+                "INSERT INTO token_transaction (from_user_id, to_user_id, amount, tx_hash, tx_type, note) VALUES (?,?,?,?,?,?)")) {
             ps.setObject(1, resolveUserId(from));
             ps.setObject(2, resolveUserId(to));
             ps.setLong(3, amount);
             ps.setString(4, txHash);
             ps.setString(5, type);
+            ps.setString(6, "web3-" + type.toLowerCase()); // descriptive note for the log
             ps.executeUpdate();
         } catch (Exception e) {
             System.err.println("[EduTokenService] logTransaction error: " + e.getMessage());

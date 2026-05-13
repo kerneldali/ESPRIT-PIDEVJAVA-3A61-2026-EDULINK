@@ -345,11 +345,24 @@ public class HelpRequestListController implements Initializable {
 
 
 
+    /**
+     * Walks the scene graph upward from the card container looking for
+     * the StackPane with fx:id "contentArea". Handles ScrollPane viewport nesting.
+     */
     private StackPane findContentArea() {
         javafx.scene.Node n = cardsContainer;
         while (n != null) {
-            if (n instanceof StackPane && "contentArea".equals(n.getId())) return (StackPane) n;
-            n = n.getParent();
+            if (n instanceof StackPane sp && "contentArea".equals(sp.getId())) {
+                return sp;
+            }
+            javafx.scene.Parent p = n.getParent();
+            // Skip internal ScrollPane skin viewport nodes
+            if (p != null && (p.getClass().getSimpleName().contains("Viewport") ||
+                              p.getClass().getSimpleName().contains("ScrollPaneSkin"))) {
+                n = p.getParent();
+            } else {
+                n = p;
+            }
         }
         return null;
     }

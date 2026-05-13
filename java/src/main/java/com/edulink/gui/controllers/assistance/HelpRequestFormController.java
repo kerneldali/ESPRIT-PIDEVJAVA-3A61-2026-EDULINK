@@ -193,12 +193,29 @@ public class HelpRequestFormController implements Initializable {
     @FXML
     public void handleCancel() { goBack(); }
 
+    /**
+     * Navigates back to the HelpRequest list after a save/cancel.
+     * Walks the full scene graph upward to find the named StackPane 'contentArea',
+     * which may be many levels above when this form is inside a ScrollPane viewport.
+     */
     private void goBack() {
         try {
-            Parent view = FXMLLoader.load(getClass().getResource("/view/assistance/HelpRequestList.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/view/assistance/HelpRequestList.fxml"));
+            Parent listView = loader.load();
+            // Trigger an immediate data refresh on the newly loaded list
+            HelpRequestListController listCtrl = loader.getController();
+            if (listCtrl != null) {
+                listCtrl.loadData();
+            }
             StackPane area = findContentArea();
-            if (area != null) area.getChildren().setAll(view);
-        } catch (IOException e) { e.printStackTrace(); }
+            if (area != null) {
+                area.getChildren().setAll(listView);
+            } else {
+                System.err.println("[HelpRequestForm] Could not find contentArea — scene graph traversal failed.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void applyErrorStyle(Control c) {
@@ -213,11 +230,25 @@ public class HelpRequestFormController implements Initializable {
         errorLabel.setText("");
     }
 
+    /**
+     * Walks the scene graph upward from the form container looking for
+     * the StackPane whose fx:id is "contentArea". Works correctly even
+     * when this form is nested inside a ScrollPane's internal viewport.
+     */
     private StackPane findContentArea() {
         javafx.scene.Node n = formContainer;
         while (n != null) {
-            if (n instanceof StackPane && "contentArea".equals(n.getId())) return (StackPane) n;
-            n = n.getParent();
+            if (n instanceof StackPane sp && "contentArea".equals(sp.getId())) {
+                return sp;
+            }
+            // For ScrollPane, skip to the ScrollPane itself (not its viewport skin node)
+            javafx.scene.Parent p = n.getParent();
+            if (p instanceof javafx.scene.control.ScrollPane.ScrollPaneSkin ||
+                (p != null && p.getClass().getSimpleName().contains("Viewport"))) {
+                n = p.getParent();
+            } else {
+                n = p;
+            }
         }
         return null;
     }
