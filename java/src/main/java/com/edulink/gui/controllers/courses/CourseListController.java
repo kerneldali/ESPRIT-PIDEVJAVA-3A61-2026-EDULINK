@@ -21,6 +21,9 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 public class CourseListController implements Initializable {
 
@@ -46,6 +49,7 @@ public class CourseListController implements Initializable {
     private EnrollmentService enrollmentService = new EnrollmentService();
     private List<Course> allCourses;
     private Matiere currentMatiere;
+    private Timeline pollingTimeline;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -110,6 +114,35 @@ public class CourseListController implements Initializable {
         this.pageTitle.setText("Courses in " + matiere.getName());
         this.allCourses = courseService.findByMatiere(matiere.getId());
         applyFilters();
+        startPolling();
+    }
+
+    private void startPolling() {
+        if (pollingTimeline != null) pollingTimeline.stop();
+        pollingTimeline = new Timeline(new KeyFrame(Duration.seconds(5), e -> {
+            if (rootPane.getScene() != null && rootPane.getScene().getWindow().isShowing()) {
+                if (currentMatiere == null) return;
+                int oldSize = allCourses != null ? allCourses.size() : 0;
+                List<Course> freshData = courseService.findByMatiere(currentMatiere.getId());
+                if (freshData.size() != oldSize || !sameCourses(freshData, allCourses)) {
+                    allCourses = freshData;
+                    applyFilters();
+                }
+            } else {
+                pollingTimeline.stop();
+            }
+        }));
+        pollingTimeline.setCycleCount(Timeline.INDEFINITE);
+        pollingTimeline.play();
+    }
+
+    private boolean sameCourses(List<Course> list1, List<Course> list2) {
+        if (list1.size() != list2.size()) return false;
+        for (int i = 0; i < list1.size(); i++) {
+            if (list1.get(i).getId() != list2.get(i).getId()) return false;
+            if (!String.valueOf(list1.get(i).getStatus()).equals(String.valueOf(list2.get(i).getStatus()))) return false;
+        }
+        return true;
     }
 
     private void displayCourses(List<Course> list) {
